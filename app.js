@@ -677,6 +677,15 @@ async function generateInvoice() {
     }
 }
 
+function closeAppAndGoToChat() {
+    if (tg) {
+        tg.HapticFeedback?.notificationOccurred('success');
+        tg.close();
+    } else {
+        alert('Invoice generated & sent to Telegram chat!');
+    }
+}
+
 function openPdfViewer() {
     if (generatedPdfData && generatedPdfData.url) {
         if (tg && tg.openLink) {

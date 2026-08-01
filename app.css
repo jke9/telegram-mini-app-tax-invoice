@@ -66,6 +66,7 @@ body {
     border: 1px solid rgba(61, 90, 254, 0.3);
     border-radius: var(--radius-lg);
     backdrop-filter: blur(16px);
+    margin-bottom: 14px;
 }
 
 .header-icon {
@@ -1500,4 +1501,114 @@ input[type=number]::-webkit-outer-spin-button {
 
 .nav-item.active .nav-label {
     color: #ffffff;
+}
+
+/* ── Ultra-Compact Success Card ────────────────────── */
+.success-card-compact {
+    padding: 16px !important;
+    background: #141625 !important;
+    border: 1px solid rgba(0, 230, 118, 0.4) !important;
+    box-shadow: 0 10px 30px rgba(0, 230, 118, 0.15) !important;
+    border-radius: var(--radius-lg) !important;
+}
+
+.success-header-compact {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.success-anim-sm {
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+.success-title-sm {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 2px;
+}
+
+.success-sub-sm {
+    font-size: 0.78rem;
+    color: #00e676;
+    font-weight: 600;
+}
+
+.success-details-compact {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-size: 0.8rem;
+    color: var(--tg-theme-text-color);
+    margin-bottom: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.success-action-group-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.btn-close-app-chat {
+    width: 100%;
+    background: linear-gradient(135deg, #0088cc, #00b0ff);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 13px;
+    font-size: 0.92rem;
+    font-weight: 800;
+    font-family: 'Outfit', sans-serif;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0, 136, 204, 0.4);
+    transition: all 0.2s ease;
+}
+
+.btn-close-app-chat:active {
+    transform: scale(0.97);
+}
+
+.btn-view-action-sm {
+    width: 100%;
+    background: rgba(61, 90, 254, 0.18);
+    border: 1px solid rgba(61, 90, 254, 0.4);
+    color: #82b1ff;
+    border-radius: var(--radius-md);
+    padding: 11px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: 'Outfit', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-view-action-sm:active {
+    transform: scale(0.97);
+    background: rgba(61, 90, 254, 0.3);
+}
+
+.btn-new-sm {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--tg-theme-hint-color);
+    border-radius: var(--radius-md);
+    padding: 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: 'Outfit', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-new-sm:active {
+    transform: scale(0.97);
+    background: var(--glass-hover);
 }

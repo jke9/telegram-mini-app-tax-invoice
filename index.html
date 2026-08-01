@@ -66,17 +66,6 @@
 
         <!-- ══════════════ VIEW 1: INVOICE GENERATOR ══════════════ -->
         <div id="view-generator" class="app-view active">
-            <!-- ── Progress Bar ── -->
-            <div class="progress-track">
-                <div class="progress-fill" id="progress-fill" style="width: 20%"></div>
-            </div>
-            <div class="step-dots">
-                <div class="dot active" id="dot-1"></div>
-                <div class="dot" id="dot-2"></div>
-                <div class="dot" id="dot-3"></div>
-                <div class="dot" id="dot-4"></div>
-                <div class="dot" id="dot-5"></div>
-            </div>
 
             <!-- ══════════════ STEP 1: Contractor ══════════════ -->
             <div class="step-card active" id="step-1">
@@ -267,38 +256,29 @@
                 </div>
             </div>
 
-            <!-- ══════════════ SUCCESS SCREEN WITH INLINE LIVE PDF VIEWER ══════════════ -->
-            <div class="step-card success-card" id="step-success" style="display:none;">
-                <div class="success-anim">✅</div>
-                <h2 class="success-title">Invoice Generated!</h2>
-                <p class="success-sub">Your Tax Invoice PDF is ready. Preview it below:</p>
-                
-                <div class="success-details" id="success-details"></div>
-
-                <!-- 📄 Inline Live PDF Document Preview Box -->
-                <div class="inline-pdf-container" id="inline-pdf-box">
-                    <div class="pdf-box-header">
-                        <span>📄 Live Invoice PDF Preview</span>
-                        <button type="button" class="btn-expand-pdf" onclick="openPdfViewer()">🔍 Full Screen</button>
+            <!-- ══════════════ SUCCESS SCREEN (ULTRA-COMPACT WITH AUTOMATIC CHAT DELIVERY & CLOSE APP BUTTON) ══════════════ -->
+            <div class="step-card success-card-compact" id="step-success" style="display:none;">
+                <div class="success-header-compact">
+                    <div class="success-anim-sm">✅</div>
+                    <div>
+                        <h2 class="success-title-sm">Invoice Generated!</h2>
+                        <p class="success-sub-sm">PDF added to your chat</p>
                     </div>
-                    <iframe id="pdf-inline-iframe" class="pdf-iframe-preview" src="" frameborder="0"></iframe>
                 </div>
+                
+                <div class="success-details-compact" id="success-details"></div>
 
-                <div class="success-action-group">
-                    <button type="button" id="btn-chat-send" class="btn-chat-action" onclick="sendPdfToChat()">
-                        💬 Send PDF directly to Telegram Chat
+                <div class="success-action-group-compact">
+                    <button type="button" class="btn-close-app-chat" onclick="closeAppAndGoToChat()">
+                        💬 Close App & Return to Chat
                     </button>
-                    <button type="button" id="btn-view-pdf" class="btn-view-action" onclick="openPdfViewer()">
-                        📄 Open / View PDF in Full Screen
+                    <button type="button" class="btn-view-action-sm" onclick="openPdfViewer()">
+                        📄 Open / View PDF
                     </button>
-                    <a id="download-link" class="btn-download" href="#" target="_blank">
-                        ⬇️ Direct File Download
-                    </a>
+                    <button type="button" class="btn-new-sm" onclick="resetForm()">
+                        🔄 Generate Another Invoice
+                    </button>
                 </div>
-
-                <button class="btn-new" onclick="resetForm()">
-                    🔄 Generate Another Invoice
-                </button>
             </div>
 
             <!-- ══════════════ ERROR BANNER ══════════════ -->
