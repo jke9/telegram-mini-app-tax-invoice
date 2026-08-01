@@ -1257,6 +1257,55 @@ input[type=number]::-webkit-outer-spin-button {
 .btn-generate-compact:active {
     transform: scale(0.98);
 }
+
+/* ── Inline PDF Document Viewer Box ──────────────────────── */
+.inline-pdf-container {
+    background: #0b0d19;
+    border: 1px solid rgba(61, 90, 254, 0.35);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin: 16px 0;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(61, 90, 254, 0.15);
+    width: 100%;
+}
+
+.pdf-box-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, rgba(61, 90, 254, 0.25), rgba(0, 176, 255, 0.15));
+    border-bottom: 1px solid rgba(61, 90, 254, 0.3);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.btn-expand-pdf {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #82b1ff;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    font-family: 'Outfit', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-expand-pdf:active {
+    transform: scale(0.95);
+    background: rgba(61, 90, 254, 0.3);
+}
+
+.pdf-iframe-preview {
+    width: 100%;
+    height: 380px;
+    border: none;
+    background: #ffffff;
+    display: block;
+}
     from { opacity: 0; transform: translateY(6px); }
     to   { opacity: 1; transform: translateY(0); }
 }

@@ -267,22 +267,32 @@
                 </div>
             </div>
 
-            <!-- ══════════════ SUCCESS SCREEN ══════════════ -->
+            <!-- ══════════════ SUCCESS SCREEN WITH INLINE LIVE PDF VIEWER ══════════════ -->
             <div class="step-card success-card" id="step-success" style="display:none;">
                 <div class="success-anim">✅</div>
                 <h2 class="success-title">Invoice Generated!</h2>
-                <p class="success-sub">Your Tax Invoice PDF has been created successfully.</p>
-                <div class="success-details" id="success-details"></div>
+                <p class="success-sub">Your Tax Invoice PDF is ready. Preview it below:</p>
                 
+                <div class="success-details" id="success-details"></div>
+
+                <!-- 📄 Inline Live PDF Document Preview Box -->
+                <div class="inline-pdf-container" id="inline-pdf-box">
+                    <div class="pdf-box-header">
+                        <span>📄 Live Invoice PDF Preview</span>
+                        <button type="button" class="btn-expand-pdf" onclick="openPdfViewer()">🔍 Full Screen</button>
+                    </div>
+                    <iframe id="pdf-inline-iframe" class="pdf-iframe-preview" src="" frameborder="0"></iframe>
+                </div>
+
                 <div class="success-action-group">
                     <button type="button" id="btn-chat-send" class="btn-chat-action" onclick="sendPdfToChat()">
                         💬 Send PDF directly to Telegram Chat
                     </button>
                     <button type="button" id="btn-view-pdf" class="btn-view-action" onclick="openPdfViewer()">
-                        📄 Open / View PDF in Browser
+                        📄 Open / View PDF in Full Screen
                     </button>
                     <a id="download-link" class="btn-download" href="#" target="_blank">
-                        ⬇️ Download File Link
+                        ⬇️ Direct File Download
                     </a>
                 </div>
 

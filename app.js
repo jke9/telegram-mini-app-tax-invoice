@@ -631,6 +631,12 @@ async function generateInvoice() {
             dlLink.download = fname;
         }
 
+        // Set inline iframe PDF preview source
+        const iframe = document.getElementById('pdf-inline-iframe');
+        if (iframe) {
+            iframe.src = generatedPdfData.url;
+        }
+
         // Show details in success card
         const detailsEl = document.getElementById('success-details');
         if (detailsEl) {
