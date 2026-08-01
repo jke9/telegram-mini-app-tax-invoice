@@ -36,46 +36,92 @@ let contractorList = [];
 let customerList = [];
 let projectList = [];
 
-// 🔒 User Access Whitelist Configuration
-// Add Telegram Usernames (without @) or Telegram User IDs allowed to use the app.
-// Example: ['samirmultani34', 'divine_admin', 123456789]
-// If array is empty [], access is open to everyone.
-const ALLOWED_USERS = ['Tely_user']; 
+// 🔒 Passcode Configuration (Default Passcode: 0101)
+const REQUIRED_PASSCODE = '0101';
+let currentPin = '';
+let generatedPdfData = null;
+
+// ─── Passcode Lock Logic ──────────────────────────────────────────────────────
+function checkPasscodeOnStart() {
+    const isUnlocked = localStorage.getItem('jke_passcode_unlocked') === REQUIRED_PASSCODE;
+    const passcodeOverlay = document.getElementById('passcode-screen');
+    if (isUnlocked && passcodeOverlay) {
+        passcodeOverlay.classList.add('hidden');
+    } else if (passcodeOverlay) {
+        passcodeOverlay.classList.remove('hidden');
+    }
+}
+
+function pressPin(num) {
+    if (currentPin.length < 4) {
+        currentPin += num;
+        updatePinDots();
+        if (tg) tg.HapticFeedback.impactOccurred('light');
+        if (currentPin.length === 4) {
+            setTimeout(verifyPin, 150);
+        }
+    }
+}
+
+function clearPin() {
+    currentPin = '';
+    updatePinDots();
+    document.getElementById('passcode-error')?.classList.add('hidden');
+    if (tg) tg.HapticFeedback.impactOccurred('medium');
+}
+
+function backspacePin() {
+    if (currentPin.length > 0) {
+        currentPin = currentPin.slice(0, -1);
+        updatePinDots();
+        document.getElementById('passcode-error')?.classList.add('hidden');
+        if (tg) tg.HapticFeedback.impactOccurred('light');
+    }
+}
+
+function updatePinDots() {
+    for (let i = 1; i <= 4; i++) {
+        const dot = document.getElementById(`pdot-${i}`);
+        if (dot) {
+            if (i <= currentPin.length) dot.classList.add('filled');
+            else dot.classList.remove('filled');
+        }
+    }
+}
+
+function verifyPin() {
+    if (currentPin === REQUIRED_PASSCODE) {
+        localStorage.setItem('jke_passcode_unlocked', REQUIRED_PASSCODE);
+        document.getElementById('passcode-screen')?.classList.add('hidden');
+        document.getElementById('passcode-error')?.classList.add('hidden');
+        if (tg) tg.HapticFeedback.notificationOccurred('success');
+    } else {
+        document.getElementById('passcode-error')?.classList.remove('hidden');
+        if (tg) tg.HapticFeedback.notificationOccurred('error');
+        currentPin = '';
+        updatePinDots();
+    }
+}
+
+function lockApp() {
+    localStorage.removeItem('jke_passcode_unlocked');
+    currentPin = '';
+    updatePinDots();
+    document.getElementById('passcode-error')?.classList.add('hidden');
+    document.getElementById('passcode-screen')?.classList.remove('hidden');
+    if (tg) tg.HapticFeedback.notificationOccurred('warning');
+}
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+    // Check Security Passcode Lock Screen
+    checkPasscodeOnStart();
+
     if (tg) {
         tg.ready();
         tg.expand();
-        tg.MainButton.setText('Next →');
-        tg.MainButton.show();
-        tg.MainButton.onClick(handleMainButton);
+        tg.MainButton.hide(); // Hide native MainButton to prevent overlap with bottom navigation bar
         tg.BackButton.onClick(handleBackButton);
-
-        // Check Access Restriction
-        const tgUser = tg.initDataUnsafe?.user;
-        if (ALLOWED_USERS.length > 0) {
-            const username = (tgUser?.username || '').toLowerCase();
-            const userId = tgUser?.id;
-            const isAllowed = ALLOWED_USERS.some(u => {
-                if (typeof u === 'number') return u === userId;
-                return String(u).toLowerCase().replace('@', '') === username;
-            });
-
-            if (!isAllowed) {
-                document.body.innerHTML = `
-                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; padding:24px; text-align:center; background:#121824; color:#fff; font-family:'Outfit',sans-serif;">
-                        <div style="font-size:56px; margin-bottom:16px;">🔒</div>
-                        <h2 style="font-size:22px; color:#ff4d4f; margin-bottom:8px;">Access Restricted</h2>
-                        <p style="font-size:14px; color:#94a3b8; line-height:1.5; max-width:300px;">
-                            This Mini App is private. Your Telegram account (<strong>@${username || userId || 'User'}</strong>) is not on the authorized user list.
-                        </p>
-                        <div style="margin-top:24px; font-size:12px; color:#64748b;">Contact Administrator to request access</div>
-                    </div>
-                `;
-                return;
-            }
-        }
     }
 
     // Set today's date as default
@@ -552,7 +598,9 @@ async function generateInvoice() {
                 inv_date: state.inv_date,
                 amount: state.amount,
                 amount_mode: state.amount_mode,
-                include_stamp: state.include_stamp
+                include_stamp: state.include_stamp,
+                user_id: tg?.initDataUnsafe?.user?.id,
+                return_json: true
             }),
             signal: controller.signal
         });
@@ -564,16 +612,41 @@ async function generateInvoice() {
             throw new Error(err.error || `Server error (${res.status})`);
         }
 
-        // Trigger PDF download
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        
+        const resData = await res.json();
         const safeProject = (state.project || 'Project').trim().replace(/[\/\\?%*:|"<>]/g, '').replace(/\s+/g, '_');
         const safeInv = (state.inv_no || 'Invoice').trim().replace(/[\/\\?%*:|"<>]/g, '').replace(/\s+/g, '_');
-        const fname = `${safeProject}_${safeInv}_Tax_Invoice.pdf`;
+        const fname = resData.filename || `${safeProject}_${safeInv}_Tax_Invoice.pdf`;
+        
+        generatedPdfData = {
+            url: resData.data_url || `data:application/pdf;base64,${resData.pdf_base64}`,
+            filename: fname,
+            sent_to_telegram: resData.sent_to_telegram
+        };
 
-        // Show success screen
-        showSuccess(url, fname);
+        const dlLink = document.getElementById('download-link');
+        if (dlLink) {
+            dlLink.href = generatedPdfData.url;
+            dlLink.download = fname;
+        }
+
+        // Show details in success card
+        const detailsEl = document.getElementById('success-details');
+        if (detailsEl) {
+            detailsEl.innerHTML = `
+                <div><strong>Contractor:</strong> ${state.contractor}</div>
+                <div><strong>Customer:</strong> ${state.customer}</div>
+                <div><strong>Project:</strong> ${state.project}</div>
+                <div><strong>Invoice No:</strong> ${state.inv_no}</div>
+                <div><strong>Grand Total:</strong> ₹ ${lastPreviewData ? lastPreviewData.grand_total : fmt(state.amount)}</div>
+                ${resData.sent_to_telegram ? '<div style="color:#00e676; font-weight:600; margin-top:8px;">✅ Sent directly to your Telegram Chat!</div>' : ''}
+            `;
+        }
+
+        // Hide Step 5, show Success
+        document.getElementById('step-5').style.display = 'none';
+        const sc = document.getElementById('step-success');
+        sc.style.display = 'block';
+        sc.classList.add('active');
 
         if (tg) {
             tg.HapticFeedback.notificationOccurred('success');
@@ -593,6 +666,52 @@ async function generateInvoice() {
         if (tg) tg.HapticFeedback.notificationOccurred('error');
     } finally {
         isGenerating = false;
+    }
+}
+
+function openPdfViewer() {
+    if (generatedPdfData && generatedPdfData.url) {
+        if (tg && tg.openLink) {
+            tg.openLink(generatedPdfData.url);
+        } else {
+            const win = window.open();
+            if (win) {
+                win.document.write(`<iframe src="${generatedPdfData.url}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+            }
+        }
+    }
+}
+
+async function sendPdfToChat() {
+    if (!tg?.initDataUnsafe?.user?.id) {
+        alert('Telegram Chat Delivery requires opening this app inside Telegram!');
+        return;
+    }
+    const btn = document.getElementById('btn-chat-send');
+    try {
+        if (btn) btn.textContent = '⏳ Sending to Telegram Chat...';
+        
+        const res = await fetch(`${API}/api/generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contractor: state.contractor,
+                customer: state.customer,
+                project: state.project,
+                inv_no: state.inv_no,
+                inv_date: state.inv_date,
+                amount: state.amount,
+                amount_mode: state.amount_mode,
+                include_stamp: state.include_stamp,
+                user_id: tg.initDataUnsafe.user.id
+            })
+        });
+        
+        if (btn) btn.textContent = '✅ Sent to Telegram Chat!';
+        if (tg) tg.HapticFeedback.notificationOccurred('success');
+    } catch (e) {
+        alert('Failed to send to Telegram chat: ' + e.message);
+        if (btn) btn.textContent = '💬 Send PDF directly to Telegram Chat';
     }
 }
 

@@ -184,6 +184,47 @@ def generate_invoice():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+    import base64
+    import requests
+
+    user_id = data.get('user_id') or data.get('chat_id')
+    return_json = data.get('return_json') or bool(user_id) or request.headers.get('Accept') == 'application/json'
+
+    # Check if Telegram chat delivery is requested
+    sent_to_telegram = False
+    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "8869317601:AAFesNJpvb0XzkRPUYdLgwA9wXu-9_vljWs")
+    
+    if user_id and bot_token and bot_token != "YOUR_BOT_TOKEN_FROM_BOTFATHER":
+        try:
+            telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
+            with open(output_path, 'rb') as f:
+                caption = f"🧾 *Tax Invoice Generated*\n• Invoice No: `{inv_no}`\n• Project: `{project}`\n• Contractor: `{contractor}`"
+                resp = requests.post(
+                    telegram_api_url,
+                    data={'chat_id': user_id, 'caption': caption, 'parse_mode': 'Markdown'},
+                    files={'document': (fname, f, 'application/pdf')},
+                    timeout=8
+                )
+                if resp.status_code == 200:
+                    sent_to_telegram = True
+        except Exception as tel_err:
+            print(f"[-] Failed to send document via Telegram Bot API: {tel_err}")
+
+    # Read base64 string for mobile webview inline viewer
+    with open(output_path, 'rb') as f:
+        pdf_bytes = f.read()
+        pdf_b64 = base64.b64encode(pdf_bytes).decode('utf-8')
+        data_url = f"data:application/pdf;base64,{pdf_b64}"
+
+    if return_json:
+        return jsonify({
+            'status': 'success',
+            'filename': fname,
+            'pdf_base64': pdf_b64,
+            'data_url': data_url,
+            'sent_to_telegram': sent_to_telegram
+        })
+
     return send_file(
         output_path,
         mimetype='application/pdf',
