@@ -220,43 +220,47 @@
                 </div>
             </div>
 
-            <!-- ══════════════ STEP 5: Stamp & Confirm ══════════════ -->
-            <div class="step-card" id="step-5">
-                <div class="step-title">
-                    <span class="step-icon">✒️</span>
-                    <div>
-                        <h2>Stamp & Confirm</h2>
-                        <p class="step-sub">Final options before generating</p>
+            <!-- ══════════════ STEP 5: Stamp & Confirm (Ultra-Compact) ══════════════ -->
+            <div class="step-card compact-step" id="step-5">
+                <div class="step-header-compact">
+                    <div class="step-header-left">
+                        <span class="step-icon-sm">✒️</span>
+                        <h2 class="step-title-sm">Confirm & Generate</h2>
+                    </div>
+                    <div class="stamp-pill">
+                        <label class="switch-label-sm">
+                            <input type="checkbox" id="stamp-toggle" checked>
+                            <span class="switch-slider-sm"></span>
+                        </label>
+                        <span id="stamp-toggle-label" class="stamp-lbl-text">Stamp & Sign</span>
                     </div>
                 </div>
 
-                <div class="field-group">
-                    <label class="field-label">Company Stamp & Signature</label>
-                    <div class="stamp-toggle-wrap">
-                        <label class="switch-label">
-                            <input type="checkbox" id="stamp-toggle" checked>
-                            <span class="switch-slider"></span>
-                        </label>
-                        <div class="stamp-toggle-text">
-                            <span id="stamp-toggle-label">Include Stamp & Sign</span>
-                            <small id="stamp-toggle-sub">Official stamp will appear on invoice</small>
+                <!-- Compact Summary Box -->
+                <div class="summary-box-compact">
+                    <div class="sum-compact-grid">
+                        <div class="sum-item">
+                            <div class="sum-lbl">🏢 Contractor</div>
+                            <div class="sum-val" id="sum-contractor">—</div>
+                        </div>
+                        <div class="sum-item">
+                            <div class="sum-lbl">🏛️ Customer</div>
+                            <div class="sum-val" id="sum-customer">—</div>
+                        </div>
+                        <div class="sum-item">
+                            <div class="sum-lbl">📄 Invoice / Date</div>
+                            <div class="sum-val"><span id="sum-invno">—</span> • <span id="sum-date">—</span></div>
+                        </div>
+                        <div class="sum-item grand-item">
+                            <div class="sum-lbl">💰 Grand Total</div>
+                            <div class="sum-val grand-val" id="sum-grand">—</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Summary Card -->
-                <div class="summary-box">
-                    <div class="summary-title">📋 Invoice Summary</div>
-                    <div class="summary-row"><span>Contractor</span><span id="sum-contractor">—</span></div>
-                    <div class="summary-row"><span>Customer</span><span id="sum-customer">—</span></div>
-                    <div class="summary-row"><span>Invoice No.</span><span id="sum-invno">—</span></div>
-                    <div class="summary-row"><span>Date</span><span id="sum-date">—</span></div>
-                    <div class="summary-row highlight"><span>Grand Total</span><span id="sum-grand">—</span></div>
-                </div>
-
-                <div class="step-nav">
-                    <button type="button" class="btn-back-step" onclick="handleBackButton()">← Back</button>
-                    <button class="btn-generate" id="btn-generate" onclick="generateInvoice()">
+                <div class="step-nav-compact">
+                    <button type="button" class="btn-back-compact" onclick="handleBackButton()">← Back</button>
+                    <button class="btn-generate-compact" id="btn-generate" onclick="generateInvoice()">
                         <span id="btn-gen-icon">⚡</span>
                         <span id="btn-gen-text">Generate Tax Invoice PDF</span>
                     </button>
