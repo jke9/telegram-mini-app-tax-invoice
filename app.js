@@ -471,7 +471,11 @@ function handleBackButton() {
 
 function goToStep(step) {
     // Hide current step
-    document.getElementById(`step-${currentStep}`)?.classList.remove('active');
+    const currCard = document.getElementById(`step-${currentStep}`);
+    if (currCard) {
+        currCard.classList.remove('active');
+        currCard.style.display = 'none';
+    }
 
     // Update dot states
     const prevDot = document.getElementById(`dot-${currentStep}`);
@@ -487,6 +491,11 @@ function goToStep(step) {
     const newDot = document.getElementById(`dot-${step}`);
     if (newDot) { newDot.classList.remove('done'); newDot.classList.add('active'); }
 
+    // Scroll to top instantly for smooth page transition
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+
     updateStepUI();
 
     if (tg) tg.HapticFeedback.impactOccurred('light');
@@ -500,18 +509,11 @@ function updateStepUI() {
     // Step badge
     document.getElementById('step-badge').textContent = `Step ${currentStep} / ${TOTAL_STEPS}`;
 
-    // Telegram back button
+    // Telegram back button (Hide MainButton permanently to prevent bottom nav overlap)
     if (tg) {
         if (currentStep > 1) tg.BackButton.show();
         else tg.BackButton.hide();
-
-        // Telegram main button
-        if (currentStep < TOTAL_STEPS) {
-            tg.MainButton.setText('Next →');
-            tg.MainButton.show();
-        } else {
-            tg.MainButton.hide(); // Using custom button on Step 5
-        }
+        tg.MainButton.hide();
     }
 
     // On Step 5: populate summary
