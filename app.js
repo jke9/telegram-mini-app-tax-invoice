@@ -1048,15 +1048,35 @@ let fullProjectsData = [];
 function switchAppView(viewName) {
     currentAppView = viewName;
     const isGen = viewName === 'generator';
-    
-    document.getElementById('view-generator').classList.toggle('hidden', !isGen);
-    document.getElementById('view-master-data').classList.toggle('hidden', isGen);
 
+    // Strictly show/hide views using style.display for guaranteed separation
+    const generatorView = document.getElementById('view-generator');
+    const masterView = document.getElementById('view-master-data');
+
+    if (generatorView) generatorView.style.display = isGen ? 'flex' : 'none';
+    if (masterView) masterView.style.display = isGen ? 'none' : 'flex';
+
+    // Update active state on nav buttons
     ['generator', 'contractors', 'customers', 'projects'].forEach(tab => {
         const btn = document.getElementById(`nav-btn-${tab}`);
         if (btn) btn.classList.toggle('active', tab === viewName);
     });
 
+    // Update app header title to reflect active section
+    const headerTextEl = document.querySelector('#app-header .header-text p');
+    const headerTitleMap = {
+        generator: 'Generator',
+        contractors: 'Contractors',
+        customers: 'Customers',
+        projects: 'Projects'
+    };
+    if (headerTextEl) headerTextEl.textContent = headerTitleMap[viewName] || 'Generator';
+
+    // Update step badge visibility
+    const stepBadge = document.getElementById('step-badge');
+    if (stepBadge) stepBadge.style.display = isGen ? 'flex' : 'none';
+
+    // Load master data for the selected category
     if (!isGen) {
         switchMasterCategory(viewName);
     }
