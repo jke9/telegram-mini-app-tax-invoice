@@ -625,6 +625,21 @@ async function generateInvoice() {
             sent_to_telegram: resData.sent_to_telegram
         };
 
+        // Pre-convert base64 data URL → Blob URL for reliable opening in all contexts
+        try {
+            const rawUrl = generatedPdfData.url;
+            if (rawUrl.startsWith('data:')) {
+                const base64 = rawUrl.split(',')[1];
+                const byteChars = atob(base64);
+                const byteArr = new Uint8Array(byteChars.length);
+                for (let i = 0; i < byteChars.length; i++) {
+                    byteArr[i] = byteChars.charCodeAt(i);
+                }
+                const blob = new Blob([byteArr], { type: 'application/pdf' });
+                generatedPdfData.blobUrl = URL.createObjectURL(blob);
+            }
+        } catch (_) { /* keep using data URL if blob fails */ }
+
         const dlLink = document.getElementById('download-link');
         if (dlLink) {
             dlLink.href = generatedPdfData.url;
@@ -687,15 +702,51 @@ function closeAppAndGoToChat() {
 }
 
 function openPdfViewer() {
-    if (generatedPdfData && generatedPdfData.url) {
-        if (tg && tg.openLink) {
-            tg.openLink(generatedPdfData.url);
-        } else {
-            const win = window.open();
-            if (win) {
-                win.document.write(`<iframe src="${generatedPdfData.url}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
-            }
+    if (!generatedPdfData || !generatedPdfData.url) {
+        alert('No PDF generated yet. Please generate an invoice first.');
+        return;
+    }
+
+    // Prefer pre-built Blob URL (most reliable)
+    const openUrl = generatedPdfData.blobUrl || generatedPdfData.url;
+
+    // If it's a blob:// or http(s):// URL, open directly
+    if (openUrl.startsWith('blob:') || openUrl.startsWith('http://') || openUrl.startsWith('https://')) {
+        const win = window.open(openUrl, '_blank');
+        if (!win) {
+            // Pop-up blocked: fallback to download
+            const a = document.createElement('a');
+            a.href = openUrl;
+            a.target = '_blank';
+            a.download = generatedPdfData.filename || 'invoice.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
+        return;
+    }
+
+    // Last resort: convert data URL on-the-fly
+    try {
+        const base64 = openUrl.split(',')[1];
+        const byteChars = atob(base64);
+        const byteArr = new Uint8Array(byteChars.length);
+        for (let i = 0; i < byteChars.length; i++) {
+            byteArr[i] = byteChars.charCodeAt(i);
+        }
+        const blob = new Blob([byteArr], { type: 'application/pdf' });
+        const blobUrl = URL.createObjectURL(blob);
+        const win = window.open(blobUrl, '_blank');
+        if (!win) {
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = generatedPdfData.filename || 'invoice.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    } catch (e) {
+        alert('Could not open PDF: ' + e.message);
     }
 }
 
