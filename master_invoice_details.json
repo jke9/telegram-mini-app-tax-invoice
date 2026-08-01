@@ -53,6 +53,15 @@
       "account_no": "201520110000788",
       "branch": "BAPUNAGAR",
       "ifsc": "BKID0002015"
+    },
+    {
+      "name": "Test Infratech",
+      "gstin": "24TEST1234F1Z0",
+      "address": "Test Office, Nikol, Ahmedabad",
+      "bank_name": "AXIS BANK",
+      "account_no": "9876543210",
+      "branch": "NIKOL",
+      "ifsc": "UTIB0001234"
     }
   ],
   "customers": [

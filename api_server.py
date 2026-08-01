@@ -157,8 +157,16 @@ def generate_invoice():
     safe_inv = inv_no.strip().replace('/', '-').replace('\\', '-').replace(' ', '_')
     fname = f"{safe_project}_{safe_inv}_Tax_Invoice.pdf"
 
-    outputs_dir = os.path.join(PARENT_DIR, 'outputs')
-    os.makedirs(outputs_dir, exist_ok=True)
+    import tempfile
+    outputs_dir = os.path.join(BASE_DIR, 'outputs')
+    try:
+        os.makedirs(outputs_dir, exist_ok=True)
+        test_file = os.path.join(outputs_dir, '.write_test')
+        with open(test_file, 'w') as tf:
+            tf.write('ok')
+        os.remove(test_file)
+    except Exception:
+        outputs_dir = tempfile.gettempdir()
     output_path = os.path.join(outputs_dir, fname)
 
     try:
