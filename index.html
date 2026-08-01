@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tax Invoice Generator</title>
+    <meta name="description" content="Generate professional GST Tax Invoices instantly from Telegram">
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="app.css">
+</head>
+
+<body>
+    <div id="app-container">
+
+        <!-- ── Header ── -->
+        <header id="app-header">
+            <div class="header-icon">🧾</div>
+            <div class="header-text">
+                <h1>Tax Invoice</h1>
+                <p>Generator</p>
+            </div>
+            <div id="step-badge" class="step-badge">Step 1 / 5</div>
+        </header>
+
+        <!-- ══════════════ VIEW 1: INVOICE GENERATOR ══════════════ -->
+        <div id="view-generator" class="app-view active">
+            <!-- ── Progress Bar ── -->
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-fill" style="width: 20%"></div>
+            </div>
+            <div class="step-dots">
+                <div class="dot active" id="dot-1"></div>
+                <div class="dot" id="dot-2"></div>
+                <div class="dot" id="dot-3"></div>
+                <div class="dot" id="dot-4"></div>
+                <div class="dot" id="dot-5"></div>
+            </div>
+
+            <!-- ══════════════ STEP 1: Contractor ══════════════ -->
+            <div class="step-card active" id="step-1">
+            <div class="step-title">
+                <span class="step-icon">🏢</span>
+                <div>
+                    <h2>Select Contractor</h2>
+                    <p class="step-sub">Who is raising this invoice?</p>
+                </div>
+            </div>
+            <div class="field-group">
+                <label class="field-label" for="sel-contractor">Contractor Company</label>
+                <div class="select-wrapper">
+                    <select id="sel-contractor" class="field-select">
+                        <option value="">Loading...</option>
+                    </select>
+                    <span class="select-arrow">▾</span>
+                </div>
+            </div>
+            <div id="contractor-preview" class="info-preview hidden">
+                <div class="preview-row"><span class="preview-label">GSTIN</span><span class="preview-val"
+                        id="prev-c-gstin">—</span></div>
+                <div class="preview-row"><span class="preview-label">Bank</span><span class="preview-val"
+                        id="prev-c-bank">—</span></div>
+            </div>
+            <div class="step-nav">
+                <div></div>
+                <button type="button" class="btn-next-step" onclick="handleMainButton()">Next Step →</button>
+            </div>
+        </div>
+
+        <!-- ══════════════ STEP 2: Customer & Project ══════════════ -->
+        <div class="step-card" id="step-2">
+            <div class="step-title">
+                <span class="step-icon">🏛️</span>
+                <div>
+                    <h2>Customer & Project</h2>
+                    <p class="step-sub">Who are you billing and for what work?</p>
+                </div>
+            </div>
+            <div class="field-group">
+                <label class="field-label" for="sel-customer">Customer / Client</label>
+                <div class="select-wrapper">
+                    <select id="sel-customer" class="field-select">
+                        <option value="">Loading...</option>
+                    </select>
+                    <span class="select-arrow">▾</span>
+                </div>
+            </div>
+            <div class="field-group">
+                <label class="field-label" for="sel-project">Project / Work Location</label>
+                <div class="select-wrapper">
+                    <select id="sel-project" class="field-select">
+                        <option value="">Loading...</option>
+                    </select>
+                    <span class="select-arrow">▾</span>
+                </div>
+            </div>
+            <div class="step-nav">
+                <button type="button" class="btn-back-step" onclick="handleBackButton()">← Back</button>
+                <button type="button" class="btn-next-step" onclick="handleMainButton()">Next Step →</button>
+            </div>
+        </div>
+
+        <!-- ══════════════ STEP 3: Invoice Details ══════════════ -->
+        <div class="step-card" id="step-3">
+            <div class="step-title">
+                <span class="step-icon">📄</span>
+                <div>
+                    <h2>Invoice Details</h2>
+                    <p class="step-sub">Enter invoice number and date</p>
+                </div>
+            </div>
+            <div class="field-group">
+                <label class="field-label" for="inv-no">Invoice Number</label>
+                <input type="text" id="inv-no" class="field-input" placeholder="e.g. RA BILL 1" value="RA BILL 1">
+            </div>
+            <div class="field-group">
+                <label class="field-label" for="inv-date">Invoice Date</label>
+                <input type="text" id="inv-date" class="field-input" placeholder="DD/MM/YYYY">
+            </div>
+            <div class="step-nav">
+                <button type="button" class="btn-back-step" onclick="handleBackButton()">← Back</button>
+                <button type="button" class="btn-next-step" onclick="handleMainButton()">Next Step →</button>
+            </div>
+        </div>
+
+        <!-- ══════════════ STEP 4: Bill Amount ══════════════ -->
+        <div class="step-card" id="step-4">
+            <div class="step-title">
+                <span class="step-icon">💰</span>
+                <div>
+                    <h2>Bill Amount</h2>
+                    <p class="step-sub">Enter amount and select type</p>
+                </div>
+            </div>
+            <div class="field-group">
+                <label class="field-label">Amount Type</label>
+                <div class="toggle-group">
+                    <button class="toggle-btn active" id="mode-taxable" onclick="setMode('taxable')">
+                        <span class="toggle-icon">📊</span>
+                        Taxable Amount
+                        <small>GST will be added on top</small>
+                    </button>
+                    <button class="toggle-btn" id="mode-total" onclick="setMode('total')">
+                        <span class="toggle-icon">🎯</span>
+                        Grand Total
+                        <small>GST already included</small>
+                    </button>
+                </div>
+            </div>
+            <div class="field-group">
+                <label class="field-label" for="bill-amount">Amount (INR)</label>
+                <div class="amount-input-wrap">
+                    <span class="amount-prefix">₹</span>
+                    <input type="number" id="bill-amount" class="field-input amount-input" placeholder="0.00"
+                        step="0.01" min="0">
+                </div>
+            </div>
+
+            <!-- Live Tax Preview -->
+            <div class="tax-preview" id="tax-preview" style="display:none;">
+                <div class="tax-preview-title">📋 Tax Calculation Preview</div>
+                <div class="tax-row"><span>Taxable Amount</span><span id="pv-taxable">—</span></div>
+                <div class="tax-row"><span>CGST (9%)</span><span id="pv-cgst">—</span></div>
+                <div class="tax-row"><span>SGST (9%)</span><span id="pv-sgst">—</span></div>
+                <div class="tax-row subtotal-row"><span>Subtotal</span><span id="pv-subtotal">—</span></div>
+                <div class="tax-row roundoff-row" id="pv-roundoff-row" style="display:none;"><span>Round Off</span><span
+                        id="pv-roundoff">—</span></div>
+                <div class="tax-row grand-row"><span>Grand Total</span><span id="pv-grand">—</span></div>
+            </div>
+
+            <div class="step-nav">
+                <button type="button" class="btn-back-step" onclick="handleBackButton()">← Back</button>
+                <button type="button" class="btn-next-step" onclick="handleMainButton()">Next Step →</button>
+            </div>
+        </div>
+
+        <!-- ══════════════ STEP 5: Stamp & Confirm ══════════════ -->
+        <div class="step-card" id="step-5">
+            <div class="step-title">
+                <span class="step-icon">✒️</span>
+                <div>
+                    <h2>Stamp & Confirm</h2>
+                    <p class="step-sub">Final options before generating</p>
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label class="field-label">Company Stamp & Signature</label>
+                <div class="stamp-toggle-wrap">
+                    <label class="switch-label">
+                        <input type="checkbox" id="stamp-toggle" checked>
+                        <span class="switch-slider"></span>
+                    </label>
+                    <div class="stamp-toggle-text">
+                        <span id="stamp-toggle-label">Include Stamp & Sign</span>
+                        <small id="stamp-toggle-sub">Official stamp will appear on invoice</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Card -->
+            <div class="summary-box">
+                <div class="summary-title">📋 Invoice Summary</div>
+                <div class="summary-row"><span>Contractor</span><span id="sum-contractor">—</span></div>
+                <div class="summary-row"><span>Customer</span><span id="sum-customer">—</span></div>
+                <div class="summary-row"><span>Invoice No.</span><span id="sum-invno">—</span></div>
+                <div class="summary-row"><span>Date</span><span id="sum-date">—</span></div>
+                <div class="summary-row highlight"><span>Grand Total</span><span id="sum-grand">—</span></div>
+            </div>
+
+            <div class="step-nav">
+                <button type="button" class="btn-back-step" onclick="handleBackButton()">← Back</button>
+                <button class="btn-generate" id="btn-generate" onclick="generateInvoice()">
+                    <span id="btn-gen-icon">⚡</span>
+                    <span id="btn-gen-text">Generate Tax Invoice PDF</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ══════════════ SUCCESS SCREEN ══════════════ -->
+        <div class="step-card success-card" id="step-success" style="display:none;">
+            <div class="success-anim">✅</div>
+            <h2 class="success-title">Invoice Generated!</h2>
+            <p class="success-sub">Your Tax Invoice PDF has been created successfully.</p>
+            <div class="success-details" id="success-details"></div>
+            <a id="download-link" class="btn-download" href="#" download>
+                ⬇️ Download PDF
+            </a>
+            <button class="btn-new" onclick="resetForm()">
+                🔄 Generate Another Invoice
+            </button>
+        </div>
+
+        <!-- ══════════════ ERROR BANNER ══════════════ -->
+        <div id="error-banner" class="error-banner hidden">
+            <span id="error-msg">⚠️ Something went wrong.</span>
+        </div>
+        </div> <!-- End of #view-generator -->
+
+        <!-- ══════════════ VIEW 2: MASTER DATA MANAGER ══════════════ -->
+        <div id="view-master-data" class="app-view hidden">
+            <div class="view-header">
+                <h2 id="master-view-title">🏢 Contractors List</h2>
+                <button type="button" id="btn-add-master-entry" class="btn-primary-action" onclick="handleHeaderAddClick()">
+                    ➕ Add New
+                </button>
+            </div>
+
+            <!-- Category Pill Switcher -->
+            <div class="master-category-pills">
+                <button type="button" id="pill-contractors" class="pill-btn active" onclick="switchMasterCategory('contractors')">🏢 Contractors</button>
+                <button type="button" id="pill-customers" class="pill-btn" onclick="switchMasterCategory('customers')">🏛️ Customers</button>
+                <button type="button" id="pill-projects" class="pill-btn" onclick="switchMasterCategory('projects')">🚧 Projects</button>
+            </div>
+
+            <!-- Dynamic List Container -->
+            <div id="master-cards-list" class="cards-list">
+                <!-- Dynamically populated cards with Edit button -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ══════════════ NATIVE BOTTOM NAVIGATION BAR ══════════════ -->
+    <nav id="bottom-nav" class="bottom-nav">
+        <button type="button" id="nav-btn-generator" class="nav-item active" onclick="switchAppView('generator')">
+            <span class="nav-icon">🧾</span>
+            <span class="nav-label">Generator</span>
+        </button>
+        <button type="button" id="nav-btn-contractors" class="nav-item" onclick="switchAppView('contractors')">
+            <span class="nav-icon">🏢</span>
+            <span class="nav-label">Contractors</span>
+        </button>
+        <button type="button" id="nav-btn-customers" class="nav-item" onclick="switchAppView('customers')">
+            <span class="nav-icon">🏛️</span>
+            <span class="nav-label">Customers</span>
+        </button>
+        <button type="button" id="nav-btn-projects" class="nav-item" onclick="switchAppView('projects')">
+            <span class="nav-icon">🚧</span>
+            <span class="nav-label">Projects</span>
+        </button>
+    </nav>
+
+    <!-- ══════════════ ADD MASTER DATA MODAL ══════════════ -->
+    <div id="add-data-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>➕ Add Custom Master Data</h3>
+                <button type="button" class="btn-close-modal" onclick="closeAddDataModal()">&times;</button>
+            </div>
+            
+            <!-- Tab Selector -->
+            <div class="modal-tabs">
+                <button type="button" id="tab-btn-contractor" class="tab-btn active" onclick="switchModalTab('contractor')">🏢 Contractor</button>
+                <button type="button" id="tab-btn-customer" class="tab-btn" onclick="switchModalTab('customer')">🏛️ Customer</button>
+                <button type="button" id="tab-btn-project" class="tab-btn" onclick="switchModalTab('project')">🚧 Project</button>
+            </div>
+
+            <!-- Tab 1: Contractor Form -->
+            <div id="modal-tab-contractor" class="tab-content active">
+                <form id="form-add-contractor" onsubmit="submitAddContractor(event)">
+                    <div class="form-group">
+                        <label>Contractor Company Name *</label>
+                        <input type="text" id="add-c-name" class="field-input" placeholder="e.g. Royal Infratech" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>GSTIN *</label>
+                            <input type="text" id="add-c-gstin" class="field-input" placeholder="24XXXXX0000X1ZX" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Bank Name</label>
+                            <input type="text" id="add-c-bank" class="field-input" placeholder="e.g. HDFC BANK">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Account No.</label>
+                            <input type="text" id="add-c-acc" class="field-input" placeholder="e.g. 501002390123">
+                        </div>
+                        <div class="form-group">
+                            <label>IFSC Code</label>
+                            <input type="text" id="add-c-ifsc" class="field-input" placeholder="e.g. HDFC0001234">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Branch</label>
+                        <input type="text" id="add-c-branch" class="field-input" placeholder="e.g. NIKOL">
+                    </div>
+                    <div class="form-group">
+                        <label>Full Address</label>
+                        <input type="text" id="add-c-addr" class="field-input" placeholder="Registered office address...">
+                    </div>
+                    <div class="form-group">
+                        <label>Stamp & Signature Image (PNG/JPG)</label>
+                        <input type="file" id="add-c-stamp" class="field-input-file" accept="image/*">
+                    </div>
+                    <button type="submit" class="btn-submit-modal" id="btn-save-contractor">💾 Save Contractor</button>
+                </form>
+            </div>
+
+            <!-- Tab 2: Customer Form -->
+            <div id="modal-tab-customer" class="tab-content">
+                <form id="form-add-customer" onsubmit="submitAddCustomer(event)">
+                    <div class="form-group">
+                        <label>Customer / Client Name *</label>
+                        <input type="text" id="add-cust-name" class="field-input" placeholder="e.g. Rajkot Municipal Corporation" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Belongs to Contractor</label>
+                        <div class="select-wrapper">
+                            <select id="add-cust-contractor" class="field-select">
+                                <option value="">All Contractors</option>
+                            </select>
+                            <span class="select-arrow">▾</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>GSTIN</label>
+                        <input type="text" id="add-cust-gstin" class="field-input" placeholder="24XXXXX0000X1ZX">
+                    </div>
+                    <div class="form-group">
+                        <label>Full Address</label>
+                        <input type="text" id="add-cust-addr" class="field-input" placeholder="Client official address...">
+                    </div>
+                    <button type="submit" class="btn-submit-modal" id="btn-save-customer">💾 Save Customer</button>
+                </form>
+            </div>
+
+            <!-- Tab 3: Project Form -->
+            <div id="modal-tab-project" class="tab-content">
+                <form id="form-add-project" onsubmit="submitAddProject(event)">
+                    <div class="form-group">
+                        <label>Project Location Key / Short Name *</label>
+                        <input type="text" id="add-proj-key" class="field-input" placeholder="e.g. AMC Science City 2" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Belongs to Contractor</label>
+                        <div class="select-wrapper">
+                            <select id="add-proj-contractor" class="field-select">
+                                <option value="">All Contractors</option>
+                            </select>
+                            <span class="select-arrow">▾</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Belongs to Customer</label>
+                        <div class="select-wrapper">
+                            <select id="add-proj-customer" class="field-select">
+                                <option value="">All Customers</option>
+                            </select>
+                            <span class="select-arrow">▾</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Full Work Description *</label>
+                        <textarea id="add-proj-desc" class="field-input" rows="3" placeholder="Providing & Laying Sewerage Network..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn-submit-modal" id="btn-save-project">💾 Save Project</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,167 @@
+{
+  "contractors": [
+    {
+      "name": "Jay Khodiyar Enterprise",
+      "gstin": "24BJHPP5061K1ZZ",
+      "address": "407-THE EDGE, OPP. MALBAR ROYAL BUNGALOWS, BHAKTI CIRCLE ROAD, NIKOL, AHMEDABAD, 382350.",
+      "bank_name": "ICICI BANK",
+      "account_no": "093005503575",
+      "branch": "BAPUNAGAR",
+      "ifsc": "ICIC0000930"
+    },
+    {
+      "name": "Jay Varudi",
+      "gstin": "24AAECJ3981C1ZR",
+      "address": "210, ,2ND FLOOR, SUNDARMA ARCADE, OPP. SHUKAN MALL, SCIENCE CITY ROAD, SOLA, AHMEDABAD - 380060",
+      "bank_name": "",
+      "account_no": "",
+      "branch": "",
+      "ifsc": ""
+    },
+    {
+      "name": "JNP INFRASTRUCTURE",
+      "gstin": "24AADFJ3113C1Z6",
+      "address": "303, UNION TRADE CENTER, B/S APPLE HOSPITAL UDHNA, UDHNA DARWAJA, SURAT, GUJARAT, 395002",
+      "bank_name": "DCB BANK",
+      "account_no": "03345100000532",
+      "branch": "SURAT",
+      "ifsc": "DCBL0000033"
+    },
+    {
+      "name": "YOGI CONSTRUCTION CO.",
+      "gstin": "24AAAFY3044N1Z1",
+      "address": "106, S.B.K SOCIETY, NEAR RAMJI MANDIR, BHATTA, AHMEDABAD - 380007  ",
+      "bank_name": "Punjab National Bank",
+      "account_no": "09334011000348",
+      "branch": "Gandhinagar",
+      "ifsc": "PUNB009910"
+    },
+    {
+      "name": "Shivam Builders",
+      "gstin": "24ABDFS4611H1ZG",
+      "address": "290, THE MEADOWS, GOKULDHAM,NR EKLAVYA SCHOOL,SARKHEJ-SANAND ROAD, AHMEDABAD, GUJARAT, 382210",
+      "bank_name": "ICICI BANK",
+      "account_no": "42350500563",
+      "branch": "MAKARBA",
+      "ifsc": "ICIC0004235"
+    },
+    {
+      "name": "Sarthi Construction",
+      "gstin": "24ALRPG2118D1ZI",
+      "address": "228, VISHALA SUPREME,S.P. RING ROAD,NIKOL,AHMEDABAD,GUJARAT,382350",
+      "bank_name": "Bank Of India",
+      "account_no": "201520110000788",
+      "branch": "BAPUNAGAR",
+      "ifsc": "BKID0002015"
+    }
+  ],
+  "customers": [
+    {
+      "name": "Ahmedabad Municipal Corporation",
+      "gstin": "24AAALA0024C3Z7",
+      "address": "AHMEDABAD MUNICIPAL CORPORATION, MAHANAGAR SEVA SADAN, SARDAR PATEL BHAVAN, DANAPITH, AHMEDABAD - 380001."
+    },
+    {
+      "name": "Anjar Nagarpalika",
+      "gstin": "",
+      "address": "ANJAR NAGARPALIKA, ANJAR, KUTCH, GUJARAT."
+    },
+    {
+      "name": "GUDA",
+      "gstin": "",
+      "address": ""
+    },
+    {
+      "name": "GWSSB",
+      "gstin": "",
+      "address": ""
+    },
+    {
+      "name": "GUDC",
+      "gstin": "",
+      "address": ""
+    }
+  ],
+  "projects": [
+    {
+      "location_key": "AMC  Kali Lake",
+      "description": "Providing & Laying Storm Network for Kali Lake in West Zone of AMC Area",
+      "description_caps": "PROVIDING & LAYING STORM NETWORK FOR KALI LAKE IN WEST ZONE OF AMC AREA"
+    },
+    {
+      "location_key": "ANJAR",
+      "description": "Working survey, Soil investigation, Design of Underground Drainage project. Work including Providing, Supplying,",
+      "description_caps": "WORKING SURVEY, SOIL INVESTIGATION, DESIGN OF UNDERGROUND DRAINAGE PROJECT. WORK INCLUDING PROVIDING, SUPPLYING,"
+    },
+    {
+      "location_key": "AMC Vatva",
+      "description": "Construction of Storm Water Drain from Mahalaxmi Lake to Ropada Lake in Vatva Ward of South Zone in AMC Area (Phase-2)",
+      "description_caps": "CONSTRUCTION OF STORM WATER DRAIN FROM MAHALAXMI LAKE TO ROPADA LAKE IN VATVA WARD OF SOUTH ZONE IN AMC AREA (PHASE-2)"
+    },
+    {
+      "location_key": "AMC Piplaj",
+      "description": "Providing Systematic Sewerage Network facility on diff. road of Piplaj - Gopalpur - Saijpur Gam, Piplaj - survey No. - 95 and other Non-T.P. Road of this area in Lambha Ward at South Zone of AMC Area ",
+      "description_caps": "PROVIDING SYSTEMATIC SEWERAGE NETWORK FACILITY ON DIFF. ROAD OF PIPLAJ - GOPALPUR - SAIJPUR GAM, PIPLAJ - SURVEY NO. - 95 AND OTHER NON-T.P. ROAD OF THIS AREA IN LAMBHA WARD AT SOUTH ZONE OF AMC AREA "
+    },
+    {
+      "location_key": "AMC ASARWA 3",
+      "description": "Tender Documents For Laying of Water Distribution Network, Providing & Laying of Sewerage Network with Demolition & Construction of Road for Laying Network in Asarwa Ward (Part-III) in Central Zone of AMC area",
+      "description_caps": "TENDER DOCUMENTS FOR LAYING OF WATER DISTRIBUTION NETWORK, PROVIDING & LAYING OF SEWERAGE NETWORK WITH DEMOLITION & CONSTRUCTION OF ROAD FOR LAYING NETWORK IN ASARWA WARD (PART-III) IN CENTRAL ZONE OF AMC AREA"
+    },
+    {
+      "location_key": "AMC ASARWA 4",
+      "description": "Tender Documents For Laying of Water Distribution Network, Providing & Laying of Sewerage Network with Demolition & Construction of Road for Laying Network in Asarwa Ward (Part-IV) in Central Zone of AMC area",
+      "description_caps": "TENDER DOCUMENTS FOR LAYING OF WATER DISTRIBUTION NETWORK, PROVIDING & LAYING OF SEWERAGE NETWORK WITH DEMOLITION & CONSTRUCTION OF ROAD FOR LAYING NETWORK IN ASARWA WARD (PART-IV) IN CENTRAL ZONE OF AMC AREA"
+    },
+    {
+      "location_key": "GUDC Kheda",
+      "description": "Cluster 11: (Botad WSS(Swap-III),Kheda WSS (Swap-III), Mahemdabad WSS (Swap-II), Dhandhuka WSS (Swap-I),Nadiad U.G.D-1(Swap-III), & Nadiad U.G.D-2 (Swap-II)) Under AMRUT 2.0.",
+      "description_caps": "CLUSTER 11: (BOTAD WSS(SWAP-III),KHEDA WSS (SWAP-III), MAHEMDABAD WSS (SWAP-II), DHANDHUKA WSS (SWAP-I),NADIAD U.G.D-1(SWAP-III), & NADIAD U.G.D-2 (SWAP-II)) UNDER AMRUT 2.0."
+    },
+    {
+      "location_key": "GUDC Mahemdabad",
+      "description": "Cluster 11: (Botad WSS(Swap-III),Kheda WSS (Swap-III), Mahemdabad WSS (Swap-II), Dhandhuka WSS (Swap-I),Nadiad U.G.D-1(Swap-III), & Nadiad U.G.D-2 (Swap-II)) Under AMRUT 2.0.",
+      "description_caps": "CLUSTER 11: (BOTAD WSS(SWAP-III),KHEDA WSS (SWAP-III), MAHEMDABAD WSS (SWAP-II), DHANDHUKA WSS (SWAP-I),NADIAD U.G.D-1(SWAP-III), & NADIAD U.G.D-2 (SWAP-II)) UNDER AMRUT 2.0."
+    },
+    {
+      "location_key": "AMC Muthiya",
+      "description": "Tender Documents For Providing & laying Storm Water Network in TP-70 & 71 (Naroda Muthiya Lake) of AMC area",
+      "description_caps": "TENDER DOCUMENTS FOR PROVIDING & LAYING STORM WATER NETWORK IN TP-70 & 71 (NARODA MUTHIYA LAKE) OF AMC AREA"
+    },
+    {
+      "location_key": "AMC ARC",
+      "description": "LayingOfNewDrainageLine/StromWaterDrainLine,UpgradationWorkOnTheNew RoadsToBuildAndBreakdownRepairingWorkAndDrainageLine/StromWaterDrainLineRelated Works in Different Ward of South Zone.",
+      "description_caps": "LAYINGOFNEWDRAINAGELINE/STROMWATERDRAINLINE,UPGRADATIONWORKONTHENEW ROADSTOBUILDANDBREAKDOWNREPAIRINGWORKANDDRAINAGELINE/STROMWATERDRAINLINERELATED WORKS IN DIFFERENT WARD OF SOUTH ZONE."
+    },
+    {
+      "location_key": "GUDC Zalod",
+      "description": "Designing, Constructing, Testing & Commissioning of ESR, UGSR, Rising Main, Distribution Network with Tap Connection, Pump House, Pumping Machinery & Electro mech Work for Zalod Nagarpalika at Zalod, District: Dahod, Gujarat.",
+      "description_caps": "DESIGNING, CONSTRUCTING, TESTING & COMMISSIONING OF ESR, UGSR, RISING MAIN, DISTRIBUTION NETWORK WITH TAP CONNECTION, PUMP HOUSE, PUMPING MACHINERY & ELECTRO MECH WORK FOR ZALOD NAGARPALIKA AT ZALOD, DISTRICT: DAHOD, GUJARAT."
+    },
+    {
+      "location_key": "GWSSSB Zalod",
+      "description": "Working Survey, Soil Investigation, Design, Build and Operate contract for Designing, Constructing, Testing & Commissioning , Providing, supplying, lowering, laying and jointing DI/PVC pipeline as Rising/Gravity Main,  Constructing RCC ESR,U/G Sumps, Pump House, Staff Quarters, Compound Wall, Approach Road, Village level Sump's, ESR's & Pump Room including connecting Line at various village & Pumping Machineries and Miscellaneous Works at Various H/W or Sub H/W under Augmentation of Machhanala  Regional Water Supply Scheme.",
+      "description_caps": "WORKING SURVEY, SOIL INVESTIGATION, DESIGN, BUILD AND OPERATE CONTRACT FOR DESIGNING, CONSTRUCTING, TESTING & COMMISSIONING , PROVIDING, SUPPLYING, LOWERING, LAYING AND JOINTING DI/PVC PIPELINE AS RISING/GRAVITY MAIN,  CONSTRUCTING RCC ESR,U/G SUMPS, PUMP HOUSE, STAFF QUARTERS, COMPOUND WALL, APPROACH ROAD, VILLAGE LEVEL SUMP'S, ESR'S & PUMP ROOM INCLUDING CONNECTING LINE AT VARIOUS VILLAGE & PUMPING MACHINERIES AND MISCELLANEOUS WORKS AT VARIOUS H/W OR SUB H/W UNDER AUGMENTATION OF MACHHANALA  REGIONAL WATER SUPPLY SCHEME."
+    },
+    {
+      "location_key": "AMC Sardarnagar",
+      "description": "Providing and Laying Sewerage Network at Sardarnagar Township in Sardarnagar Ward, North Zone of AMC Area.",
+      "description_caps": "PROVIDING AND LAYING SEWERAGE NETWORK AT SARDARNAGAR TOWNSHIP IN SARDARNAGAR WARD, NORTH ZONE OF AMC AREA."
+    },
+    {
+      "location_key": "AMC Science City",
+      "description": "Providing & Laying Sewerage Network of Missing lines in TP-40, 41, 53A, 53B, 216, 217, 301 & 405 in North West Zone of AMC area",
+      "description_caps": "PROVIDING & LAYING SEWERAGE NETWORK OF MISSING LINES IN TP-40, 41, 53A, 53B, 216, 217, 301 & 405 IN NORTH WEST ZONE OF AMC AREA"
+    },
+    {
+      "location_key": "AMC Chiloda",
+      "description": "Providing & Laying Storm Water Disposal Network in TP-241 (Chiloda) of AMC area",
+      "description_caps": "PROVIDING & LAYING STORM WATER DISPOSAL NETWORK IN TP-241 (CHILODA) OF AMC AREA"
+    },
+    {
+      "location_key": "AMC Partheshwer",
+      "description": "Laying of New Strom water line in Partheshwer mahadev mandir to umiya dham And geban shah peer to aakash metro and different places in Lambha wards in south zone",
+      "description_caps": "LAYING OF NEW STROM WATER LINE IN PARTHESHWER MAHADEV MANDIR TO UMIYA DHAM AND GEBAN SHAH PEER TO AAKASH METRO AND DIFFERENT PLACES IN LAMBHA WARDS IN SOUTH ZONE"
+    }
+  ]
+}
