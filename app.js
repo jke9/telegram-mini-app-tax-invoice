@@ -36,6 +36,12 @@ let contractorList = [];
 let customerList = [];
 let projectList = [];
 
+// 🔒 User Access Whitelist Configuration
+// Add Telegram Usernames (without @) or Telegram User IDs allowed to use the app.
+// Example: ['samirmultani34', 'divine_admin', 123456789]
+// If array is empty [], access is open to everyone.
+const ALLOWED_USERS = []; 
+
 // ─── Init ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
     if (tg) {
@@ -45,6 +51,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         tg.MainButton.show();
         tg.MainButton.onClick(handleMainButton);
         tg.BackButton.onClick(handleBackButton);
+
+        // Check Access Restriction
+        const tgUser = tg.initDataUnsafe?.user;
+        if (ALLOWED_USERS.length > 0) {
+            const username = (tgUser?.username || '').toLowerCase();
+            const userId = tgUser?.id;
+            const isAllowed = ALLOWED_USERS.some(u => {
+                if (typeof u === 'number') return u === userId;
+                return String(u).toLowerCase().replace('@', '') === username;
+            });
+
+            if (!isAllowed) {
+                document.body.innerHTML = `
+                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; padding:24px; text-align:center; background:#121824; color:#fff; font-family:'Outfit',sans-serif;">
+                        <div style="font-size:56px; margin-bottom:16px;">🔒</div>
+                        <h2 style="font-size:22px; color:#ff4d4f; margin-bottom:8px;">Access Restricted</h2>
+                        <p style="font-size:14px; color:#94a3b8; line-height:1.5; max-width:300px;">
+                            This Mini App is private. Your Telegram account (<strong>@${username || userId || 'User'}</strong>) is not on the authorized user list.
+                        </p>
+                        <div style="margin-top:24px; font-size:12px; color:#64748b;">Contact Administrator to request access</div>
+                    </div>
+                `;
+                return;
+            }
+        }
     }
 
     // Set today's date as default
