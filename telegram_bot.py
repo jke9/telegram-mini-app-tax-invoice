@@ -25,9 +25,9 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-# ⚠️ Paste your Bot Token from @BotFather here or set TELEGRAM_BOT_TOKEN env variable
-BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "YOUR_BOT_TOKEN_FROM_BOTFATHER")
-WEBAPP_URL = os.environ.get("MINI_APP_URL", "https://your-mini-app-domain.com")
+# 🤖 Telegram Bot Credentials & WebApp URL
+BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "8869317601:AAFesNJpvb0XzkRPUYdLgwA9wXu-9_vljWs")
+WEBAPP_URL = os.environ.get("MINI_APP_URL", "https://telegram-mini-app-tax-invoice.vercel.app")
 
 
 # ─── /start Command Handler ───────────────────────────────────────────────────
