@@ -3,9 +3,12 @@
    ═══════════════════════════════════════════════════════ */
 
 const getApiUrl = () => {
-    const host = window.location.hostname || 'localhost';
-    const port = '8031';
-    return `${window.location.protocol}//${host}:${port}`;
+    const host = window.location.hostname;
+    if (!host || host === 'localhost' || host === '127.0.0.1') {
+        return 'http://localhost:8031';
+    }
+    // On Vercel or remote host, use relative path (/api/...)
+    return '';
 };
 const API = getApiUrl();
 const tg = window.Telegram?.WebApp;
@@ -77,16 +80,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ─── Load Dropdowns ───────────────────────────────────────────────────────────
 async function loadDropdowns() {
     try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
+
         const [cRes, custRes, projRes] = await Promise.all([
-            fetch(`${API}/api/contractors`),
-            fetch(`${API}/api/customers`),
-            fetch(`${API}/api/projects`)
+            fetch(`${API}/api/contractors`, { signal: controller.signal }),
+            fetch(`${API}/api/customers`, { signal: controller.signal }),
+            fetch(`${API}/api/projects`, { signal: controller.signal })
         ]);
+        clearTimeout(timeoutId);
+
+        if (!cRes.ok || !custRes.ok || !projRes.ok) throw new Error('API response not ok');
+
         contractorList = await cRes.json();
         customerList = await custRes.json();
         projectList = await projRes.json();
     } catch (e) {
-        // Fallback static data if API not running
+        // Fallback static data if API not running or timing out
         contractorList = ['Shivam Builders', 'Jay Khodiyar Enterprise', 'Jay Varudi', 'JNP INFRASTRUCTURE', 'YOGI CONSTRUCTION CO.', 'Sarthi Construction'];
         customerList = ['Ahmedabad Municipal Corporation', 'GUDC', 'GWSSB', 'Anjar Nagarpalika', 'GUDA'];
         projectList = [
