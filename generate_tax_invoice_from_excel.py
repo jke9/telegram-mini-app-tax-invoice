@@ -483,15 +483,23 @@ def draw_excel_tax_invoice(output_pdf: str, invoice_data: dict):
         elif os.path.exists(exact_jpg):
             stamp_path = exact_jpg
         else:
-            supplier_first = supplier_name.split()[0].lower() if supplier_name else ""
+            sup_lower = supplier_name.lower()
             for fname in os.listdir(stamps_dir):
-                if fname.lower().endswith((".png", ".jpg", ".jpeg")) and supplier_first and supplier_first in fname.lower():
-                    stamp_path = os.path.join(stamps_dir, fname)
-                    break
-            if not stamp_path:
-                fallback = os.path.join(stamps_dir, "Shivam_Stamp Sign.png")
-                if os.path.exists(fallback):
-                    stamp_path = fallback
+                f_lower = fname.lower()
+                if not f_lower.endswith((".png", ".jpg", ".jpeg")):
+                    continue
+                if "shivam" in sup_lower and "shivam" in f_lower:
+                    stamp_path = os.path.join(stamps_dir, fname); break
+                elif "yogi" in sup_lower and "yogi" in f_lower:
+                    stamp_path = os.path.join(stamps_dir, fname); break
+                elif "khodiyar" in sup_lower and "khodiyar" in f_lower:
+                    stamp_path = os.path.join(stamps_dir, fname); break
+                elif "varudi" in sup_lower and "varudi" in f_lower:
+                    stamp_path = os.path.join(stamps_dir, fname); break
+                elif "sarthi" in sup_lower and "sarthi" in f_lower:
+                    stamp_path = os.path.join(stamps_dir, fname); break
+                elif "jnp" in sup_lower and "jnp" in f_lower:
+                    stamp_path = os.path.join(stamps_dir, fname); break
 
     # Draw stamp image OVER the text with realistic hand-stamped tilt (-3 deg) and natural overlap
     if include_stamp and stamp_path and os.path.exists(stamp_path):
