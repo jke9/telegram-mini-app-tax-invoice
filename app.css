@@ -1629,3 +1629,85 @@ input[type=number]::-webkit-outer-spin-button {
     transform: scale(0.97);
     background: var(--glass-hover);
 }
+
+/* ── Step 4: Ultra-Compact Pill Toggle & Tax Preview ── */
+.amount-type-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.amount-type-lbl {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--tg-theme-text-color);
+}
+
+.amount-mode-pills {
+    display: flex;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 3px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--glass-border);
+}
+
+.mode-pill {
+    background: transparent;
+    border: none;
+    color: var(--tg-theme-hint-color);
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: 'Outfit', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mode-pill.active {
+    background: var(--tg-theme-button-color);
+    color: #ffffff;
+    box-shadow: 0 2px 8px var(--accent-glow);
+}
+
+.amount-type-hint {
+    font-size: 0.75rem;
+    color: var(--tg-theme-hint-color);
+    margin-bottom: 12px;
+}
+
+.tax-preview-inline {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.tax-inline-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--tg-theme-hint-color);
+}
+
+.tax-inline-row span:last-child {
+    color: var(--tg-theme-text-color);
+    font-weight: 600;
+}
+
+.tax-inline-grand {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #00e676;
+    border-top: 1px dashed rgba(255, 255, 255, 0.12);
+    padding-top: 6px;
+    margin-top: 2px;
+}

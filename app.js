@@ -364,7 +364,11 @@ function setMode(mode) {
     state.amount_mode = mode;
     document.getElementById('mode-taxable').classList.toggle('active', mode === 'taxable');
     document.getElementById('mode-total').classList.toggle('active', mode === 'total');
-    if (tg) tg.HapticFeedback.selectionChanged();
+    const hint = document.getElementById('amount-type-hint');
+    if (hint) hint.textContent = mode === 'taxable'
+        ? 'GST (18%) will be added on top of this amount'
+        : 'GST (18%) is already included in this amount';
+    if (tg) tg.HapticFeedback?.selectionChanged();
     // Re-trigger preview
     clearTimeout(previewDebounce);
     previewDebounce = setTimeout(fetchPreview, 300);
@@ -390,7 +394,8 @@ async function fetchPreview() {
         document.getElementById('pv-taxable').textContent = `₹ ${data.taxable}`;
         document.getElementById('pv-cgst').textContent = `₹ ${data.cgst}`;
         document.getElementById('pv-sgst').textContent = `₹ ${data.sgst}`;
-        document.getElementById('pv-subtotal').textContent = `₹ ${data.subtotal}`;
+        const stEl = document.getElementById('pv-subtotal');
+        if (stEl) stEl.textContent = `₹ ${data.subtotal}`;
         document.getElementById('pv-grand').textContent = `₹ ${data.grand_total}`;
 
         const roundRow = document.getElementById('pv-roundoff-row');
@@ -414,7 +419,8 @@ async function fetchPreview() {
         document.getElementById('pv-taxable').textContent = `₹ ${fmt(taxable)}`;
         document.getElementById('pv-cgst').textContent = `₹ ${fmt(cgst)}`;
         document.getElementById('pv-sgst').textContent = `₹ ${fmt(sgst)}`;
-        document.getElementById('pv-subtotal').textContent = `₹ ${fmt(subtotal)}`;
+        const stEl2 = document.getElementById('pv-subtotal');
+        if (stEl2) stEl2.textContent = `₹ ${fmt(subtotal)}`;
         document.getElementById('pv-grand').textContent = `₹ ${fmt(grand)}`;
 
         lastPreviewData = { grand_total: fmt(grand) };
@@ -502,14 +508,15 @@ function goToStep(step) {
 }
 
 function updateStepUI() {
-    // Progress bar
-    const pct = (currentStep / TOTAL_STEPS) * 100;
-    document.getElementById('progress-fill').style.width = `${pct}%`;
+    // Progress bar (element may not exist if removed)
+    const pf = document.getElementById('progress-fill');
+    if (pf) pf.style.width = `${(currentStep / TOTAL_STEPS) * 100}%`;
 
     // Step badge
-    document.getElementById('step-badge').textContent = `Step ${currentStep} / ${TOTAL_STEPS}`;
+    const badge = document.getElementById('step-badge');
+    if (badge) badge.textContent = `Step ${currentStep} / ${TOTAL_STEPS}`;
 
-    // Telegram back button (Hide MainButton permanently to prevent bottom nav overlap)
+    // Telegram back button
     if (tg) {
         if (currentStep > 1) tg.BackButton.show();
         else tg.BackButton.hide();
@@ -640,41 +647,24 @@ async function generateInvoice() {
             }
         } catch (_) { /* keep using data URL if blob fails */ }
 
-        const dlLink = document.getElementById('download-link');
-        if (dlLink) {
-            dlLink.href = generatedPdfData.url;
-            dlLink.download = fname;
+        // ✅ PDF Generated — Update button and Auto close app to return to Telegram chat
+        if (btn) {
+            document.getElementById('btn-gen-icon').textContent = '✅';
+            document.getElementById('btn-gen-text').textContent = 'PDF Sent to Chat! Closing...';
         }
-
-        // Set inline iframe PDF preview source
-        const iframe = document.getElementById('pdf-inline-iframe');
-        if (iframe) {
-            iframe.src = generatedPdfData.url;
-        }
-
-        // Show details in success card
-        const detailsEl = document.getElementById('success-details');
-        if (detailsEl) {
-            detailsEl.innerHTML = `
-                <div><strong>Contractor:</strong> ${state.contractor}</div>
-                <div><strong>Customer:</strong> ${state.customer}</div>
-                <div><strong>Project:</strong> ${state.project}</div>
-                <div><strong>Invoice No:</strong> ${state.inv_no}</div>
-                <div><strong>Grand Total:</strong> ₹ ${lastPreviewData ? lastPreviewData.grand_total : fmt(state.amount)}</div>
-                ${resData.sent_to_telegram ? '<div style="color:#00e676; font-weight:600; margin-top:8px;">✅ Sent directly to your Telegram Chat!</div>' : ''}
-            `;
-        }
-
-        // Hide Step 5, show Success
-        document.getElementById('step-5').style.display = 'none';
-        const sc = document.getElementById('step-success');
-        sc.style.display = 'block';
-        sc.classList.add('active');
 
         if (tg) {
-            tg.HapticFeedback.notificationOccurred('success');
+            tg.HapticFeedback?.notificationOccurred('success');
             tg.MainButton.hide();
             tg.BackButton.hide();
+            // Close app to return user directly to chat
+            setTimeout(() => {
+                tg.close();
+            }, 800);
+        } else {
+            // Desktop fallback: show brief alert then reset
+            alert(`✅ Tax Invoice Generated!\n${resData.sent_to_telegram ? 'PDF sent to Telegram chat.' : 'PDF ready.'}`);
+            resetForm();
         }
 
     } catch (e) {

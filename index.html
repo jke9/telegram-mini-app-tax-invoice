@@ -169,21 +169,22 @@
                         <p class="step-sub">Enter amount and select type</p>
                     </div>
                 </div>
-                <div class="field-group">
-                    <label class="field-label">Amount Type</label>
-                    <div class="toggle-group">
-                        <button class="toggle-btn active" id="mode-taxable" onclick="setMode('taxable')">
-                            <span class="toggle-icon">📊</span>
-                            Taxable Amount
-                            <small>GST will be added on top</small>
+
+                <!-- Amount Type Pill Toggle -->
+                <div class="amount-type-toggle-row">
+                    <span class="amount-type-lbl">Amount Type</span>
+                    <div class="amount-mode-pills">
+                        <button type="button" class="mode-pill active" id="mode-taxable" onclick="setMode('taxable')">
+                            📊 Taxable
                         </button>
-                        <button class="toggle-btn" id="mode-total" onclick="setMode('total')">
-                            <span class="toggle-icon">🎯</span>
-                            Grand Total
-                            <small>GST already included</small>
+                        <button type="button" class="mode-pill" id="mode-total" onclick="setMode('total')">
+                            🎯 Grand Total
                         </button>
                     </div>
                 </div>
+                <p class="amount-type-hint" id="amount-type-hint">GST (18%) will be added on top of this amount</p>
+
+                <!-- Amount Input -->
                 <div class="field-group">
                     <label class="field-label" for="bill-amount">Amount (INR)</label>
                     <div class="amount-input-wrap">
@@ -192,15 +193,13 @@
                     </div>
                 </div>
 
-                <!-- Live Tax Preview -->
-                <div class="tax-preview" id="tax-preview" style="display:none;">
-                    <div class="tax-preview-title">📋 Tax Calculation Preview</div>
-                    <div class="tax-row"><span>Taxable Amount</span><span id="pv-taxable">—</span></div>
-                    <div class="tax-row"><span>CGST (9%)</span><span id="pv-cgst">—</span></div>
-                    <div class="tax-row"><span>SGST (9%)</span><span id="pv-sgst">—</span></div>
-                    <div class="tax-row subtotal-row"><span>Subtotal</span><span id="pv-subtotal">—</span></div>
-                    <div class="tax-row roundoff-row" id="pv-roundoff-row" style="display:none;"><span>Round Off</span><span id="pv-roundoff">—</span></div>
-                    <div class="tax-row grand-row"><span>Grand Total</span><span id="pv-grand">—</span></div>
+                <!-- Inline Compact Tax Preview -->
+                <div class="tax-preview-inline" id="tax-preview" style="display:none;">
+                    <div class="tax-inline-row"><span>Taxable</span><span id="pv-taxable">—</span></div>
+                    <div class="tax-inline-row"><span>CGST 9%</span><span id="pv-cgst">—</span></div>
+                    <div class="tax-inline-row"><span>SGST 9%</span><span id="pv-sgst">—</span></div>
+                    <div class="tax-inline-row" id="pv-roundoff-row" style="display:none;"><span>Round Off</span><span id="pv-roundoff">—</span></div>
+                    <div class="tax-inline-grand"><span>Grand Total</span><span id="pv-grand">—</span></div>
                 </div>
 
                 <div class="step-nav">
@@ -208,6 +207,7 @@
                     <button type="button" class="btn-next-step" onclick="handleMainButton()">Next Step →</button>
                 </div>
             </div>
+
 
             <!-- ══════════════ STEP 5: Stamp & Confirm (Ultra-Compact) ══════════════ -->
             <div class="step-card compact-step" id="step-5">
@@ -252,31 +252,6 @@
                     <button class="btn-generate-compact" id="btn-generate" onclick="generateInvoice()">
                         <span id="btn-gen-icon">⚡</span>
                         <span id="btn-gen-text">Generate Tax Invoice PDF</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- ══════════════ SUCCESS SCREEN (ULTRA-COMPACT WITH AUTOMATIC CHAT DELIVERY & CLOSE APP BUTTON) ══════════════ -->
-            <div class="step-card success-card-compact" id="step-success" style="display:none;">
-                <div class="success-header-compact">
-                    <div class="success-anim-sm">✅</div>
-                    <div>
-                        <h2 class="success-title-sm">Invoice Generated!</h2>
-                        <p class="success-sub-sm">PDF added to your chat</p>
-                    </div>
-                </div>
-                
-                <div class="success-details-compact" id="success-details"></div>
-
-                <div class="success-action-group-compact">
-                    <button type="button" class="btn-close-app-chat" onclick="closeAppAndGoToChat()">
-                        💬 Close App & Return to Chat
-                    </button>
-                    <button type="button" class="btn-view-action-sm" onclick="openPdfViewer()">
-                        📄 Open / View PDF
-                    </button>
-                    <button type="button" class="btn-new-sm" onclick="resetForm()">
-                        🔄 Generate Another Invoice
                     </button>
                 </div>
             </div>
