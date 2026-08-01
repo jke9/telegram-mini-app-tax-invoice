@@ -40,7 +40,7 @@ let projectList = [];
 // Add Telegram Usernames (without @) or Telegram User IDs allowed to use the app.
 // Example: ['samirmultani34', 'divine_admin', 123456789]
 // If array is empty [], access is open to everyone.
-const ALLOWED_USERS = []; 
+const ALLOWED_USERS = ['Tely_user']; 
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
