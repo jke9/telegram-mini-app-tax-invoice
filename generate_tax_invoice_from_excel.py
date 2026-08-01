@@ -86,13 +86,40 @@ def clean_words_string(words):
 
 
 def draw_wrapped_text(c, text, x, y, max_width, font_name, font_size, leading=11, align="left"):
-    """Draws multi-line wrapped text within specified width budget."""
+    """Draws multi-line wrapped text strictly within specified max_width budget, ensuring no text ever overflows column lines."""
+    import re
     c.setFont(font_name, font_size)
-    words = clean_str(text).split()
+    raw = clean_str(text)
+    if not raw:
+        return 0
+
+    # 1. Pre-insert spaces after slashes, commas, hyphens if missing, and split CamelCase
+    formatted_text = re.sub(r'([/,])(?!\s)', r'\1 ', raw)
+    formatted_text = re.sub(r'([a-z])([A-Z])', r'\1 \2', formatted_text)
+
+    words = formatted_text.split()
+
+    # 2. Break down any individual word that is wider than max_width into sub-word chunks
+    processed_words = []
+    for w in words:
+        if c.stringWidth(w, font_name, font_size) <= max_width:
+            processed_words.append(w)
+        else:
+            # Word exceeds column width — split character by character
+            chunk = ""
+            for char in w:
+                if c.stringWidth(chunk + char, font_name, font_size) <= max_width:
+                    chunk += char
+                else:
+                    if chunk:
+                        processed_words.append(chunk)
+                    chunk = char
+            if chunk:
+                processed_words.append(chunk)
+
     lines = []
     curr_line = []
-    
-    for w in words:
+    for w in processed_words:
         test_line = " ".join(curr_line + [w])
         if c.stringWidth(test_line, font_name, font_size) <= max_width:
             curr_line.append(w)
