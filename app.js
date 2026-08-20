@@ -611,15 +611,20 @@ async function fetchPreview() {
 
 // ─── Live Edit Handler for Round Off Input ───────────────────────────────────
 function onRoundOffInput(e) {
-    const rawVal = e.target.value;
+    const rawVal = (e.target.value || '').trim();
     const badge = document.getElementById('ro-mode-badge');
     const resetBtn = document.getElementById('btn-ro-reset');
 
-    if (rawVal.trim() === '' || isNaN(parseFloat(rawVal))) {
+    if (rawVal === '' || rawVal === '+' || rawVal === '-') {
         return;
     }
 
-    const customRo = parseFloat(rawVal);
+    const cleanNum = parseFloat(rawVal.replace(/^\+/, ''));
+    if (isNaN(cleanNum)) {
+        return;
+    }
+
+    const customRo = cleanNum;
     state.is_manual_round_off = true;
     state.custom_round_off = customRo;
 
