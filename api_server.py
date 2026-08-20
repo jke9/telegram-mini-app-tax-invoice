@@ -470,8 +470,16 @@ def telegram_webhook():
                 file_suffix = "Proforma_Invoice" if is_proforma else "Tax_Invoice"
                 fname = f"{safe_project}_{safe_inv}_{file_suffix}.pdf"
 
-                output_dir = '/tmp' if os.environ.get('VERCEL') else os.path.join(BASE_DIR, 'outputs')
-                os.makedirs(output_dir, exist_ok=True)
+                import tempfile
+                output_dir = os.path.join(BASE_DIR, 'outputs')
+                try:
+                    os.makedirs(output_dir, exist_ok=True)
+                    test_p = os.path.join(output_dir, '.test')
+                    with open(test_p, 'w') as tf:
+                        tf.write('1')
+                    os.remove(test_p)
+                except Exception:
+                    output_dir = tempfile.gettempdir()
                 output_path = os.path.join(output_dir, fname)
 
                 create_invoice_with_autolookup(

@@ -503,9 +503,15 @@ def draw_excel_tax_invoice(output_pdf: str, invoice_data: dict):
     # Auto-detect or load stamp image from Stamps directory if include_stamp is True (Default: True)
     include_stamp = invoice_data.get("include_stamp", True)
     stamp_path = invoice_data.get("stamp_path")
-    stamps_dir = os.path.join(os.path.dirname(__file__), "Stamps")
     
-    if include_stamp and not stamp_path and os.path.exists(stamps_dir):
+    possible_stamps_dirs = [
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "Stamps"),
+        os.path.join(os.getcwd(), "Stamps"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "Stamps"),
+    ]
+    stamps_dir = next((sd for sd in possible_stamps_dirs if os.path.exists(sd)), None)
+    
+    if include_stamp and not stamp_path and stamps_dir and os.path.exists(stamps_dir):
         safe_supplier = "".join(c for c in supplier_name if c.isalnum() or c in (" ", "_", "-")).strip().replace(" ", "_")
         exact_png = os.path.join(stamps_dir, f"{safe_supplier}.png")
         exact_jpg = os.path.join(stamps_dir, f"{safe_supplier}.jpg")
