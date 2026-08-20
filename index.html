@@ -222,7 +222,18 @@
                     <div class="tax-inline-row"><span>Taxable</span><span id="pv-taxable">—</span></div>
                     <div class="tax-inline-row"><span>CGST 9%</span><span id="pv-cgst">—</span></div>
                     <div class="tax-inline-row"><span>SGST 9%</span><span id="pv-sgst">—</span></div>
-                    <div class="tax-inline-row" id="pv-roundoff-row" style="display:none;"><span>Round Off</span><span id="pv-roundoff">—</span></div>
+                    <div class="tax-inline-row ro-interactive-row" id="pv-roundoff-row">
+                        <div class="ro-lbl-wrap">
+                            <span>Round Off</span>
+                            <span id="ro-mode-badge" class="ro-badge ro-badge-auto">AUTO</span>
+                        </div>
+                        <div class="ro-ctrl-wrap">
+                            <button type="button" id="btn-ro-reset" class="btn-ro-reset" title="Reset to Auto Round Off" onclick="resetRoundOffToAuto()" style="display:none;">↺ Auto</button>
+                            <div class="ro-input-box">
+                                <input type="number" id="pv-roundoff-input" class="inline-ro-input" step="0.01" placeholder="+0.00">
+                            </div>
+                        </div>
+                    </div>
                     <div class="tax-inline-grand"><span>Grand Total</span><span id="pv-grand">—</span></div>
                 </div>
 

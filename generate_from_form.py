@@ -55,7 +55,8 @@ def create_invoice_with_autolookup(
     amount_mode: str = "taxable",
     include_stamp: bool = True,
     output_pdf: str = "outputs/autolookup_invoice.pdf",
-    doc_type: str = "tax_invoice"
+    doc_type: str = "tax_invoice",
+    custom_round_off: float = None
 ):
     # 1. Auto-lookup Contractor Profile
     c_info = get_contractor_by_name(contractor_name)
@@ -95,7 +96,11 @@ def create_invoice_with_autolookup(
         cgst_val = round(total_gst / 2.0, 2)
         sgst_val = round(total_gst - cgst_val, 2)
         subtotal = taxable_val + cgst_val + sgst_val
-        round_off_val = round(grand_val - subtotal, 2)
+        if custom_round_off is not None:
+            round_off_val = round(float(custom_round_off), 2)
+            grand_val = round(subtotal + round_off_val, 2)
+        else:
+            round_off_val = round(grand_val - subtotal, 2)
         mode_label = "TOTAL AMOUNT MODE (Whole Number Target)"
     else:
         # Option A: Input is Taxable Amount (Calculate Total + Round Off)
@@ -103,8 +108,12 @@ def create_invoice_with_autolookup(
         cgst_val = round(taxable_val * 0.09, 2)
         sgst_val = round(taxable_val * 0.09, 2)
         subtotal = taxable_val + cgst_val + sgst_val
-        grand_val = float(round(subtotal))  # Auto-round to whole number (no paisa)
-        round_off_val = round(grand_val - subtotal, 2)
+        if custom_round_off is not None:
+            round_off_val = round(float(custom_round_off), 2)
+            grand_val = round(subtotal + round_off_val, 2)
+        else:
+            grand_val = float(round(subtotal))  # Auto-round to whole number (no paisa)
+            round_off_val = round(grand_val - subtotal, 2)
         mode_label = "TAXABLE AMOUNT MODE (With Auto Round-Off)"
 
     words_str = number_to_words_inr(grand_val)

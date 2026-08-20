@@ -32,7 +32,9 @@ const state = {
     amount: 0,
     amount_mode: 'taxable',
     include_stamp: true,
-    doc_type: currentDocType
+    doc_type: currentDocType,
+    custom_round_off: null,
+    is_manual_round_off: false
 };
 
 // Master data cache
@@ -249,9 +251,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Amount input: live preview on change
     document.getElementById('bill-amount').addEventListener('input', () => {
+        // When amount changes, reset manual flag so auto-roundoff recalculates
+        if (state.is_manual_round_off) {
+            state.is_manual_round_off = false;
+            state.custom_round_off = null;
+        }
         clearTimeout(previewDebounce);
-        previewDebounce = setTimeout(fetchPreview, 600);
+        previewDebounce = setTimeout(fetchPreview, 400);
     });
+
+    // Round-off editable input: live update
+    const roInput = document.getElementById('pv-roundoff-input');
+    if (roInput) {
+        roInput.addEventListener('input', onRoundOffInput);
+    }
 
     // Update step UI
     updateStepUI();
@@ -465,6 +478,8 @@ function updateContractorPreview() {
 function setMode(mode) {
     amountMode = mode;
     state.amount_mode = mode;
+    state.is_manual_round_off = false;
+    state.custom_round_off = null;
     document.getElementById('mode-taxable').classList.toggle('active', mode === 'taxable');
     document.getElementById('mode-total').classList.toggle('active', mode === 'total');
     const hint = document.getElementById('amount-type-hint');
@@ -485,11 +500,17 @@ async function fetchPreview() {
         return;
     }
 
+    const payload = {
+        amount: amtVal,
+        amount_mode: amountMode,
+        custom_round_off: state.is_manual_round_off ? state.custom_round_off : null
+    };
+
     try {
         const res = await fetch(`${API}/api/preview`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount: amtVal, amount_mode: amountMode })
+            body: JSON.stringify(payload)
         });
         const data = await res.json();
         lastPreviewData = data;
@@ -502,11 +523,29 @@ async function fetchPreview() {
         document.getElementById('pv-grand').textContent = `₹ ${data.grand_total}`;
 
         const roundRow = document.getElementById('pv-roundoff-row');
-        if (data.round_off) {
-            document.getElementById('pv-roundoff').textContent = `${data.round_off}`;
-            roundRow.style.display = 'flex';
-        } else {
-            roundRow.style.display = 'none';
+        const roInput = document.getElementById('pv-roundoff-input');
+        const badge = document.getElementById('ro-mode-badge');
+        const resetBtn = document.getElementById('btn-ro-reset');
+
+        if (roundRow) roundRow.style.display = 'flex';
+
+        if (roInput) {
+            if (!state.is_manual_round_off) {
+                roInput.value = data.round_off || '+0.00';
+                roInput.classList.remove('is-custom');
+                if (badge) {
+                    badge.textContent = 'AUTO';
+                    badge.className = 'ro-badge ro-badge-auto';
+                }
+                if (resetBtn) resetBtn.style.display = 'none';
+            } else {
+                roInput.classList.add('is-custom');
+                if (badge) {
+                    badge.textContent = 'EDITED';
+                    badge.className = 'ro-badge ro-badge-edit';
+                }
+                if (resetBtn) resetBtn.style.display = 'inline-flex';
+            }
         }
 
         document.getElementById('tax-preview').style.display = 'block';
@@ -516,8 +555,13 @@ async function fetchPreview() {
         const cgst = Math.round(taxable * 0.09 * 100) / 100;
         const sgst = cgst;
         const subtotal = taxable + cgst + sgst;
-        const grand = Math.round(subtotal);
-        const ro = Math.round((grand - subtotal) * 100) / 100;
+        let grand = Math.round(subtotal);
+        let ro = Math.round((grand - subtotal) * 100) / 100;
+
+        if (state.is_manual_round_off && state.custom_round_off !== null) {
+            ro = state.custom_round_off;
+            grand = Math.round((subtotal + ro) * 100) / 100;
+        }
 
         document.getElementById('pv-taxable').textContent = `₹ ${fmt(taxable)}`;
         document.getElementById('pv-cgst').textContent = `₹ ${fmt(cgst)}`;
@@ -526,17 +570,87 @@ async function fetchPreview() {
         if (stEl2) stEl2.textContent = `₹ ${fmt(subtotal)}`;
         document.getElementById('pv-grand').textContent = `₹ ${fmt(grand)}`;
 
-        lastPreviewData = { grand_total: fmt(grand) };
+        lastPreviewData = {
+            taxable_raw: taxable,
+            cgst_raw: cgst,
+            sgst_raw: sgst,
+            subtotal_raw: subtotal,
+            grand_total: fmt(grand),
+            grand_total_raw: grand,
+            round_off: `${ro >= 0 ? '+' : ''}${ro.toFixed(2)}`,
+            round_off_raw: ro
+        };
 
         const roundRow = document.getElementById('pv-roundoff-row');
-        if (ro !== 0) {
-            document.getElementById('pv-roundoff').textContent = `${ro >= 0 ? '+' : ''}${ro.toFixed(2)}`;
-            roundRow.style.display = 'flex';
-        } else {
-            roundRow.style.display = 'none';
+        const roInput = document.getElementById('pv-roundoff-input');
+        const badge = document.getElementById('ro-mode-badge');
+        const resetBtn = document.getElementById('btn-ro-reset');
+
+        if (roundRow) roundRow.style.display = 'flex';
+        if (roInput) {
+            if (!state.is_manual_round_off) {
+                roInput.value = `${ro >= 0 ? '+' : ''}${ro.toFixed(2)}`;
+                roInput.classList.remove('is-custom');
+                if (badge) {
+                    badge.textContent = 'AUTO';
+                    badge.className = 'ro-badge ro-badge-auto';
+                }
+                if (resetBtn) resetBtn.style.display = 'none';
+            } else {
+                roInput.classList.add('is-custom');
+                if (badge) {
+                    badge.textContent = 'EDITED';
+                    badge.className = 'ro-badge ro-badge-edit';
+                }
+                if (resetBtn) resetBtn.style.display = 'inline-flex';
+            }
         }
         document.getElementById('tax-preview').style.display = 'block';
     }
+}
+
+// ─── Live Edit Handler for Round Off Input ───────────────────────────────────
+function onRoundOffInput(e) {
+    const rawVal = e.target.value;
+    const badge = document.getElementById('ro-mode-badge');
+    const resetBtn = document.getElementById('btn-ro-reset');
+
+    if (rawVal.trim() === '' || isNaN(parseFloat(rawVal))) {
+        return;
+    }
+
+    const customRo = parseFloat(rawVal);
+    state.is_manual_round_off = true;
+    state.custom_round_off = customRo;
+
+    if (badge) {
+        badge.textContent = 'EDITED';
+        badge.className = 'ro-badge ro-badge-edit';
+    }
+    if (resetBtn) resetBtn.style.display = 'inline-flex';
+    e.target.classList.add('is-custom');
+
+    // Real-time local recalculation of Grand Total
+    if (lastPreviewData) {
+        const taxableRaw = parseFloat(lastPreviewData.taxable_raw || 0);
+        const cgstRaw = parseFloat(lastPreviewData.cgst_raw || 0);
+        const sgstRaw = parseFloat(lastPreviewData.sgst_raw || 0);
+        const subtotalRaw = taxableRaw + cgstRaw + sgstRaw;
+        const newGrand = Math.round((subtotalRaw + customRo) * 100) / 100;
+
+        document.getElementById('pv-grand').textContent = `₹ ${fmt(newGrand)}`;
+        lastPreviewData.grand_total = fmt(newGrand);
+        lastPreviewData.grand_total_raw = newGrand;
+        lastPreviewData.round_off = `${customRo >= 0 ? '+' : ''}${customRo.toFixed(2)}`;
+        lastPreviewData.round_off_raw = customRo;
+    }
+}
+
+function resetRoundOffToAuto() {
+    state.is_manual_round_off = false;
+    state.custom_round_off = null;
+    if (tg) tg.HapticFeedback?.selectionChanged();
+    fetchPreview();
 }
 
 // ─── Local Indian Number Formatter (fallback) ────────────────────────────────
@@ -714,6 +828,7 @@ async function generateInvoice() {
                 amount_mode: state.amount_mode,
                 include_stamp: state.include_stamp,
                 doc_type: currentDocType,
+                custom_round_off: state.is_manual_round_off ? state.custom_round_off : null,
                 user_id: tg?.initDataUnsafe?.user?.id,
                 return_json: true
             }),

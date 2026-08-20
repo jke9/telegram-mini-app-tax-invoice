@@ -125,6 +125,7 @@ def preview_invoice():
     data = request.json or {}
     amount = float(data.get('amount', 0))
     mode = str(data.get('amount_mode', 'taxable')).lower().strip()
+    custom_ro = data.get('custom_round_off')
 
     if mode in ['total', 'grand_total', 'total_amount']:
         grand_val = float(round(amount))
@@ -133,25 +134,41 @@ def preview_invoice():
         cgst_val = round(total_gst / 2.0, 2)
         sgst_val = round(total_gst - cgst_val, 2)
         subtotal = taxable_val + cgst_val + sgst_val
-        round_off = round(grand_val - subtotal, 2)
+        if custom_ro is not None and str(custom_ro).strip() != '':
+            try:
+                round_off = round(float(custom_ro), 2)
+                grand_val = round(subtotal + round_off, 2)
+            except Exception:
+                round_off = round(grand_val - subtotal, 2)
+        else:
+            round_off = round(grand_val - subtotal, 2)
     else:
         taxable_val = round(amount, 2)
         cgst_val = round(taxable_val * 0.09, 2)
         sgst_val = round(taxable_val * 0.09, 2)
         subtotal = taxable_val + cgst_val + sgst_val
-        grand_val = float(round(subtotal))
-        round_off = round(grand_val - subtotal, 2)
+        if custom_ro is not None and str(custom_ro).strip() != '':
+            try:
+                round_off = round(float(custom_ro), 2)
+                grand_val = round(subtotal + round_off, 2)
+            except Exception:
+                grand_val = float(round(subtotal))
+                round_off = round(grand_val - subtotal, 2)
+        else:
+            grand_val = float(round(subtotal))
+            round_off = round(grand_val - subtotal, 2)
 
     return jsonify({
         'taxable': fmt_indian(taxable_val),
         'cgst': fmt_indian(cgst_val),
         'sgst': fmt_indian(sgst_val),
         'subtotal': fmt_indian(subtotal),
-        'round_off': f"{round_off:+.2f}" if round_off != 0 else None,
+        'round_off': f"{round_off:+.2f}",
         'grand_total': fmt_indian(grand_val),
         'taxable_raw': taxable_val,
         'cgst_raw': cgst_val,
         'sgst_raw': sgst_val,
+        'round_off_raw': round_off,
         'grand_total_raw': grand_val,
     })
 
@@ -172,6 +189,14 @@ def generate_invoice():
     amount_mode = data.get('amount_mode', 'taxable')
     include_stamp = bool(data.get('include_stamp', True))
     doc_type = data.get('doc_type', 'tax_invoice')
+    custom_ro = data.get('custom_round_off')
+    if custom_ro is not None and str(custom_ro).strip() != '':
+        try:
+            custom_round_off = float(custom_ro)
+        except Exception:
+            custom_round_off = None
+    else:
+        custom_round_off = None
 
     is_proforma = str(doc_type).lower().strip() in ['proforma', 'proforma_invoice', 'proforma-invoice']
     doc_title_label = "Proforma Invoice" if is_proforma else "Tax Invoice"
@@ -182,7 +207,6 @@ def generate_invoice():
     safe_inv = inv_no.strip().replace('/', '-').replace('\\', '-').replace(' ', '_')
     fname = f"{safe_project}_{safe_inv}_{doc_suffix}.pdf"
 
-    import tempfile
     outputs_dir = os.path.join(BASE_DIR, 'outputs')
     try:
         os.makedirs(outputs_dir, exist_ok=True)
@@ -205,7 +229,8 @@ def generate_invoice():
             amount_mode=amount_mode,
             include_stamp=include_stamp,
             output_pdf=output_path,
-            doc_type=doc_type
+            doc_type=doc_type,
+            custom_round_off=custom_round_off
         )
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -467,6 +492,15 @@ def telegram_webhook():
                 is_proforma = doc_type == 'proforma_invoice'
                 doc_title_label = "Proforma Invoice" if is_proforma else "Tax Invoice"
 
+                custom_ro = raw_data.get('custom_round_off')
+                if custom_ro is not None and str(custom_ro).strip() != '':
+                    try:
+                        custom_round_off = float(custom_ro)
+                    except Exception:
+                        custom_round_off = None
+                else:
+                    custom_round_off = None
+
                 # Generate invoice PDF
                 safe_project = "".join(c for c in project if c.isalnum() or c in (" ", "_", "-")).strip().replace(" ", "_") or "Project"
                 safe_inv = "".join(c for c in inv_no if c.isalnum() or c in (" ", "_", "-")).strip().replace(" ", "_") or "Invoice"
@@ -495,7 +529,8 @@ def telegram_webhook():
                     amount_mode=amount_mode,
                     include_stamp=include_stamp,
                     output_pdf=output_path,
-                    doc_type=doc_type
+                    doc_type=doc_type,
+                    custom_round_off=custom_round_off
                 )
 
                 # Send document back to user chat
