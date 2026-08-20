@@ -7,6 +7,9 @@ import sys
 import os
 import json
 import datetime
+import requests
+import base64
+import tempfile
 
 # Self-contained directory paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
