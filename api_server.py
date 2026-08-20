@@ -403,6 +403,185 @@ def add_project():
         return jsonify({'error': str(e)}), 500
 
 
+# ─── Telegram Webhook Routes (Vercel Serverless 24/7 Bot) ─────────────────────
+@app.route('/api/webhook', methods=['POST'])
+def telegram_webhook():
+    try:
+        update = request.get_json(force=True, silent=True)
+        if not update:
+            return jsonify({'status': 'no_data'}), 200
+
+        bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+        if not bot_token:
+            _env = os.path.join(BASE_DIR, '.env')
+            if os.path.exists(_env):
+                try:
+                    with open(_env, 'r', encoding='utf-8') as _f:
+                        for _l in _f:
+                            if _l.strip().startswith('TELEGRAM_BOT_TOKEN='):
+                                bot_token = _l.strip().split('=', 1)[1].strip().strip('"').strip("'")
+                except Exception:
+                    pass
+
+        if not bot_token:
+            return jsonify({'status': 'bot_token_missing'}), 200
+
+        message = update.get('message') or update.get('edited_message')
+        if not message:
+            return jsonify({'status': 'ignored'}), 200
+
+        chat_id = message.get('chat', {}).get('id')
+        user_first_name = message.get('from', {}).get('first_name', 'there')
+        text = (message.get('text') or '').strip()
+
+        # Handle WebApp Data (When PDF generated inside Mini App)
+        web_app_data = message.get('web_app_data')
+        if web_app_data:
+            try:
+                raw_data = json.loads(web_app_data.get('data', '{}'))
+                contractor = raw_data.get('contractor', '')
+                customer = raw_data.get('customer', '')
+                project = raw_data.get('project', '')
+                inv_no = raw_data.get('inv_no', 'INV-01')
+                inv_date = raw_data.get('inv_date', '')
+                amount = float(raw_data.get('amount', 0))
+                amount_mode = raw_data.get('amount_mode', 'taxable')
+                include_stamp = raw_data.get('include_stamp', True)
+                doc_type = raw_data.get('doc_type', 'tax_invoice')
+                is_proforma = doc_type == 'proforma_invoice'
+                doc_title_label = "Proforma Invoice" if is_proforma else "Tax Invoice"
+
+                # Generate invoice PDF
+                safe_project = "".join(c for c in project if c.isalnum() or c in (" ", "_", "-")).strip().replace(" ", "_") or "Project"
+                safe_inv = "".join(c for c in inv_no if c.isalnum() or c in (" ", "_", "-")).strip().replace(" ", "_") or "Invoice"
+                file_suffix = "Proforma_Invoice" if is_proforma else "Tax_Invoice"
+                fname = f"{safe_project}_{safe_inv}_{file_suffix}.pdf"
+
+                output_dir = '/tmp' if os.environ.get('VERCEL') else os.path.join(BASE_DIR, 'outputs')
+                os.makedirs(output_dir, exist_ok=True)
+                output_path = os.path.join(output_dir, fname)
+
+                create_invoice_with_autolookup(
+                    contractor_name=contractor,
+                    customer_name=customer,
+                    project_key=project,
+                    inv_no=inv_no,
+                    inv_date=inv_date,
+                    input_amount=amount,
+                    amount_mode=amount_mode,
+                    include_stamp=include_stamp,
+                    output_pdf=output_path,
+                    doc_type=doc_type
+                )
+
+                # Send document back to user chat
+                icon = "📋" if is_proforma else "🧾"
+                caption = f"{icon} *{doc_title_label} Generated*\n• Invoice No: `{inv_no}`\n• Project: `{project}`\n• Contractor: `{contractor}`"
+                telegram_send_url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
+                with open(output_path, 'rb') as f:
+                    requests.post(
+                        telegram_send_url,
+                        data={'chat_id': chat_id, 'caption': caption, 'parse_mode': 'Markdown'},
+                        files={'document': (fname, f, 'application/pdf')},
+                        timeout=10
+                    )
+            except Exception as gen_err:
+                requests.post(
+                    f"https://api.telegram.org/bot{bot_token}/sendMessage",
+                    json={'chat_id': chat_id, 'text': f"❌ Error creating invoice: {gen_err}"}
+                )
+            return jsonify({'status': 'web_app_data_processed'}), 200
+
+        # Handle /start Command
+        if text.startswith('/start'):
+            webapp_url = os.environ.get("MINI_APP_URL", "https://txtinv.vercel.app")
+            welcome_text = (
+                f"👋 *Welcome, {user_first_name}!*\n\n"
+                f"🧾 *Tax & Proforma Invoice Generator*\n"
+                f"Create GST Tax and Proforma Invoices with Indian numbering (`1,00,000`), Round Off and Company Stamps 24/7!\n\n"
+                f"Tap the button below to open the Mini App:"
+            )
+            keyboard = {
+                "inline_keyboard": [
+                    [{"text": "📱 Open Invoice Generator", "web_app": {"url": webapp_url}}]
+                ]
+            }
+            requests.post(
+                f"https://api.telegram.org/bot{bot_token}/sendMessage",
+                json={
+                    'chat_id': chat_id,
+                    'text': welcome_text,
+                    'parse_mode': 'Markdown',
+                    'reply_markup': keyboard
+                },
+                timeout=5
+            )
+            return jsonify({'status': 'start_handled'}), 200
+
+        return jsonify({'status': 'ignored'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/set-webhook', methods=['GET', 'POST'])
+def set_webhook():
+    """Helper endpoint to register/update Telegram webhook with Vercel URL."""
+    try:
+        bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+        if not bot_token:
+            _env = os.path.join(BASE_DIR, '.env')
+            if os.path.exists(_env):
+                try:
+                    with open(_env, 'r', encoding='utf-8') as _f:
+                        for _l in _f:
+                            if _l.strip().startswith('TELEGRAM_BOT_TOKEN='):
+                                bot_token = _l.strip().split('=', 1)[1].strip().strip('"').strip("'")
+                except Exception:
+                    pass
+
+        if not bot_token:
+            return jsonify({'error': 'TELEGRAM_BOT_TOKEN not configured in environment'}), 400
+
+        host = request.host_url.rstrip('/')
+        webhook_url = request.args.get('url') or f"{host}/api/webhook"
+        if webhook_url.startswith('http://') and 'vercel.app' in webhook_url:
+            webhook_url = webhook_url.replace('http://', 'https://')
+
+        resp = requests.get(f"https://api.telegram.org/bot{bot_token}/setWebhook?url={webhook_url}", timeout=10)
+        return jsonify({
+            'status': 'success',
+            'webhook_url': webhook_url,
+            'telegram_response': resp.json()
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/webhook-info', methods=['GET'])
+def webhook_info():
+    """Helper endpoint to inspect current Telegram webhook status."""
+    try:
+        bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+        if not bot_token:
+            _env = os.path.join(BASE_DIR, '.env')
+            if os.path.exists(_env):
+                try:
+                    with open(_env, 'r', encoding='utf-8') as _f:
+                        for _l in _f:
+                            if _l.strip().startswith('TELEGRAM_BOT_TOKEN='):
+                                bot_token = _l.strip().split('=', 1)[1].strip().strip('"').strip("'")
+                except Exception:
+                    pass
+
+        if not bot_token:
+            return jsonify({'error': 'TELEGRAM_BOT_TOKEN not configured'}), 400
+
+        resp = requests.get(f"https://api.telegram.org/bot{bot_token}/getWebhookInfo", timeout=10)
+        return jsonify(resp.json())
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 if __name__ == '__main__':
     sys.stdout.reconfigure(encoding='utf-8')
     print("=" * 60)
