@@ -70,30 +70,35 @@ def fmt_indian(val):
 
 
 # ─── GET /api/contractors ─────────────────────────────────────────────────────
+@app.route('/contractors', methods=['GET'])
 @app.route('/api/contractors', methods=['GET'])
 def get_contractors():
     names = [c['name'] for c in MASTER.get('contractors', [])]
     return jsonify(names)
 
 
+@app.route('/contractors/full', methods=['GET'])
 @app.route('/api/contractors/full', methods=['GET'])
 def get_contractors_full():
     return jsonify(MASTER.get('contractors', []))
 
 
 # ─── GET /api/customers ───────────────────────────────────────────────────────
+@app.route('/customers', methods=['GET'])
 @app.route('/api/customers', methods=['GET'])
 def get_customers():
     names = [c['name'] for c in MASTER.get('customers', [])]
     return jsonify(names)
 
 
+@app.route('/customers/full', methods=['GET'])
 @app.route('/api/customers/full', methods=['GET'])
 def get_customers_full():
     return jsonify(MASTER.get('customers', []))
 
 
 # ─── GET /api/projects ────────────────────────────────────────────────────────
+@app.route('/projects', methods=['GET'])
 @app.route('/api/projects', methods=['GET'])
 def get_projects():
     projects = [
@@ -103,12 +108,14 @@ def get_projects():
     return jsonify(projects)
 
 
+@app.route('/projects/full', methods=['GET'])
 @app.route('/api/projects/full', methods=['GET'])
 def get_projects_full():
     return jsonify(MASTER.get('projects', []))
 
 
 # ─── POST /api/preview ────────────────────────────────────────────────────────
+@app.route('/preview', methods=['POST'])
 @app.route('/api/preview', methods=['POST'])
 def preview_invoice():
     """Returns calculated tax figures without generating PDF."""
@@ -147,6 +154,7 @@ def preview_invoice():
 
 
 # ─── POST /api/generate ───────────────────────────────────────────────────────
+@app.route('/generate', methods=['POST'])
 @app.route('/api/generate', methods=['POST'])
 def generate_invoice():
     """Generates Tax or Proforma Invoice PDF and returns it as download or JSON."""
@@ -271,6 +279,7 @@ def generate_invoice():
 
 
 # ─── Health Check ─────────────────────────────────────────────────────────────
+@app.route('/health', methods=['GET'])
 @app.route('/api/health', methods=['GET'])
 def health():
     return jsonify({'status': 'ok', 'service': 'Tax & Proforma Invoice Generator API', 'port': 8031})
@@ -292,6 +301,7 @@ def save_master_json():
 
 
 # ─── POST /api/add-contractor ────────────────────────────────────────────────
+@app.route('/add-contractor', methods=['POST'])
 @app.route('/api/add-contractor', methods=['POST'])
 def add_contractor():
     try:
@@ -343,6 +353,7 @@ def add_contractor():
 
 
 # ─── POST /api/add-customer ──────────────────────────────────────────────────
+@app.route('/add-customer', methods=['POST'])
 @app.route('/api/add-customer', methods=['POST'])
 def add_customer():
     try:
@@ -372,6 +383,7 @@ def add_customer():
 
 
 # ─── POST /api/add-project ───────────────────────────────────────────────────
+@app.route('/add-project', methods=['POST'])
 @app.route('/api/add-project', methods=['POST'])
 def add_project():
     try:
@@ -404,6 +416,7 @@ def add_project():
 
 
 # ─── Telegram Webhook Routes (Vercel Serverless 24/7 Bot) ─────────────────────
+@app.route('/webhook', methods=['POST'])
 @app.route('/api/webhook', methods=['POST'])
 def telegram_webhook():
     try:
@@ -523,6 +536,7 @@ def telegram_webhook():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/set-webhook', methods=['GET', 'POST'])
 @app.route('/api/set-webhook', methods=['GET', 'POST'])
 def set_webhook():
     """Helper endpoint to register/update Telegram webhook with Vercel URL."""
@@ -557,6 +571,7 @@ def set_webhook():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/webhook-info', methods=['GET'])
 @app.route('/api/webhook-info', methods=['GET'])
 def webhook_info():
     """Helper endpoint to inspect current Telegram webhook status."""
