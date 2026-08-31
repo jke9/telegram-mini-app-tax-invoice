@@ -52,7 +52,8 @@
       "bank_name": "Bank Of India",
       "account_no": "201520110000788",
       "branch": "BAPUNAGAR",
-      "ifsc": "BKID0002015"
+      "ifsc": "BKID0002015",
+      "active": true
     }
   ],
   "customers": [

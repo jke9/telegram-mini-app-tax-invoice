@@ -1605,6 +1605,119 @@ input[type=number]::-webkit-outer-spin-button {
     color: #000000;
 }
 
+/* ── Master Active Toggle Switch & Status Badges ──────── */
+.card-actions-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.master-active-toggle {
+    position: relative;
+    display: inline-block;
+    width: 38px;
+    height: 22px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.master-active-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.mat-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 22px;
+}
+
+.mat-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: #cfd8dc;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.master-active-toggle input:checked + .mat-slider {
+    background: linear-gradient(135deg, #00e676, #00b0ff);
+    border-color: #00e676;
+    box-shadow: 0 0 10px rgba(0, 230, 118, 0.4);
+}
+
+.master-active-toggle input:checked + .mat-slider:before {
+    transform: translateX(16px);
+    background-color: #ffffff;
+}
+
+/* Master Card Inactive State */
+.master-card.is-inactive {
+    opacity: 0.62;
+    background: #11111d;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.master-card.is-inactive .card-title {
+    color: #90a4ae;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.66rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    margin-top: 4px;
+    width: fit-content;
+}
+
+.status-badge.active {
+    background: rgba(0, 230, 118, 0.15);
+    color: #00e676;
+    border: 1px solid rgba(0, 230, 118, 0.3);
+}
+
+.status-badge.inactive {
+    background: rgba(255, 255, 255, 0.08);
+    color: #b0bec5;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Modal Form Toggle */
+.form-group-toggle {
+    margin: 12px 0 16px 0;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+}
+
+.form-toggle-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #e0e0e0;
+}
+
 /* ── Native Bottom Navigation Bar ───────────────────────── */
 .bottom-nav {
     position: fixed;

@@ -1513,7 +1513,16 @@ function resetForm() {
 }
 
 // ─── Modal & Custom Data Handlers ─────────────────────────────────────────────
-function openAddDataModal(defaultTab = 'contractor') {
+function openAddDataModal(defaultTab = 'contractor', isNew = true) {
+    if (isNew) {
+        document.getElementById('form-add-contractor')?.reset();
+        document.getElementById('form-add-customer')?.reset();
+        document.getElementById('form-add-project')?.reset();
+        const ac = document.getElementById('add-c-active'); if (ac) ac.checked = true;
+        const acust = document.getElementById('add-cust-active'); if (acust) acust.checked = true;
+        const ap = document.getElementById('add-proj-active'); if (ap) ap.checked = true;
+    }
+
     const currC = document.getElementById('sel-contractor').value;
     const currCust = document.getElementById('sel-customer').value;
 
@@ -1576,6 +1585,8 @@ async function submitAddContractor(e) {
         formData.append('ifsc', ifsc);
         formData.append('branch', branch);
         formData.append('address', addr);
+        const isActive = document.getElementById('add-c-active')?.checked ?? true;
+        formData.append('active', isActive);
         if (stampFile) {
             formData.append('stamp_file', stampFile);
         }
@@ -1592,15 +1603,15 @@ async function submitAddContractor(e) {
                 gstin: gstin,
                 bank: `${bank}${branch ? ' — ' + branch : ''}`
             };
-            if (!contractorList.includes(name)) {
-                contractorList.push(name);
-            }
+            await loadDropdowns();
             const cSel = document.getElementById('sel-contractor');
-            cSel.innerHTML = contractorList.map(n => `<option value="${n}">${n}</option>`).join('');
-            cSel.value = name;
-            onContractorChange();
+            if (isActive) {
+                cSel.value = name;
+                onContractorChange();
+            }
             closeAddDataModal();
             document.getElementById('form-add-contractor').reset();
+            if (currentMasterCategory === 'contractors') loadMasterCards('contractors');
         } else {
             showError(result.error || 'Failed to save contractor');
         }
@@ -1623,19 +1634,18 @@ async function submitAddCustomer(e) {
         const contractor_name = document.getElementById('add-cust-contractor') ? document.getElementById('add-cust-contractor').value : '';
         const gstin = document.getElementById('add-cust-gstin').value.trim();
         const addr = document.getElementById('add-cust-addr').value.trim();
+        const isActive = document.getElementById('add-cust-active')?.checked ?? true;
 
         const res = await fetch(`${API}/api/add-customer`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, gstin, address: addr, contractor_name })
+            body: JSON.stringify({ name, gstin, address: addr, contractor_name, active: isActive })
         });
         const result = await res.json();
 
         if (res.ok && result.status === 'success') {
             log(`Customer '${name}' saved!`, 'success');
-            if (!customerList.includes(name)) {
-                customerList.push(name);
-            }
+            await loadDropdowns();
 
             if (contractor_name) {
                 if (!CONTRACTOR_MAP[contractor_name]) {
@@ -1646,11 +1656,13 @@ async function submitAddCustomer(e) {
             }
 
             const custSel = document.getElementById('sel-customer');
-            custSel.innerHTML = customerList.map(n => `<option value="${n}">${n}</option>`).join('');
-            custSel.value = name;
-            onCustomerChange();
+            if (isActive) {
+                custSel.value = name;
+                onCustomerChange();
+            }
             closeAddDataModal();
             document.getElementById('form-add-customer').reset();
+            if (currentMasterCategory === 'customers') loadMasterCards('customers');
         } else {
             showError(result.error || 'Failed to save customer');
         }
@@ -1673,19 +1685,18 @@ async function submitAddProject(e) {
         const description = document.getElementById('add-proj-desc').value.trim();
         const contractor_name = document.getElementById('add-proj-contractor').value;
         const customer_name = document.getElementById('add-proj-customer').value;
+        const isActive = document.getElementById('add-proj-active')?.checked ?? true;
 
         const res = await fetch(`${API}/api/add-project`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ location_key, description, contractor_name, customer_name })
+            body: JSON.stringify({ location_key, description, contractor_name, customer_name, active: isActive })
         });
         const result = await res.json();
 
         if (res.ok && result.status === 'success') {
             log(`Project '${location_key}' saved!`, 'success');
-            if (!projectList.some(p => p.key === location_key)) {
-                projectList.push({ key: location_key, label: location_key });
-            }
+            await loadDropdowns();
 
             if (contractor_name) {
                 if (!CONTRACTOR_MAP[contractor_name]) {
@@ -1698,10 +1709,13 @@ async function submitAddProject(e) {
 
             updateFilteredProjects();
             const projSel = document.getElementById('sel-project');
-            projSel.value = location_key;
-            onProjectChange();
+            if (isActive) {
+                projSel.value = location_key;
+                onProjectChange();
+            }
             closeAddDataModal();
             document.getElementById('form-add-project').reset();
+            if (currentMasterCategory === 'projects') loadMasterCards('projects');
         } else {
             showError(result.error || 'Failed to save project');
         }
@@ -1713,178 +1727,33 @@ async function submitAddProject(e) {
     }
 }
 
-// ─── Success Screen ───────────────────────────────────────────────────────────
-function showSuccess(pdfUrl, fname) {
-    // Hide all step cards
-    for (let i = 1; i <= TOTAL_STEPS; i++) {
-        const el = document.getElementById(`step-${i}`);
-        if (el) { el.classList.remove('active'); el.style.display = 'none'; }
-    }
-    document.getElementById('progress-fill').style.width = '100%';
-    document.getElementById('step-badge').textContent = '✅ Complete';
-
-    // Set download link
-    const link = document.getElementById('download-link');
-    link.href = pdfUrl;
-    link.setAttribute('download', fname);
-
-    // Details
-    document.getElementById('success-details').innerHTML = `
-        <strong>Contractor:</strong> ${state.contractor}<br>
-        <strong>Customer:</strong> ${state.customer}<br>
-        <strong>Invoice No:</strong> ${state.inv_no}<br>
-        <strong>Date:</strong> ${state.inv_date}<br>
-        <strong>Grand Total:</strong> ₹ ${lastPreviewData ? lastPreviewData.grand_total : fmt(state.amount)}<br>
-        <strong>Stamp:</strong> ${state.include_stamp ? 'With Stamp & Sign ✒️' : 'Without Stamp'}
-    `;
-
-    const sc = document.getElementById('step-success');
-    sc.style.display = 'block';
-    sc.classList.add('active');
-
-    log(`Invoice generated: ${fname}`, 'success');
-}
-
-// ─── Reset Form ───────────────────────────────────────────────────────────────
-function resetForm() {
-    currentStep = 1;
-    lastPreviewData = null;
-
-    // Hide success
-    const sc = document.getElementById('step-success');
-    sc.style.display = 'none'; sc.classList.remove('active');
-
-    // Reset all dots
-    for (let i = 1; i <= TOTAL_STEPS; i++) {
-        const dot = document.getElementById(`dot-${i}`);
-        if (dot) { dot.classList.remove('active', 'done'); }
-        const card = document.getElementById(`step-${i}`);
-        if (card) { card.style.display = 'none'; card.classList.remove('active'); }
-    }
-
-    // Reset form fields
-    document.getElementById('bill-amount').value = '';
-    document.getElementById('tax-preview').style.display = 'none';
-
-    // Activate step 1
-    document.getElementById('step-1').style.display = 'block';
-    document.getElementById('step-1').classList.add('active');
-    document.getElementById('dot-1').classList.add('active');
-
-    updateStepUI();
-
-    if (tg) {
-        tg.MainButton.show();
-        tg.BackButton.hide();
-        tg.HapticFeedback.impactOccurred('light');
-    }
-}
-
-// ─── Error Helpers ────────────────────────────────────────────────────────────
-function showError(msg) {
-    const el = document.getElementById('error-banner');
-    if (el) {
-        document.getElementById('error-msg').textContent = msg;
-        el.classList.remove('hidden');
-    }
-    log(msg, 'error');
-}
-
-function hideError() {
-    const el = document.getElementById('error-banner');
-    if (el) el.classList.add('hidden');
-}
-
-// ─── Native App Navigation View Switcher ───────────────────────────────────────
-let currentAppView = 'generator';
-let currentMasterCategory = 'contractors';
-let fullContractorsData = [];
-let fullCustomersData = [];
-let fullProjectsData = [];
-
-function switchAppView(viewName) {
-    currentAppView = viewName;
-    const isGen = viewName === 'generator';
-
-    // Strictly show/hide views using style.display for guaranteed separation
-    const generatorView = document.getElementById('view-generator');
-    const masterView = document.getElementById('view-master-data');
-
-    if (generatorView) generatorView.style.display = isGen ? 'flex' : 'none';
-    if (masterView) masterView.style.display = isGen ? 'none' : 'flex';
-
-    // Update active state on nav buttons
-    ['generator', 'contractors', 'customers', 'projects'].forEach(tab => {
-        const btn = document.getElementById(`nav-btn-${tab}`);
-        if (btn) btn.classList.toggle('active', tab === viewName);
-    });
-
-    // Update app header title to reflect active section
-    const headerTextEl = document.querySelector('#app-header .header-text p');
-    const headerTitleMap = {
-        generator: 'Generator',
-        contractors: 'Contractors',
-        customers: 'Customers',
-        projects: 'Projects'
-    };
-    if (headerTextEl) headerTextEl.textContent = headerTitleMap[viewName] || 'Generator';
-
-    // Update step badge visibility
-    const stepBadge = document.getElementById('step-badge');
-    if (stepBadge) stepBadge.style.display = isGen ? 'flex' : 'none';
-
-    // Load master data for the selected category
-    if (!isGen) {
-        switchMasterCategory(viewName);
-    }
-}
-
-function switchMasterCategory(category) {
-    currentMasterCategory = category;
-    ['contractors', 'customers', 'projects'].forEach(cat => {
-        const pill = document.getElementById(`pill-${cat}`);
-        if (pill) pill.classList.toggle('active', cat === category);
-    });
-
-    const titleMap = {
-        contractors: '🏢 Contractors List',
-        customers: '🏛️ Customers List',
-        projects: '🚧 Projects List'
-    };
-    document.getElementById('master-view-title').textContent = titleMap[category] || 'Master Data';
-
-    loadMasterCards(category);
-}
-
-function handleHeaderAddClick() {
-    const tabMap = {
-        contractors: 'contractor',
-        customers: 'customer',
-        projects: 'project'
-    };
-    openAddDataModal(tabMap[currentMasterCategory] || 'contractor');
-}
-
-async function loadMasterCards(category) {
-    const listContainer = document.getElementById('master-cards-list');
-    listContainer.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--tg-theme-hint-color);">⏳ Loading ${category}...</div>`;
+// ─── Master Item Status Toggle Handler ────────────────────────────────────────
+async function onToggleMasterItemStatus(category, encodedItemId, isActive) {
+    const itemId = decodeURIComponent(encodedItemId);
+    if (tg) tg.HapticFeedback?.impactOccurred('medium');
 
     try {
-        if (category === 'contractors') {
-            const res = await fetch(`${API}/api/contractors/full`);
-            fullContractorsData = await res.json();
-            renderContractorCards(fullContractorsData);
-        } else if (category === 'customers') {
-            const res = await fetch(`${API}/api/customers/full`);
-            fullCustomersData = await res.json();
-            renderCustomerCards(fullCustomersData);
-        } else if (category === 'projects') {
-            const res = await fetch(`${API}/api/projects/full`);
-            fullProjectsData = await res.json();
-            renderProjectCards(fullProjectsData);
+        const res = await fetch(`${API}/api/master/toggle-status`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ category, id: itemId, active: isActive })
+        });
+        const result = await res.json();
+
+        if (res.ok && result.status === 'success') {
+            log(`${category} '${itemId}' active status set to ${isActive}`, 'success');
+            // Refresh dropdown lists for generator immediately
+            await loadDropdowns();
+            // Reload master cards for current category to update UI seamlessly
+            loadMasterCards(currentMasterCategory);
+            if (tg) tg.HapticFeedback?.notificationOccurred('success');
+        } else {
+            showError(result.error || 'Failed to update active status');
+            loadMasterCards(currentMasterCategory);
         }
-    } catch (e) {
-        listContainer.innerHTML = `<div class="error-banner">⚠️ Failed to load ${category}: ${e.message}</div>`;
+    } catch (err) {
+        showError('Network error updating status: ' + err.message);
+        loadMasterCards(currentMasterCategory);
     }
 }
 
@@ -1895,16 +1764,27 @@ function renderContractorCards(contractors) {
         return;
     }
 
-    listContainer.innerHTML = contractors.map(c => `
-        <div class="master-card">
+    listContainer.innerHTML = contractors.map(c => {
+        const isActive = c.active !== false;
+        return `
+        <div class="master-card ${isActive ? '' : 'is-inactive'}">
             <div class="card-top">
                 <div>
                     <div class="card-title">${c.name}</div>
                     <div class="card-sub">GSTIN: ${c.gstin || '—'}</div>
+                    <span class="status-badge ${isActive ? 'active' : 'inactive'}">
+                        ${isActive ? '🟢 Active' : '⚪ Inactive'}
+                    </span>
                 </div>
-                <button type="button" class="btn-edit-card" onclick="editContractor('${encodeURIComponent(JSON.stringify(c))}')">
-                    ✏️ Edit
-                </button>
+                <div class="card-actions-group">
+                    <label class="master-active-toggle" title="Toggle active status in generator dropdowns">
+                        <input type="checkbox" ${isActive ? 'checked' : ''} onchange="onToggleMasterItemStatus('contractor', '${encodeURIComponent(c.name)}', this.checked)">
+                        <span class="mat-slider"></span>
+                    </label>
+                    <button type="button" class="btn-edit-card" onclick="editContractor('${encodeURIComponent(JSON.stringify(c))}')">
+                        ✏️ Edit
+                    </button>
+                </div>
             </div>
             <div class="card-detail-row">
                 <span>Bank</span>
@@ -1915,7 +1795,8 @@ function renderContractorCards(contractors) {
                 <span>${c.account_no || '—'}</span>
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
 }
 
 function renderCustomerCards(customers) {
@@ -1925,23 +1806,35 @@ function renderCustomerCards(customers) {
         return;
     }
 
-    listContainer.innerHTML = customers.map(c => `
-        <div class="master-card">
+    listContainer.innerHTML = customers.map(c => {
+        const isActive = c.active !== false;
+        return `
+        <div class="master-card ${isActive ? '' : 'is-inactive'}">
             <div class="card-top">
                 <div>
                     <div class="card-title">${c.name}</div>
                     <div class="card-sub">GSTIN: ${c.gstin || '—'}</div>
+                    <span class="status-badge ${isActive ? 'active' : 'inactive'}">
+                        ${isActive ? '🟢 Active' : '⚪ Inactive'}
+                    </span>
                 </div>
-                <button type="button" class="btn-edit-card" onclick="editCustomer('${encodeURIComponent(JSON.stringify(c))}')">
-                    ✏️ Edit
-                </button>
+                <div class="card-actions-group">
+                    <label class="master-active-toggle" title="Toggle active status in generator dropdowns">
+                        <input type="checkbox" ${isActive ? 'checked' : ''} onchange="onToggleMasterItemStatus('customer', '${encodeURIComponent(c.name)}', this.checked)">
+                        <span class="mat-slider"></span>
+                    </label>
+                    <button type="button" class="btn-edit-card" onclick="editCustomer('${encodeURIComponent(JSON.stringify(c))}')">
+                        ✏️ Edit
+                    </button>
+                </div>
             </div>
             <div class="card-detail-row">
                 <span>Address</span>
                 <span>${(c.address || '—').substring(0, 45)}...</span>
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
 }
 
 function renderProjectCards(projects) {
@@ -1951,22 +1844,34 @@ function renderProjectCards(projects) {
         return;
     }
 
-    listContainer.innerHTML = projects.map(p => `
-        <div class="master-card">
+    listContainer.innerHTML = projects.map(p => {
+        const isActive = p.active !== false;
+        return `
+        <div class="master-card ${isActive ? '' : 'is-inactive'}">
             <div class="card-top">
                 <div>
                     <div class="card-title">${p.location_key}</div>
+                    <span class="status-badge ${isActive ? 'active' : 'inactive'}">
+                        ${isActive ? '🟢 Active' : '⚪ Inactive'}
+                    </span>
                 </div>
-                <button type="button" class="btn-edit-card" onclick="editProject('${encodeURIComponent(JSON.stringify(p))}')">
-                    ✏️ Edit
-                </button>
+                <div class="card-actions-group">
+                    <label class="master-active-toggle" title="Toggle active status in generator dropdowns">
+                        <input type="checkbox" ${isActive ? 'checked' : ''} onchange="onToggleMasterItemStatus('project', '${encodeURIComponent(p.location_key)}', this.checked)">
+                        <span class="mat-slider"></span>
+                    </label>
+                    <button type="button" class="btn-edit-card" onclick="editProject('${encodeURIComponent(JSON.stringify(p))}')">
+                        ✏️ Edit
+                    </button>
+                </div>
             </div>
             <div class="card-detail-row">
                 <span>Description</span>
                 <span>${(p.description || '—').substring(0, 45)}...</span>
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
 }
 
 function editContractor(encodedJson) {
@@ -1978,7 +1883,9 @@ function editContractor(encodedJson) {
     document.getElementById('add-c-ifsc').value = c.ifsc || '';
     document.getElementById('add-c-branch').value = c.branch || '';
     document.getElementById('add-c-addr').value = c.address || '';
-    openAddDataModal('contractor');
+    const activeBox = document.getElementById('add-c-active');
+    if (activeBox) activeBox.checked = c.active !== false;
+    openAddDataModal('contractor', false);
 }
 
 function editCustomer(encodedJson) {
@@ -1986,14 +1893,18 @@ function editCustomer(encodedJson) {
     document.getElementById('add-cust-name').value = c.name || '';
     document.getElementById('add-cust-gstin').value = c.gstin || '';
     document.getElementById('add-cust-addr').value = c.address || '';
-    openAddDataModal('customer');
+    const activeBox = document.getElementById('add-cust-active');
+    if (activeBox) activeBox.checked = c.active !== false;
+    openAddDataModal('customer', false);
 }
 
 function editProject(encodedJson) {
     const p = JSON.parse(decodeURIComponent(encodedJson));
     document.getElementById('add-proj-key').value = p.location_key || '';
     document.getElementById('add-proj-desc').value = p.description || '';
-    openAddDataModal('project');
+    const activeBox = document.getElementById('add-proj-active');
+    if (activeBox) activeBox.checked = p.active !== false;
+    openAddDataModal('project', false);
 }
 
 // ─── Log ──────────────────────────────────────────────────────────────────────

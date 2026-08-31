@@ -78,7 +78,8 @@ def fmt_indian(val):
 @app.route('/contractors', methods=['GET'])
 @app.route('/api/contractors', methods=['GET'])
 def get_contractors():
-    names = [c['name'] for c in MASTER.get('contractors', [])]
+    include_all = request.args.get('all', 'false').lower() in ['true', '1']
+    names = [c['name'] for c in MASTER.get('contractors', []) if include_all or c.get('active', True) != False]
     return jsonify(names)
 
 
@@ -92,7 +93,8 @@ def get_contractors_full():
 @app.route('/customers', methods=['GET'])
 @app.route('/api/customers', methods=['GET'])
 def get_customers():
-    names = [c['name'] for c in MASTER.get('customers', [])]
+    include_all = request.args.get('all', 'false').lower() in ['true', '1']
+    names = [c['name'] for c in MASTER.get('customers', []) if include_all or c.get('active', True) != False]
     return jsonify(names)
 
 
@@ -106,9 +108,11 @@ def get_customers_full():
 @app.route('/projects', methods=['GET'])
 @app.route('/api/projects', methods=['GET'])
 def get_projects():
+    include_all = request.args.get('all', 'false').lower() in ['true', '1']
     projects = [
         {'key': p['location_key'], 'label': p['location_key']}
         for p in MASTER.get('projects', [])
+        if include_all or p.get('active', True) != False
     ]
     return jsonify(projects)
 
@@ -117,6 +121,38 @@ def get_projects():
 @app.route('/api/projects/full', methods=['GET'])
 def get_projects_full():
     return jsonify(MASTER.get('projects', []))
+
+
+# ─── POST /api/master/toggle-status ───────────────────────────────────────────
+@app.route('/master/toggle-status', methods=['POST'])
+@app.route('/api/master/toggle-status', methods=['POST'])
+@app.route('/toggle-status', methods=['POST'])
+@app.route('/api/toggle-status', methods=['POST'])
+def toggle_master_status():
+    """Toggles active/inactive status for contractors, customers, or projects."""
+    data = request.json or {}
+    cat = str(data.get('category') or data.get('type') or '').lower().strip()
+    item_id = str(data.get('name') or data.get('key') or data.get('id') or '').strip()
+    new_active = bool(data.get('active', True))
+
+    if cat in ['contractor', 'contractors']:
+        items = MASTER.get('contractors', [])
+        target = next((c for c in items if c.get('name') == item_id), None)
+    elif cat in ['customer', 'customers']:
+        items = MASTER.get('customers', [])
+        target = next((c for c in items if c.get('name') == item_id), None)
+    elif cat in ['project', 'projects']:
+        items = MASTER.get('projects', [])
+        target = next((p for p in items if p.get('location_key') == item_id), None)
+    else:
+        return jsonify({'error': 'Invalid category'}), 400
+
+    if not target:
+        return jsonify({'error': f'Item "{item_id}" not found in {cat}'}), 404
+
+    target['active'] = new_active
+    save_master_json()
+    return jsonify({'status': 'success', 'category': cat, 'id': item_id, 'active': new_active})
 
 
 # ─── POST /api/preview ────────────────────────────────────────────────────────
@@ -724,6 +760,7 @@ def add_contractor():
 
         contractors = MASTER.get('contractors', [])
         existing = next((c for c in contractors if c.get('name') == name), None)
+        is_active = bool(data.get('active', existing.get('active', True) if existing else True))
         new_entry = {
             'name': name,
             'gstin': gstin,
@@ -731,7 +768,8 @@ def add_contractor():
             'bank_name': bank_name,
             'account_no': account_no,
             'branch': branch,
-            'ifsc': ifsc
+            'ifsc': ifsc,
+            'active': is_active
         }
 
         if existing:
@@ -762,7 +800,8 @@ def add_customer():
 
         customers = MASTER.get('customers', [])
         existing = next((c for c in customers if c.get('name') == name), None)
-        new_entry = {'name': name, 'gstin': gstin, 'address': address}
+        is_active = bool(data.get('active', existing.get('active', True) if existing else True))
+        new_entry = {'name': name, 'gstin': gstin, 'address': address, 'active': is_active}
 
         if existing:
             existing.update(new_entry)
@@ -791,10 +830,12 @@ def add_project():
 
         projects = MASTER.get('projects', [])
         existing = next((p for p in projects if p.get('location_key') == location_key), None)
+        is_active = bool(data.get('active', existing.get('active', True) if existing else True))
         new_entry = {
             'location_key': location_key,
             'description': description,
-            'description_caps': description.upper()
+            'description_caps': description.upper(),
+            'active': is_active
         }
 
         if existing:
