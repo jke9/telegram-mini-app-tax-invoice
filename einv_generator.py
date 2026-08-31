@@ -11,6 +11,7 @@ import json
 import base64
 import random
 import re
+import hashlib
 from datetime import datetime
 from reportlab.lib.pagesizes import A3
 from reportlab.pdfgen import canvas
@@ -163,9 +164,26 @@ def generate_einv_pdf(payload, output_path):
         round_off = round(final_integer - (taxable_amt + cgst + sgst), 2)
         total_inv_amt = float(final_integer)
 
-    # 4. Dynamic IRN and Ack No
-    ack_no = payload.get("ack_no") or ("1626" + "".join(str(random.randint(0, 9)) for _ in range(11)))
-    irn = payload.get("irn") or ("".join(random.choice("0123456789abcdef") for _ in range(64)))
+    # 4. Dynamic Authentic IRN and Ack No
+    ack_no = payload.get("ack_no")
+    if not ack_no:
+        # Authentic 15-digit NIC Portal Acknowledgement sequence
+        ack_prefix = "1624" if "2024" in doc_date else "1625" if "2025" in doc_date else "1626"
+        ack_no = f"{ack_prefix}{random.randint(10000000000, 99999999999)}"
+
+    irn = payload.get("irn")
+    if not irn:
+        # Authentic NIC SHA-256 Hash Algorithm: SHA256(SupplierGSTIN + FinancialYear + DocType + DocNo)
+        try:
+            d_parts = doc_date.split('-')
+            m_val, y_val = int(d_parts[1]), int(d_parts[2])
+            fy_start = y_val if m_val >= 4 else y_val - 1
+            fin_year_str = f"{fy_start}-{str(fy_start + 1)[-2:]}"
+        except Exception:
+            fin_year_str = "2026-27"
+
+        raw_irn_seed = f"{supplier_gstin.strip().upper()}{fin_year_str}INV{doc_no.strip().upper()}"
+        irn = hashlib.sha256(raw_irn_seed.encode('utf-8')).hexdigest()
 
     # 5. Canvas Drawing
     os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)

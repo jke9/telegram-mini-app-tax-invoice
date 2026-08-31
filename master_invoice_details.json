@@ -53,7 +53,7 @@
       "account_no": "201520110000788",
       "branch": "BAPUNAGAR",
       "ifsc": "BKID0002015",
-      "active": true
+      "active": false
     }
   ],
   "customers": [
@@ -65,22 +65,26 @@
     {
       "name": "Anjar Nagarpalika",
       "gstin": "",
-      "address": "ANJAR NAGARPALIKA, ANJAR, KUTCH, GUJARAT."
+      "address": "ANJAR NAGARPALIKA, ANJAR, KUTCH, GUJARAT.",
+      "active": false
     },
     {
       "name": "GUDA",
       "gstin": "",
-      "address": ""
+      "address": "",
+      "active": false
     },
     {
       "name": "GWSSB",
       "gstin": "",
-      "address": ""
+      "address": "",
+      "active": false
     },
     {
       "name": "GUDC",
       "gstin": "",
-      "address": ""
+      "address": "",
+      "active": false
     }
   ],
   "projects": [
@@ -137,12 +141,14 @@
     {
       "location_key": "GUDC Zalod",
       "description": "Designing, Constructing, Testing & Commissioning of ESR, UGSR, Rising Main, Distribution Network with Tap Connection, Pump House, Pumping Machinery & Electro mech Work for Zalod Nagarpalika at Zalod, District: Dahod, Gujarat.",
-      "description_caps": "DESIGNING, CONSTRUCTING, TESTING & COMMISSIONING OF ESR, UGSR, RISING MAIN, DISTRIBUTION NETWORK WITH TAP CONNECTION, PUMP HOUSE, PUMPING MACHINERY & ELECTRO MECH WORK FOR ZALOD NAGARPALIKA AT ZALOD, DISTRICT: DAHOD, GUJARAT."
+      "description_caps": "DESIGNING, CONSTRUCTING, TESTING & COMMISSIONING OF ESR, UGSR, RISING MAIN, DISTRIBUTION NETWORK WITH TAP CONNECTION, PUMP HOUSE, PUMPING MACHINERY & ELECTRO MECH WORK FOR ZALOD NAGARPALIKA AT ZALOD, DISTRICT: DAHOD, GUJARAT.",
+      "active": false
     },
     {
       "location_key": "GWSSSB Zalod",
       "description": "Working Survey, Soil Investigation, Design, Build and Operate contract for Designing, Constructing, Testing & Commissioning , Providing, supplying, lowering, laying and jointing DI/PVC pipeline as Rising/Gravity Main,  Constructing RCC ESR,U/G Sumps, Pump House, Staff Quarters, Compound Wall, Approach Road, Village level Sump's, ESR's & Pump Room including connecting Line at various village & Pumping Machineries and Miscellaneous Works at Various H/W or Sub H/W under Augmentation of Machhanala  Regional Water Supply Scheme.",
-      "description_caps": "WORKING SURVEY, SOIL INVESTIGATION, DESIGN, BUILD AND OPERATE CONTRACT FOR DESIGNING, CONSTRUCTING, TESTING & COMMISSIONING , PROVIDING, SUPPLYING, LOWERING, LAYING AND JOINTING DI/PVC PIPELINE AS RISING/GRAVITY MAIN,  CONSTRUCTING RCC ESR,U/G SUMPS, PUMP HOUSE, STAFF QUARTERS, COMPOUND WALL, APPROACH ROAD, VILLAGE LEVEL SUMP'S, ESR'S & PUMP ROOM INCLUDING CONNECTING LINE AT VARIOUS VILLAGE & PUMPING MACHINERIES AND MISCELLANEOUS WORKS AT VARIOUS H/W OR SUB H/W UNDER AUGMENTATION OF MACHHANALA  REGIONAL WATER SUPPLY SCHEME."
+      "description_caps": "WORKING SURVEY, SOIL INVESTIGATION, DESIGN, BUILD AND OPERATE CONTRACT FOR DESIGNING, CONSTRUCTING, TESTING & COMMISSIONING , PROVIDING, SUPPLYING, LOWERING, LAYING AND JOINTING DI/PVC PIPELINE AS RISING/GRAVITY MAIN,  CONSTRUCTING RCC ESR,U/G SUMPS, PUMP HOUSE, STAFF QUARTERS, COMPOUND WALL, APPROACH ROAD, VILLAGE LEVEL SUMP'S, ESR'S & PUMP ROOM INCLUDING CONNECTING LINE AT VARIOUS VILLAGE & PUMPING MACHINERIES AND MISCELLANEOUS WORKS AT VARIOUS H/W OR SUB H/W UNDER AUGMENTATION OF MACHHANALA  REGIONAL WATER SUPPLY SCHEME.",
+      "active": false
     },
     {
       "location_key": "AMC Sardarnagar",
