@@ -20,7 +20,7 @@ let amountMode = 'taxable';
 let previewDebounce = null;
 let lastPreviewData = null;
 
-// Document Type State ('tax_invoice' or 'proforma_invoice')
+// Document Type State ('tax_invoice', 'proforma_invoice', or 'mop')
 let currentDocType = localStorage.getItem('jke_doc_type') || 'tax_invoice';
 
 const state = {
@@ -29,12 +29,24 @@ const state = {
     project: '',
     inv_no: '',
     inv_date: '',
+    bill_sr_no: '15/26-27',
+    date_of_record: '',
     amount: 0,
     amount_mode: 'taxable',
     include_stamp: true,
     doc_type: currentDocType,
     custom_round_off: null,
-    is_manual_round_off: false
+    is_manual_round_off: false,
+    mop_config: {
+        agency_tds_pct: 2.0,
+        agency_sgst_tds_pct: 1.0,
+        agency_cgst_tds_pct: 1.0,
+        admin_expense_pct: 3.25,
+        it_tds_pct: 1.0,
+        retention_pct: 2.0,
+        labour_cess_pct: 1.0,
+        testing_fee_pct: 0.5
+    }
 };
 
 // Master data cache
@@ -49,6 +61,28 @@ let generatedPdfData = null;
 
 // ─── Document Type Selector Logic ─────────────────────────────────────────────
 function getDocTypeInfo(type = currentDocType) {
+    if (type === 'e_invoice' || type === 'einvoice' || type === 'e-invoice') {
+        return {
+            type: 'e_invoice',
+            title: 'E-Invoice (NIC)',
+            icon: '⚡',
+            badge: 'E-Invoice',
+            fileSuffix: 'E_Invoice',
+            desc: 'Official GST E-Invoice with IRN & QR',
+            btnText: 'Generate E-Invoice PDF'
+        };
+    }
+    if (type === 'mop' || type === 'memorandum_of_payment') {
+        return {
+            type: 'mop',
+            title: 'Memorandum of Payment',
+            icon: '📑',
+            badge: 'MOP',
+            fileSuffix: 'MOP_Statement',
+            desc: 'Sublet billing & deduction statement',
+            btnText: 'Generate MOP Statement PDF'
+        };
+    }
     const isProforma = type === 'proforma_invoice' || type === 'proforma';
     return {
         type: isProforma ? 'proforma_invoice' : 'tax_invoice',
@@ -89,11 +123,20 @@ function closeDocTypeDropdown() {
 }
 
 function selectDocType(type) {
-    currentDocType = (type === 'proforma_invoice' || type === 'proforma') ? 'proforma_invoice' : 'tax_invoice';
+    if (type === 'e_invoice' || type === 'einvoice' || type === 'e-invoice') {
+        currentDocType = 'e_invoice';
+    } else if (type === 'mop' || type === 'memorandum_of_payment') {
+        currentDocType = 'mop';
+    } else if (type === 'proforma_invoice' || type === 'proforma') {
+        currentDocType = 'proforma_invoice';
+    } else {
+        currentDocType = 'tax_invoice';
+    }
     state.doc_type = currentDocType;
     localStorage.setItem('jke_doc_type', currentDocType);
     closeDocTypeDropdown();
     updateDocTypeUI();
+    fetchPreview();
     if (tg) tg.HapticFeedback?.notificationOccurred('success');
 }
 
@@ -110,19 +153,126 @@ function updateDocTypeUI() {
     // Dropdown selection states
     const taxItem = document.getElementById('type-opt-tax');
     const proformaItem = document.getElementById('type-opt-proforma');
+    const mopItem = document.getElementById('type-opt-mop');
+    const einvItem = document.getElementById('type-opt-einv');
     const checkTax = document.getElementById('check-tax');
     const checkProforma = document.getElementById('check-proforma');
+    const checkMop = document.getElementById('check-mop');
+    const checkEinv = document.getElementById('check-einv');
 
-    if (currentDocType === 'proforma_invoice') {
-        taxItem?.classList.remove('active');
+    [taxItem, proformaItem, mopItem, einvItem].forEach(el => el?.classList.remove('active'));
+    if (checkTax) checkTax.style.display = 'none';
+    if (checkProforma) checkProforma.style.display = 'none';
+    if (checkMop) checkMop.style.display = 'none';
+    if (checkEinv) checkEinv.style.display = 'none';
+
+    if (currentDocType === 'e_invoice') {
+        einvItem?.classList.add('active');
+        if (checkEinv) checkEinv.style.display = 'inline';
+    } else if (currentDocType === 'mop') {
+        mopItem?.classList.add('active');
+        if (checkMop) checkMop.style.display = 'inline';
+    } else if (currentDocType === 'proforma_invoice') {
         proformaItem?.classList.add('active');
-        if (checkTax) checkTax.style.display = 'none';
         if (checkProforma) checkProforma.style.display = 'inline';
     } else {
         taxItem?.classList.add('active');
-        proformaItem?.classList.remove('active');
         if (checkTax) checkTax.style.display = 'inline';
-        if (checkProforma) checkProforma.style.display = 'none';
+    }
+
+    // Step 2 Labels and Dropdown Adaptations (MOP vs E-Invoice vs Standard)
+    const step2Heading = document.getElementById('step-2-heading');
+    const step2Sub = document.getElementById('step-2-sub');
+    const labelSelCustomer = document.getElementById('label-sel-customer');
+    const projectFieldGroup = document.getElementById('project-field-group');
+
+    if (currentDocType === 'e_invoice') {
+        if (step2Heading) step2Heading.textContent = 'Customer / Client';
+        if (step2Sub) step2Sub.textContent = 'Select the buyer / recipient organization';
+        if (labelSelCustomer) labelSelCustomer.textContent = 'Customer / Client';
+        if (projectFieldGroup) projectFieldGroup.style.display = 'none';
+    } else if (currentDocType === 'mop') {
+        if (step2Heading) step2Heading.textContent = 'Agency & Project';
+        if (step2Sub) step2Sub.textContent = 'Who is the main agency and for what project?';
+        if (labelSelCustomer) labelSelCustomer.textContent = 'Agency / Main Contractor';
+        if (projectFieldGroup) projectFieldGroup.style.display = 'block';
+    } else {
+        if (step2Heading) step2Heading.textContent = 'Customer & Project';
+        if (step2Sub) step2Sub.textContent = 'Who are you billing and for what work?';
+        if (labelSelCustomer) labelSelCustomer.textContent = 'Customer / Client';
+        if (projectFieldGroup) projectFieldGroup.style.display = 'block';
+    }
+    populateCustomerDropdown();
+    updateFilteredProjects();
+
+    // Step 3 Labels, Placeholders & Extra Fields
+    const invNoLabel = document.getElementById('inv-no-label');
+    const invNoInput = document.getElementById('inv-no');
+    if (currentDocType === 'e_invoice') {
+        if (invNoLabel) invNoLabel.textContent = 'Document Number';
+        if (invNoInput) {
+            invNoInput.placeholder = 'e.g. 2026/27-16';
+            if (invNoInput.value === 'RA BILL 1') invNoInput.value = '2026/27-16';
+        }
+    } else {
+        if (invNoLabel) invNoLabel.textContent = 'Invoice / RA Bill Number';
+        if (invNoInput) {
+            invNoInput.placeholder = 'e.g. RA BILL 1';
+            if (invNoInput.value === '2026/27-16') invNoInput.value = 'RA BILL 1';
+        }
+    }
+
+    const mopExtraFields = document.getElementById('mop-extra-fields');
+    if (mopExtraFields) {
+        mopExtraFields.style.display = currentDocType === 'mop' ? 'block' : 'none';
+    }
+
+    const einvExtraFields = document.getElementById('einv-extra-fields');
+    if (einvExtraFields) {
+        einvExtraFields.style.display = currentDocType === 'e_invoice' ? 'block' : 'none';
+    }
+
+    // Step 4 UI Adaptations
+    const amountTypeToggleWrap = document.getElementById('amount-type-toggle-wrap');
+    const amountTypeHint = document.getElementById('amount-type-hint');
+    const billAmountLabel = document.getElementById('bill-amount-label');
+    const step4Heading = document.getElementById('step-4-heading');
+    const step4Sub = document.getElementById('step-4-sub');
+    const mopConfigCard = document.getElementById('mop-config-card');
+    const mopPreview = document.getElementById('mop-preview');
+    const taxPreview = document.getElementById('tax-preview');
+
+    if (currentDocType === 'mop') {
+        if (amountTypeToggleWrap) amountTypeToggleWrap.style.display = 'none';
+        if (amountTypeHint) amountTypeHint.style.display = 'none';
+        if (billAmountLabel) billAmountLabel.textContent = 'Total Work Done Amount as per RA Bill (₹)';
+        if (step4Heading) step4Heading.textContent = 'RA Bill Work Amount';
+        if (step4Sub) step4Sub.textContent = 'Enter gross work done and adjust deductions';
+        if (mopConfigCard) mopConfigCard.style.display = 'block';
+        if (mopPreview) mopPreview.style.display = 'block';
+        if (taxPreview) taxPreview.style.display = 'none';
+        fetchMopDefaults();
+    } else {
+        if (amountTypeToggleWrap) amountTypeToggleWrap.style.display = 'flex';
+        if (amountTypeHint) amountTypeHint.style.display = 'block';
+        if (billAmountLabel) billAmountLabel.textContent = 'Amount (INR)';
+        if (step4Heading) step4Heading.textContent = 'Bill Amount';
+        if (step4Sub) step4Sub.textContent = 'Enter amount and select type';
+        if (mopConfigCard) mopConfigCard.style.display = 'none';
+        if (mopPreview) mopPreview.style.display = 'none';
+        if (taxPreview) taxPreview.style.display = 'block';
+    }
+
+    // Step 5 Stamp & Sign Toggle and Summary Labels
+    const stampPillWrap = document.getElementById('stamp-pill-wrap');
+    const sumInvLbl = document.getElementById('sum-invno-lbl');
+    if (currentDocType === 'e_invoice') {
+        if (stampPillWrap) stampPillWrap.style.display = 'none';
+        state.include_stamp = false;
+        if (sumInvLbl) sumInvLbl.textContent = '📄 Doc No. / Date';
+    } else {
+        if (stampPillWrap) stampPillWrap.style.display = 'flex';
+        if (sumInvLbl) sumInvLbl.textContent = currentDocType === 'mop' ? '📄 Bill No. / Date' : '📄 Invoice / Date';
     }
 
     // Update Action Button in Step 5 (if not currently generating)
@@ -229,12 +379,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize Document Type UI (Tax vs Proforma)
     updateDocTypeUI();
 
-    // Set today's date as default
+    // Set today's date as default for all date fields
     const today = new Date();
     const dd = String(today.getDate()).padStart(2, '0');
     const mm = String(today.getMonth() + 1).padStart(2, '0');
     const yyyy = today.getFullYear();
-    document.getElementById('inv-date').value = `${dd}/${mm}/${yyyy}`;
+    const todayStr = `${dd}/${mm}/${yyyy}`;
+
+    const invDateEl = document.getElementById('inv-date');
+    if (invDateEl) invDateEl.value = todayStr;
+
+    initDatePicker();
 
     // Load all dropdown data
     await loadDropdowns();
@@ -264,6 +419,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const roInput = document.getElementById('pv-roundoff-input');
     if (roInput) {
         roInput.addEventListener('input', onRoundOffInput);
+    }
+    const mopRoInput = document.getElementById('mop-pv-roundoff-input');
+    if (mopRoInput) {
+        mopRoInput.addEventListener('input', onMopRoundOffInput);
     }
 
     // Update step UI
@@ -318,9 +477,9 @@ async function loadDropdowns() {
     cSel.innerHTML = contractorList.map(n => `<option value="${n}">${n}</option>`).join('');
     cSel.addEventListener('change', onContractorChange);
 
-    // Populate customer select
+    // Populate customer select (Client for Tax/Proforma/E-Invoice, Agency Contractor for MOP)
     const custSel = document.getElementById('sel-customer');
-    custSel.innerHTML = customerList.map(n => `<option value="${n}">${n}</option>`).join('');
+    populateCustomerDropdown();
     custSel.addEventListener('change', onCustomerChange);
 
     // Populate project select
@@ -329,6 +488,27 @@ async function loadDropdowns() {
 
     // Initial cascade trigger
     onContractorChange();
+}
+
+function populateCustomerDropdown() {
+    const custSel = document.getElementById('sel-customer');
+    if (!custSel) return;
+    const currVal = custSel.value;
+    const isMop = currentDocType === 'mop';
+
+    // In MOP mode, populate with Contractor List (the Main Agency / Contractor)
+    // In other modes (Tax / Proforma / E-Invoice), populate with Customer List (Client)
+    const list = isMop ? contractorList : customerList;
+
+    custSel.innerHTML = list.map(n => `<option value="${n}">${n}</option>`).join('');
+
+    if (list.includes(currVal)) {
+        custSel.value = currVal;
+    } else if (isMop && list.includes('JNP INFRASTRUCTURE')) {
+        custSel.value = 'JNP INFRASTRUCTURE';
+    } else if (list.length > 0) {
+        custSel.value = list[0];
+    }
 }
 
 // ─── Contractor / Customer / Project Cascading Rules ───────────────────────────
@@ -351,7 +531,7 @@ const CONTRACTOR_MAP = {
     'JNP INFRASTRUCTURE': {
         defaultCustomer: 'Ahmedabad Municipal Corporation',
         allowedPrefixes: ['AMC'],
-        allowedProjects: ['AMC Muthiya', 'AMC Chiloda']
+        allowedProjects: ['AMC Muthiya', 'AMC Chiloda', 'AMC  Kali Lake', 'AMC Kali Lake']
     },
     'Jay Khodiyar Enterprise': {
         defaultCustomer: 'Ahmedabad Municipal Corporation',
@@ -383,28 +563,57 @@ function getCustomerForProject(projKey) {
 }
 
 function updateFilteredProjects() {
-    const contractorName = document.getElementById('sel-contractor').value;
-    const customerName = document.getElementById('sel-customer').value;
+    const contractorName = document.getElementById('sel-contractor')?.value || '';
+    const customerName = document.getElementById('sel-customer')?.value || '';
     const projSel = document.getElementById('sel-project');
+    if (!projSel) return;
     const currProj = projSel.value;
 
-    const cRule = CONTRACTOR_MAP[contractorName] || { allowedPrefixes: [], allowedProjects: [] };
-    const custPrefixes = CUSTOMER_PREFIX_MAP[customerName] || [];
+    let filtered = [];
 
-    const filtered = projectList.filter(p => {
-        if (cRule.allowedProjects && cRule.allowedProjects.length > 0) {
-            if (!cRule.allowedProjects.includes(p.key)) return false;
+    if (currentDocType === 'mop') {
+        // In MOP mode: customer dropdown holds the Agency / Main Contractor
+        const agencyRule = CONTRACTOR_MAP[customerName] || {};
+        if (agencyRule.allowedProjects && agencyRule.allowedProjects.length > 0) {
+            filtered = projectList.filter(p => {
+                const cleanKey = (p.key || '').replace(/\s+/g, ' ').trim().toUpperCase();
+                return agencyRule.allowedProjects.some(ap => ap.replace(/\s+/g, ' ').trim().toUpperCase() === cleanKey);
+            });
         }
-        if (cRule.allowedPrefixes && cRule.allowedPrefixes.length > 0) {
-            const matchesPrefix = cRule.allowedPrefixes.some(px => p.key.startsWith(px));
-            if (!matchesPrefix) return false;
+        // Fallback if no specific mapped project for agency
+        if (filtered.length === 0) {
+            filtered = [...projectList];
         }
+    } else {
+        // In Standard modes (Tax / Proforma / E-Invoice): customerName is Client (e.g. AMC, GUDC)
+        const cRule = CONTRACTOR_MAP[contractorName] || {};
+        const custPrefixes = CUSTOMER_PREFIX_MAP[customerName] || [];
+
         if (custPrefixes.length > 0) {
-            const matchesCustPrefix = custPrefixes.some(px => p.key.startsWith(px));
-            if (!matchesCustPrefix) return false;
+            filtered = projectList.filter(p => {
+                const cleanKey = (p.key || '').replace(/\s+/g, ' ').trim().toUpperCase();
+                return custPrefixes.some(px => cleanKey.startsWith(px.toUpperCase()));
+            });
         }
-        return true;
-    });
+
+        // If contractor has preferred projects under this customer, sort them to top
+        if (filtered.length > 0 && cRule.allowedProjects && cRule.allowedProjects.length > 0) {
+            const preferred = [];
+            const others = [];
+            filtered.forEach(p => {
+                const cleanKey = (p.key || '').replace(/\s+/g, ' ').trim().toUpperCase();
+                const isPref = cRule.allowedProjects.some(ap => ap.replace(/\s+/g, ' ').trim().toUpperCase() === cleanKey);
+                if (isPref) preferred.push(p);
+                else others.push(p);
+            });
+            filtered = [...preferred, ...others];
+        }
+
+        // Fallback: if no project matches the customer filter or projectList was empty, use all projects
+        if (filtered.length === 0) {
+            filtered = [...projectList];
+        }
+    }
 
     projSel.innerHTML = filtered.map(p => `<option value="${p.key}">${p.label}</option>`).join('');
 
@@ -419,11 +628,13 @@ function onContractorChange() {
     const contractorName = document.getElementById('sel-contractor').value;
     updateContractorPreview();
 
-    const cRule = CONTRACTOR_MAP[contractorName];
-    if (cRule && cRule.defaultCustomer) {
-        const custSel = document.getElementById('sel-customer');
-        if ([...custSel.options].some(opt => opt.value === cRule.defaultCustomer)) {
-            custSel.value = cRule.defaultCustomer;
+    if (currentDocType !== 'mop') {
+        const cRule = CONTRACTOR_MAP[contractorName];
+        if (cRule && cRule.defaultCustomer) {
+            const custSel = document.getElementById('sel-customer');
+            if ([...custSel.options].some(opt => opt.value === cRule.defaultCustomer)) {
+                custSel.value = cRule.defaultCustomer;
+            }
         }
     }
 
@@ -492,8 +703,195 @@ function setMode(mode) {
     previewDebounce = setTimeout(fetchPreview, 300);
 }
 
+// ─── Indian Words Converter for Frontend ──────────────────────────────────────
+function numToWordsIndian(number) {
+    const n = Math.round(Math.abs(Number(number) || 0));
+    if (n === 0) return 'Zero Rupees Only';
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    function twoDigits(num) {
+        if (num === 0) return '';
+        if (num < 20) return ones[num];
+        const t = Math.floor(num / 10), o = num % 10;
+        return tens[t] + (o !== 0 ? ' ' + ones[o] : '');
+    }
+    function threeDigits(num) {
+        const h = Math.floor(num / 100), r = num % 100;
+        let str = '';
+        if (h > 0) str += ones[h] + ' Hundred';
+        if (r > 0) str += (str ? ' ' : '') + twoDigits(r);
+        return str;
+    }
+    const crore = Math.floor(n / 10000000);
+    let rem = n % 10000000;
+    const lakh = Math.floor(rem / 100000);
+    rem %= 100000;
+    const thousand = Math.floor(rem / 1000);
+    rem %= 1000;
+    const parts = [];
+    if (crore > 0) parts.push(twoDigits(crore) + ' Crore');
+    if (lakh > 0) parts.push(twoDigits(lakh) + ' Lakh');
+    if (thousand > 0) parts.push(twoDigits(thousand) + ' Thousand');
+    if (rem > 0) parts.push(threeDigits(rem));
+    return parts.join(' ').trim() + ' Rupees Only';
+}
+
+// ─── MOP Dynamic Configuration & Calculation Logic ────────────────────────────
+function toggleMopConfigCollapse() {
+    const body = document.getElementById('mop-config-body');
+    const arrow = document.getElementById('mop-cfg-arrow');
+    if (!body) return;
+    const isHidden = body.style.display === 'none';
+    body.style.display = isHidden ? 'block' : 'none';
+    if (arrow) arrow.textContent = isHidden ? '▴' : '▾';
+    if (tg) tg.HapticFeedback?.impactOccurred('light');
+}
+
+async function fetchMopDefaults() {
+    const contractor = document.getElementById('sel-contractor')?.value || '';
+    const project = document.getElementById('sel-project')?.value || '';
+    try {
+        const res = await fetch(`${API}/api/mop/config?contractor=${encodeURIComponent(contractor)}&project=${encodeURIComponent(project)}`);
+        if (res.ok) {
+            const data = await res.json();
+            const cfg = data.effective_config || {};
+            if (cfg.admin_expense_pct !== undefined && document.getElementById('mop-pct-admin')) document.getElementById('mop-pct-admin').value = cfg.admin_expense_pct;
+            if (cfg.it_tds_pct !== undefined && document.getElementById('mop-pct-it-tds')) document.getElementById('mop-pct-it-tds').value = cfg.it_tds_pct;
+            if (cfg.retention_pct !== undefined && document.getElementById('mop-pct-retention')) document.getElementById('mop-pct-retention').value = cfg.retention_pct;
+            if (cfg.labour_cess_pct !== undefined && document.getElementById('mop-pct-cess')) document.getElementById('mop-pct-cess').value = cfg.labour_cess_pct;
+            if (cfg.testing_fee_pct !== undefined && document.getElementById('mop-pct-testing')) document.getElementById('mop-pct-testing').value = cfg.testing_fee_pct;
+            if (cfg.agency_tds_pct !== undefined && document.getElementById('mop-pct-agency-tds')) document.getElementById('mop-pct-agency-tds').value = cfg.agency_tds_pct;
+            if (cfg.agency_sgst_tds_pct !== undefined && document.getElementById('mop-pct-agency-sgst')) document.getElementById('mop-pct-agency-sgst').value = cfg.agency_sgst_tds_pct;
+            if (cfg.agency_cgst_tds_pct !== undefined && document.getElementById('mop-pct-agency-cgst')) document.getElementById('mop-pct-agency-cgst').value = cfg.agency_cgst_tds_pct;
+            onMopConfigChange();
+        }
+    } catch (e) {
+        onMopConfigChange();
+    }
+}
+
+function onMopConfigChange() {
+    state.mop_config = {
+        admin_expense_pct: parseFloat(document.getElementById('mop-pct-admin')?.value) || 3.25,
+        it_tds_pct: parseFloat(document.getElementById('mop-pct-it-tds')?.value) || 1.0,
+        retention_pct: parseFloat(document.getElementById('mop-pct-retention')?.value) || 2.0,
+        labour_cess_pct: parseFloat(document.getElementById('mop-pct-cess')?.value) || 1.0,
+        testing_fee_pct: parseFloat(document.getElementById('mop-pct-testing')?.value) || 0.5,
+        agency_tds_pct: parseFloat(document.getElementById('mop-pct-agency-tds')?.value) || 2.0,
+        agency_sgst_tds_pct: parseFloat(document.getElementById('mop-pct-agency-sgst')?.value) || 1.0,
+        agency_cgst_tds_pct: parseFloat(document.getElementById('mop-pct-agency-cgst')?.value) || 1.0
+    };
+    updateMopPreview();
+}
+
+function resetMopPercentages() {
+    fetchMopDefaults();
+    if (tg) tg.HapticFeedback?.notificationOccurred('success');
+}
+
+function updateMopPreview() {
+    const amtVal = parseFloat(document.getElementById('bill-amount')?.value);
+    const mopPv = document.getElementById('mop-preview');
+    if (!amtVal || amtVal <= 0) {
+        if (mopPv) mopPv.style.display = 'none';
+        return;
+    }
+
+    const cfg = state.mop_config || {};
+    const G = amtVal;
+    const b_work = G / 1.18;
+
+    const agency_tds = b_work * ((cfg.agency_tds_pct || 2.0) / 100.0);
+    const agency_sgst = b_work * ((cfg.agency_sgst_tds_pct || 1.0) / 100.0);
+    const agency_cgst = b_work * ((cfg.agency_cgst_tds_pct || 1.0) / 100.0);
+    const agency_ded_total = agency_tds + agency_sgst + agency_cgst;
+
+    const net_ab = G - agency_ded_total;
+    const admin_exp = G * ((cfg.admin_expense_pct || 3.25) / 100.0);
+
+    const our_gross = net_ab - admin_exp;
+    const our_basic = our_gross / 1.18;
+    const our_sgst = our_basic * 0.09;
+    const our_cgst = our_basic * 0.09;
+
+    const it_tds = our_basic * ((cfg.it_tds_pct || 1.0) / 100.0);
+    const retention = G * ((cfg.retention_pct || 2.0) / 100.0);
+    const labour_cess = b_work * ((cfg.labour_cess_pct || 1.0) / 100.0);
+    const testing_fee = G * ((cfg.testing_fee_pct || 0.5) / 100.0);
+
+    const our_ded_total = it_tds + retention + labour_cess + testing_fee;
+    const raw_net = our_gross - our_ded_total;
+
+    const auto_ro = Math.round(raw_net) - raw_net;
+    let effective_ro = auto_ro;
+    let net_payable = Math.round(raw_net);
+
+    if (state.is_manual_round_off && state.custom_round_off !== null) {
+        effective_ro = state.custom_round_off;
+        net_payable = Math.round((raw_net + effective_ro) * 100) / 100;
+    }
+
+    // Update DOM elements
+    if (document.getElementById('mop-pv-gross')) document.getElementById('mop-pv-gross').textContent = `₹ ${fmt(G)}`;
+    if (document.getElementById('mop-pv-agency-ded')) document.getElementById('mop-pv-agency-ded').textContent = `- ₹ ${fmt(agency_ded_total)}`;
+    if (document.getElementById('mop-pv-agency-tds')) document.getElementById('mop-pv-agency-tds').textContent = `₹ ${fmt(agency_tds)}`;
+    if (document.getElementById('mop-pv-agency-gst')) document.getElementById('mop-pv-agency-gst').textContent = `₹ ${fmt(agency_sgst + agency_cgst)}`;
+    if (document.getElementById('mop-pv-net-ab')) document.getElementById('mop-pv-net-ab').textContent = `₹ ${fmt(net_ab)}`;
+    if (document.getElementById('mop-pv-admin')) document.getElementById('mop-pv-admin').textContent = `- ₹ ${fmt(admin_exp)}`;
+    if (document.getElementById('mop-pv-our-bill')) document.getElementById('mop-pv-our-bill').textContent = `₹ ${fmt(our_gross)}`;
+    if (document.getElementById('mop-pv-our-breakdown')) document.getElementById('mop-pv-our-breakdown').textContent = `Basic: ₹${fmt(our_basic)} + GST: ₹${fmt(our_sgst + our_cgst)}`;
+    if (document.getElementById('mop-pv-our-ded')) document.getElementById('mop-pv-our-ded').textContent = `- ₹ ${fmt(our_ded_total)}`;
+
+    // Interactive Round Off Controls
+    const mopRoInput = document.getElementById('mop-pv-roundoff-input');
+    const mopBadge = document.getElementById('mop-ro-mode-badge');
+    const mopResetBtn = document.getElementById('btn-mop-ro-reset');
+
+    if (mopRoInput) {
+        if (!state.is_manual_round_off) {
+            mopRoInput.value = `${auto_ro >= 0 ? '+' : ''}${auto_ro.toFixed(2)}`;
+            mopRoInput.classList.remove('is-custom');
+            if (mopBadge) {
+                mopBadge.textContent = 'AUTO';
+                mopBadge.className = 'ro-badge ro-badge-auto';
+            }
+            if (mopResetBtn) mopResetBtn.style.display = 'none';
+        } else {
+            mopRoInput.classList.add('is-custom');
+            if (mopBadge) {
+                mopBadge.textContent = 'EDITED';
+                mopBadge.className = 'ro-badge ro-badge-edit';
+            }
+            if (mopResetBtn) mopResetBtn.style.display = 'inline-flex';
+        }
+    }
+
+    if (document.getElementById('mop-pv-net-payable')) document.getElementById('mop-pv-net-payable').textContent = `₹ ${fmt(net_payable)}`;
+    if (document.getElementById('mop-pv-words')) document.getElementById('mop-pv-words').textContent = `"${numToWordsIndian(net_payable)}"`;
+
+    lastPreviewData = {
+        grand_total: fmt(net_payable),
+        grand_total_raw: net_payable,
+        mop_raw_net: raw_net,
+        mop_calcs: {
+            gross: G,
+            raw_net: raw_net,
+            round_off: effective_ro,
+            net_payable: net_payable,
+            our_bill_gross: our_gross
+        }
+    };
+
+    if (mopPv) mopPv.style.display = 'block';
+}
+
 // ─── Live Tax Preview ─────────────────────────────────────────────────────────
 async function fetchPreview() {
+    if (currentDocType === 'mop') {
+        updateMopPreview();
+        return;
+    }
+
     const amtVal = parseFloat(document.getElementById('bill-amount').value);
     if (!amtVal || amtVal <= 0) {
         document.getElementById('tax-preview').style.display = 'none';
@@ -658,6 +1056,52 @@ function resetRoundOffToAuto() {
     fetchPreview();
 }
 
+// ─── Live Edit Handler for MOP Round Off Input ───────────────────────────────
+function onMopRoundOffInput(e) {
+    const rawVal = (e.target.value || '').trim();
+    const badge = document.getElementById('mop-ro-mode-badge');
+    const resetBtn = document.getElementById('btn-mop-ro-reset');
+
+    if (rawVal === '' || rawVal === '+' || rawVal === '-') {
+        return;
+    }
+
+    const cleanNum = parseFloat(rawVal.replace(/^\+/, ''));
+    if (isNaN(cleanNum)) {
+        return;
+    }
+
+    const customRo = cleanNum;
+    state.is_manual_round_off = true;
+    state.custom_round_off = customRo;
+
+    if (badge) {
+        badge.textContent = 'EDITED';
+        badge.className = 'ro-badge ro-badge-edit';
+    }
+    if (resetBtn) resetBtn.style.display = 'inline-flex';
+    e.target.classList.add('is-custom');
+
+    // Real-time local recalculation of Net Payable & Words
+    if (lastPreviewData && lastPreviewData.mop_raw_net !== undefined) {
+        const rawNet = lastPreviewData.mop_raw_net;
+        const newNet = Math.round((rawNet + customRo) * 100) / 100;
+        if (document.getElementById('mop-pv-net-payable')) document.getElementById('mop-pv-net-payable').textContent = `₹ ${fmt(newNet)}`;
+        if (document.getElementById('mop-pv-words')) document.getElementById('mop-pv-words').textContent = `"${numToWordsIndian(newNet)}"`;
+        lastPreviewData.grand_total = fmt(newNet);
+        lastPreviewData.grand_total_raw = newNet;
+    } else {
+        updateMopPreview();
+    }
+}
+
+function resetMopRoundOffToAuto() {
+    state.is_manual_round_off = false;
+    state.custom_round_off = null;
+    if (tg) tg.HapticFeedback?.selectionChanged();
+    updateMopPreview();
+}
+
 // ─── Local Indian Number Formatter (fallback) ────────────────────────────────
 function fmt(val) {
     const fval = Math.abs(parseFloat(val) || 0);
@@ -726,6 +1170,11 @@ function goToStep(step) {
 
     updateStepUI();
 
+    // Refresh project dropdown if entering Step 2
+    if (step === 2) {
+        updateFilteredProjects();
+    }
+
     if (tg) tg.HapticFeedback.impactOccurred('light');
 }
 
@@ -760,21 +1209,35 @@ function validateStep(step) {
     }
     if (step === 2) {
         state.customer = document.getElementById('sel-customer').value;
-        state.project = document.getElementById('sel-project').value;
-        if (!state.customer) { showError('Please select a customer.'); return false; }
-        if (!state.project) { showError('Please select a project.'); return false; }
+        if (!state.customer) { showError(currentDocType === 'mop' ? 'Please select an agency / main contractor.' : 'Please select a customer.'); return false; }
+        if (currentDocType !== 'e_invoice') {
+            state.project = document.getElementById('sel-project').value;
+            if (!state.project) { showError('Please select a project.'); return false; }
+        } else {
+            state.project = '';
+        }
     }
     if (step === 3) {
         state.inv_no = document.getElementById('inv-no').value.trim();
         state.inv_date = document.getElementById('inv-date').value.trim();
-        if (!state.inv_no) { showError('Please enter an Invoice Number.'); return false; }
-        if (!state.inv_date) { showError('Please enter an Invoice Date (DD/MM/YYYY).'); return false; }
+        if (!state.inv_no) { showError(currentDocType === 'e_invoice' ? 'Please enter a Document Number.' : 'Please enter an Invoice / RA Bill Number.'); return false; }
+        if (!state.inv_date) { showError('Please enter a Date (DD/MM/YYYY).'); return false; }
+        if (currentDocType === 'mop') {
+            state.bill_sr_no = document.getElementById('mop-bill-sr-no')?.value.trim() || '15/26-27';
+            state.date_of_record = state.inv_date;
+        }
+        if (currentDocType === 'e_invoice') {
+            state.hsn = document.getElementById('einv-hsn')?.value.trim() || '995424';
+        }
     }
     if (step === 4) {
         const amtVal = parseFloat(document.getElementById('bill-amount').value);
         if (!amtVal || amtVal <= 0) { showError('Please enter a valid Bill Amount.'); return false; }
         state.amount = amtVal;
         state.amount_mode = amountMode;
+        if (currentDocType === 'mop') {
+            onMopConfigChange();
+        }
     }
     return true;
 }
@@ -792,18 +1255,30 @@ function populateSummary() {
 
 let isGenerating = false;
 
-// ─── Generate Invoice ─────────────────────────────────────────────────────────
+// ─── Generate Invoice / MOP / E-Invoice ──────────────────────────────────────
 async function generateInvoice() {
     if (isGenerating) return;
     if (!validateStep(4)) { goToStep(4); return; }
 
     isGenerating = true;
-    state.include_stamp = document.getElementById('stamp-toggle').checked;
     state.contractor = document.getElementById('sel-contractor').value;
     state.customer = document.getElementById('sel-customer').value;
-    state.project = document.getElementById('sel-project').value;
     state.inv_no = document.getElementById('inv-no').value.trim();
     state.inv_date = document.getElementById('inv-date').value.trim();
+
+    if (currentDocType === 'e_invoice') {
+        state.project = '';
+        state.include_stamp = false;
+        state.hsn = document.getElementById('einv-hsn')?.value.trim() || '995424';
+    } else {
+        state.include_stamp = document.getElementById('stamp-toggle').checked;
+        state.project = document.getElementById('sel-project').value;
+    }
+
+    if (currentDocType === 'mop') {
+        state.bill_sr_no = document.getElementById('mop-bill-sr-no')?.value.trim() || '15/26-27';
+        state.date_of_record = state.inv_date;
+    }
 
     // Show loading state
     const btn = document.getElementById('btn-generate');
@@ -820,23 +1295,30 @@ async function generateInvoice() {
     const docInfo = getDocTypeInfo(currentDocType);
 
     try {
+        const payload = {
+            contractor: state.contractor,
+            customer: state.customer,
+            agency: state.customer,
+            project: state.project,
+            inv_no: state.inv_no,
+            inv_date: state.inv_date,
+            bill_sr_no: state.bill_sr_no,
+            date_of_record: state.date_of_record,
+            hsn: state.hsn || '995424',
+            amount: state.amount,
+            amount_mode: state.amount_mode,
+            include_stamp: state.include_stamp,
+            doc_type: currentDocType,
+            config: state.mop_config,
+            custom_round_off: state.is_manual_round_off ? state.custom_round_off : null,
+            user_id: tg?.initDataUnsafe?.user?.id,
+            return_json: true
+        };
+
         const res = await fetch(`${API}/api/generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contractor: state.contractor,
-                customer: state.customer,
-                project: state.project,
-                inv_no: state.inv_no,
-                inv_date: state.inv_date,
-                amount: state.amount,
-                amount_mode: state.amount_mode,
-                include_stamp: state.include_stamp,
-                doc_type: currentDocType,
-                custom_round_off: state.is_manual_round_off ? state.custom_round_off : null,
-                user_id: tg?.initDataUnsafe?.user?.id,
-                return_json: true
-            }),
+            body: JSON.stringify(payload),
             signal: controller.signal
         });
 
@@ -1510,3 +1992,231 @@ function editProject(encodedJson) {
 function log(msg, type = 'info') {
     console[type === 'error' ? 'error' : type === 'warn' ? 'warn' : 'log'](`[Invoice App] ${msg}`);
 }
+
+// ─── 📅 Theme-Aligned Custom Date Picker Engine ───────────────────────────────
+let activeDateInputId = null;
+let dpViewYear = new Date().getFullYear();
+let dpViewMonth = new Date().getMonth();
+let dpSelectedDate = new Date();
+
+const MONTH_NAMES = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+function initDatePicker() {
+    const yearSel = document.getElementById('dp-year-select');
+    if (yearSel) {
+        const currY = new Date().getFullYear();
+        let options = '';
+        for (let y = currY - 5; y <= currY + 10; y++) {
+            options += `<option value="${y}" ${y === currY ? 'selected' : ''}>${y}</option>`;
+        }
+        yearSel.innerHTML = options;
+    }
+}
+
+function parseDateStr(str) {
+    if (!str || typeof str !== 'string') return new Date();
+    const parts = str.trim().split(/[\/\-\.]/);
+    if (parts.length === 3) {
+        const d = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10) - 1;
+        const y = parseInt(parts[2], 10);
+        if (!isNaN(d) && !isNaN(m) && !isNaN(y) && y > 1900 && m >= 0 && m <= 11 && d >= 1 && d <= 31) {
+            return new Date(y, m, d);
+        }
+    }
+    return new Date();
+}
+
+function formatDateStr(date) {
+    const d = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const y = date.getFullYear();
+    return `${d}/${mmFormat(m)}/${y}`;
+}
+
+function mmFormat(val) {
+    return String(val).padStart(2, '0');
+}
+
+function openCustomDatePicker(inputId) {
+    activeDateInputId = inputId;
+    const inputEl = document.getElementById(inputId);
+    const initialDate = parseDateStr(inputEl?.value);
+
+    dpSelectedDate = new Date(initialDate.getTime());
+    dpViewYear = dpSelectedDate.getFullYear();
+    dpViewMonth = dpSelectedDate.getMonth();
+
+    updateDatePickerNavControls();
+    renderDatePickerGrid();
+
+    const modal = document.getElementById('custom-datepicker-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        if (tg) tg.HapticFeedback?.impactOccurred('light');
+    }
+}
+
+function closeCustomDatePicker() {
+    const modal = document.getElementById('custom-datepicker-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+    activeDateInputId = null;
+}
+
+function handleDatePickerBackdrop(e) {
+    if (e.target.id === 'custom-datepicker-modal') {
+        closeCustomDatePicker();
+    }
+}
+
+function updateDatePickerNavControls() {
+    const mSel = document.getElementById('dp-month-select');
+    const ySel = document.getElementById('dp-year-select');
+    if (mSel) mSel.value = dpViewMonth;
+    if (ySel) ySel.value = dpViewYear;
+}
+
+function onDatePickerMonthYearChange() {
+    const mSel = document.getElementById('dp-month-select');
+    const ySel = document.getElementById('dp-year-select');
+    if (mSel) dpViewMonth = parseInt(mSel.value, 10);
+    if (ySel) dpViewYear = parseInt(ySel.value, 10);
+    renderDatePickerGrid();
+}
+
+function prevDatePickerMonth() {
+    dpViewMonth--;
+    if (dpViewMonth < 0) {
+        dpViewMonth = 11;
+        dpViewYear--;
+    }
+    updateDatePickerNavControls();
+    renderDatePickerGrid();
+    if (tg) tg.HapticFeedback?.selectionChanged();
+}
+
+function nextDatePickerMonth() {
+    dpViewMonth++;
+    if (dpViewMonth > 11) {
+        dpViewMonth = 0;
+        dpViewYear++;
+    }
+    updateDatePickerNavControls();
+    renderDatePickerGrid();
+    if (tg) tg.HapticFeedback?.selectionChanged();
+}
+
+function renderDatePickerGrid() {
+    const grid = document.getElementById('dp-days-grid');
+    const headerDisplay = document.getElementById('dp-header-display');
+    if (!grid) return;
+
+    if (headerDisplay && dpSelectedDate) {
+        const dayName = DAY_NAMES[dpSelectedDate.getDay()];
+        const dateNum = dpSelectedDate.getDate();
+        const monthName = MONTH_SHORT[dpSelectedDate.getMonth()];
+        const yearNum = dpSelectedDate.getFullYear();
+        headerDisplay.textContent = `${dayName}, ${dateNum} ${monthName} ${yearNum}`;
+    }
+
+    const firstDayIndex = new Date(dpViewYear, dpViewMonth, 1).getDay();
+    const daysInMonth = new Date(dpViewYear, dpViewMonth + 1, 0).getDate();
+    const prevMonthDays = new Date(dpViewYear, dpViewMonth, 0).getDate();
+
+    const today = new Date();
+    const isCurrentMonthToday = today.getFullYear() === dpViewYear && today.getMonth() === dpViewMonth;
+
+    let cellsHtml = '';
+
+    // Previous month tail days
+    for (let x = firstDayIndex; x > 0; x--) {
+        const dNum = prevMonthDays - x + 1;
+        cellsHtml += `<div class="dp-day-cell dp-other-month" onclick="selectDateFromGrid(${dNum}, -1)">${dNum}</div>`;
+    }
+
+    // Current month days
+    for (let d = 1; d <= daysInMonth; d++) {
+        const isToday = isCurrentMonthToday && today.getDate() === d;
+        const isSelected = dpSelectedDate &&
+            dpSelectedDate.getFullYear() === dpViewYear &&
+            dpSelectedDate.getMonth() === dpViewMonth &&
+            dpSelectedDate.getDate() === d;
+
+        let classList = 'dp-day-cell';
+        if (isToday) classList += ' dp-today';
+        if (isSelected) classList += ' dp-selected';
+
+        cellsHtml += `<div class="${classList}" onclick="selectDateFromGrid(${d}, 0)">${d}</div>`;
+    }
+
+    // Next month head days (fill to 42 cells or minimum 35)
+    const totalCells = firstDayIndex + daysInMonth;
+    const nextDays = totalCells > 35 ? (42 - totalCells) : (35 - totalCells);
+    for (let j = 1; j <= nextDays; j++) {
+        cellsHtml += `<div class="dp-day-cell dp-other-month" onclick="selectDateFromGrid(${j}, 1)">${j}</div>`;
+    }
+
+    grid.innerHTML = cellsHtml;
+}
+
+function selectDateFromGrid(day, monthOffset = 0) {
+    if (monthOffset === -1) {
+        dpViewMonth--;
+        if (dpViewMonth < 0) { dpViewMonth = 11; dpViewYear--; }
+    } else if (monthOffset === 1) {
+        dpViewMonth++;
+        if (dpViewMonth > 11) { dpViewMonth = 0; dpViewYear++; }
+    }
+
+    dpSelectedDate = new Date(dpViewYear, dpViewMonth, day);
+    updateDatePickerNavControls();
+    renderDatePickerGrid();
+    if (tg) tg.HapticFeedback?.impactOccurred('light');
+}
+
+function setDatePickerPreset(preset) {
+    let d = new Date();
+    if (preset === 'yesterday') {
+        d = new Date(Date.now() - 86400000);
+    }
+    dpSelectedDate = d;
+    dpViewYear = d.getFullYear();
+    dpViewMonth = d.getMonth();
+    applyCustomDatePicker();
+}
+
+function applyCustomDatePicker() {
+    if (!activeDateInputId || !dpSelectedDate) {
+        closeCustomDatePicker();
+        return;
+    }
+
+    const dd = String(dpSelectedDate.getDate()).padStart(2, '0');
+    const mm = String(dpSelectedDate.getMonth() + 1).padStart(2, '0');
+    const yyyy = dpSelectedDate.getFullYear();
+    const formatted = `${dd}/${mm}/${yyyy}`;
+
+    const targetInput = document.getElementById(activeDateInputId);
+    if (targetInput) {
+        targetInput.value = formatted;
+        targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+        targetInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    if (activeDateInputId === 'inv-date') {
+        state.inv_date = formatted;
+        state.date_of_record = formatted;
+    }
+
+    if (tg) tg.HapticFeedback?.notificationOccurred('success');
+    closeCustomDatePicker();
+}
+

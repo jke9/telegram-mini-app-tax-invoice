@@ -15,8 +15,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         super().__init__(*args, directory=DIRECTORY, **kwargs)
 
     def end_headers(self):
-        # Allow cross-origin requests for testing
+        # Allow cross-origin requests and disable caching for instant local development updates
         self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        self.send_header('Pragma', 'no-cache')
+        self.send_header('Expires', '0')
         super().end_headers()
 
 def run_server():

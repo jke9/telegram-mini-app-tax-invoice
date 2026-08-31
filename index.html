@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="app.css?v=2.7">
 </head>
 
 <body>
@@ -82,6 +82,22 @@
                         </div>
                         <span class="item-check" id="check-proforma" style="display:none;">✓</span>
                     </button>
+                    <button type="button" class="type-dropdown-item" id="type-opt-mop" onclick="selectDocType('mop')">
+                        <span class="item-icon">📑</span>
+                        <div class="item-info">
+                            <span class="item-title">MOP (Memorandum of Payment)</span>
+                            <span class="item-desc">Sublet billing & deduction statement</span>
+                        </div>
+                        <span class="item-check" id="check-mop" style="display:none;">✓</span>
+                    </button>
+                    <button type="button" class="type-dropdown-item" id="type-opt-einv" onclick="selectDocType('e_invoice')">
+                        <span class="item-icon">⚡</span>
+                        <div class="item-info">
+                            <span class="item-title">E-Invoice (NIC Standard)</span>
+                            <span class="item-desc">Official GST E-Invoice with IRN & QR</span>
+                        </div>
+                        <span class="item-check" id="check-einv" style="display:none;">✓</span>
+                    </button>
                 </div>
             </div>
             <div id="step-badge" class="step-badge">Step 1 / 5</div>
@@ -127,13 +143,13 @@
                 <div class="step-title">
                     <span class="step-icon">🏛️</span>
                     <div>
-                        <h2>Customer & Project</h2>
-                        <p class="step-sub">Who are you billing and for what work?</p>
+                        <h2 id="step-2-heading">Customer & Project</h2>
+                        <p class="step-sub" id="step-2-sub">Who are you billing and for what work?</p>
                     </div>
                 </div>
                 <div class="field-group">
                     <div class="field-header-row">
-                        <label class="field-label" for="sel-customer">Customer / Client</label>
+                        <label class="field-label" for="sel-customer" id="label-sel-customer">Customer / Client</label>
                         <button type="button" class="btn-quick-add" onclick="openAddDataModal('customer')">➕ Add New</button>
                     </div>
                     <div class="select-wrapper">
@@ -143,7 +159,7 @@
                         <span class="select-arrow">▾</span>
                     </div>
                 </div>
-                <div class="field-group">
+                <div class="field-group" id="project-field-group">
                     <div class="field-header-row">
                         <label class="field-label" for="sel-project">Project / Work Location</label>
                         <button type="button" class="btn-quick-add" onclick="openAddDataModal('project')">➕ Add New</button>
@@ -171,12 +187,29 @@
                     </div>
                 </div>
                 <div class="field-group">
-                    <label class="field-label" for="inv-no">Invoice Number</label>
+                    <label class="field-label" for="inv-no" id="inv-no-label">Invoice / RA Bill Number</label>
                     <input type="text" id="inv-no" class="field-input" placeholder="e.g. RA BILL 1" value="RA BILL 1">
                 </div>
                 <div class="field-group">
-                    <label class="field-label" for="inv-date">Invoice Date</label>
-                    <input type="text" id="inv-date" class="field-input" placeholder="DD/MM/YYYY">
+                    <label class="field-label" for="inv-date">Invoice / Bill Date</label>
+                    <div class="date-input-wrap">
+                        <input type="text" id="inv-date" class="field-input date-picker-input" placeholder="DD/MM/YYYY" readonly onclick="openCustomDatePicker('inv-date')">
+                        <button type="button" class="btn-cal-trigger" onclick="openCustomDatePicker('inv-date')" aria-label="Open Calendar">📅</button>
+                    </div>
+                </div>
+                <!-- Additional MOP Fields (visible when MOP selected) -->
+                <div id="mop-extra-fields" class="mop-extra-fields" style="display:none;">
+                    <div class="field-group">
+                        <label class="field-label" for="mop-bill-sr-no">Sr. No. of the Bill</label>
+                        <input type="text" id="mop-bill-sr-no" class="field-input" placeholder="e.g. 15/26-27" value="15/26-27">
+                    </div>
+                </div>
+                <!-- Additional E-Invoice Fields (visible when E-Invoice selected) -->
+                <div id="einv-extra-fields" class="einv-extra-fields" style="display:none;">
+                    <div class="field-group">
+                        <label class="field-label" for="einv-hsn">Main HSN / SAC Code</label>
+                        <input type="text" id="einv-hsn" class="field-input" placeholder="e.g. 995424" value="995424">
+                    </div>
                 </div>
                 <div class="step-nav">
                     <button type="button" class="btn-back-step" onclick="handleBackButton()">← Back</button>
@@ -187,15 +220,15 @@
             <!-- ══════════════ STEP 4: Bill Amount ══════════════ -->
             <div class="step-card" id="step-4">
                 <div class="step-title">
-                    <span class="step-icon">💰</span>
+                    <span class="step-icon" id="step-4-icon">💰</span>
                     <div>
-                        <h2>Bill Amount</h2>
-                        <p class="step-sub">Enter amount and select type</p>
+                        <h2 id="step-4-heading">Bill Amount</h2>
+                        <p class="step-sub" id="step-4-sub">Enter amount and select type</p>
                     </div>
                 </div>
 
-                <!-- Amount Type Pill Toggle -->
-                <div class="amount-type-toggle-row">
+                <!-- Amount Type Pill Toggle (Tax & Proforma) -->
+                <div class="amount-type-toggle-row" id="amount-type-toggle-wrap">
                     <span class="amount-type-lbl">Amount Type</span>
                     <div class="amount-mode-pills">
                         <button type="button" class="mode-pill active" id="mode-taxable" onclick="setMode('taxable')">
@@ -210,14 +243,89 @@
 
                 <!-- Amount Input -->
                 <div class="field-group">
-                    <label class="field-label" for="bill-amount">Amount (INR)</label>
+                    <label class="field-label" for="bill-amount" id="bill-amount-label">Amount (INR)</label>
                     <div class="amount-input-wrap">
                         <span class="amount-prefix">₹</span>
                         <input type="number" id="bill-amount" class="field-input amount-input" placeholder="0.00" step="0.01" min="0">
                     </div>
                 </div>
 
-                <!-- Inline Compact Tax Preview -->
+                <!-- ⚙️ MOP Percentage Customizer Panel (Visible when MOP selected) -->
+                <div id="mop-config-card" class="mop-config-card" style="display:none;">
+                    <div class="mop-config-header" onclick="toggleMopConfigCollapse()">
+                        <div class="mop-cfg-title">
+                            <span>⚙️ Deductions & Percentages</span>
+                            <span class="mop-cfg-badge">Configurable</span>
+                        </div>
+                        <span id="mop-cfg-arrow" class="mop-cfg-arrow">▾</span>
+                    </div>
+                    
+                    <div id="mop-config-body" class="mop-config-body">
+                        <div class="mop-grid">
+                            <div class="mop-input-group">
+                                <label>Admin Expense %</label>
+                                <div class="mop-pct-wrap">
+                                    <input type="number" id="mop-pct-admin" class="mop-pct-input" value="3.25" step="0.05" min="0" oninput="onMopConfigChange()">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                            <div class="mop-input-group">
+                                <label>Income Tax (TDS) %</label>
+                                <div class="mop-pct-wrap">
+                                    <input type="number" id="mop-pct-it-tds" class="mop-pct-input" value="1.00" step="0.05" min="0" oninput="onMopConfigChange()">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                            <div class="mop-input-group">
+                                <label>Retention Money %</label>
+                                <div class="mop-pct-wrap">
+                                    <input type="number" id="mop-pct-retention" class="mop-pct-input" value="2.00" step="0.1" min="0" oninput="onMopConfigChange()">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                            <div class="mop-input-group">
+                                <label>Labour Cess %</label>
+                                <div class="mop-pct-wrap">
+                                    <input type="number" id="mop-pct-cess" class="mop-pct-input" value="1.00" step="0.1" min="0" oninput="onMopConfigChange()">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                            <div class="mop-input-group">
+                                <label>Testing Fee %</label>
+                                <div class="mop-pct-wrap">
+                                    <input type="number" id="mop-pct-testing" class="mop-pct-input" value="0.50" step="0.05" min="0" oninput="onMopConfigChange()">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                            <div class="mop-input-group">
+                                <label>Agency TDS %</label>
+                                <div class="mop-pct-wrap">
+                                    <input type="number" id="mop-pct-agency-tds" class="mop-pct-input" value="2.00" step="0.1" min="0" oninput="onMopConfigChange()">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                            <div class="mop-input-group">
+                                <label>Agency SGST TDS %</label>
+                                <div class="mop-pct-wrap">
+                                    <input type="number" id="mop-pct-agency-sgst" class="mop-pct-input" value="1.00" step="0.1" min="0" oninput="onMopConfigChange()">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                            <div class="mop-input-group">
+                                <label>Agency CGST TDS %</label>
+                                <div class="mop-pct-wrap">
+                                    <input type="number" id="mop-pct-agency-cgst" class="mop-pct-input" value="1.00" step="0.1" min="0" oninput="onMopConfigChange()">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mop-btn-reset-wrap">
+                            <button type="button" class="btn-mop-reset" onclick="resetMopPercentages()">↺ Reset to Contractor Defaults</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Standard Tax Preview (Tax & Proforma) -->
                 <div class="tax-preview-inline" id="tax-preview" style="display:none;">
                     <div class="tax-inline-row"><span>Taxable</span><span id="pv-taxable">—</span></div>
                     <div class="tax-inline-row"><span>CGST 9%</span><span id="pv-cgst">—</span></div>
@@ -237,6 +345,34 @@
                     <div class="tax-inline-grand"><span>Grand Total</span><span id="pv-grand">—</span></div>
                 </div>
 
+                <!-- 📑 Dedicated MOP Statement Live Preview -->
+                <div class="mop-preview-inline" id="mop-preview" style="display:none;">
+                    <div class="mop-pv-header">📑 Memorandum of Payment Statement</div>
+                    <div class="mop-pv-row mop-pv-highlight"><span>(A) Total Work Done</span><span id="mop-pv-gross">—</span></div>
+                    <div class="mop-pv-row"><span>(B) Less Agency Deductions</span><span id="mop-pv-agency-ded">—</span></div>
+                    <div class="mop-pv-subrow"><span>• TDS 2%</span><span id="mop-pv-agency-tds">—</span></div>
+                    <div class="mop-pv-subrow"><span>• SGST 1% + CGST 1%</span><span id="mop-pv-agency-gst">—</span></div>
+                    <div class="mop-pv-row mop-pv-subtotal"><span>(A - B) Net Work Done</span><span id="mop-pv-net-ab">—</span></div>
+                    <div class="mop-pv-row"><span>Admin & Head Expense</span><span id="mop-pv-admin">—</span></div>
+                    <div class="mop-pv-row mop-pv-highlight"><span>OUR BILL AMOUNT</span><span id="mop-pv-our-bill">—</span></div>
+                    <div class="mop-pv-subrow"><span>• Basic + SGST 9% + CGST 9%</span><span id="mop-pv-our-breakdown">—</span></div>
+                    <div class="mop-pv-row"><span>Less Deductions (TDS, Retention, Cess, Testing)</span><span id="mop-pv-our-ded">—</span></div>
+                    <div class="mop-pv-row mop-ro-interactive-row" id="mop-pv-roundoff-row">
+                        <div class="ro-lbl-wrap">
+                            <span>Round Off</span>
+                            <span id="mop-ro-mode-badge" class="ro-badge ro-badge-auto">AUTO</span>
+                        </div>
+                        <div class="ro-ctrl-wrap">
+                            <button type="button" id="btn-mop-ro-reset" class="btn-ro-reset" title="Reset to Auto Round Off" onclick="resetMopRoundOffToAuto()" style="display:none;">↺ Auto</button>
+                            <div class="ro-input-box">
+                                <input type="text" id="mop-pv-roundoff-input" class="inline-ro-input" inputmode="decimal" placeholder="+0.00">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mop-pv-grand"><span>Net Amount Payable</span><span id="mop-pv-net-payable">—</span></div>
+                    <div class="mop-pv-words" id="mop-pv-words">One Crore...</div>
+                </div>
+
                 <div class="step-nav">
                     <button type="button" class="btn-back-step" onclick="handleBackButton()">← Back</button>
                     <button type="button" class="btn-next-step" onclick="handleMainButton()">Next Step →</button>
@@ -251,7 +387,7 @@
                         <span class="step-icon-sm">✒️</span>
                         <h2 class="step-title-sm">Confirm & Generate</h2>
                     </div>
-                    <div class="stamp-pill">
+                    <div class="stamp-pill" id="stamp-pill-wrap">
                         <label class="switch-label-sm">
                             <input type="checkbox" id="stamp-toggle" checked>
                             <span class="switch-slider-sm"></span>
@@ -272,7 +408,7 @@
                             <div class="sum-val" id="sum-customer">—</div>
                         </div>
                         <div class="sum-item">
-                            <div class="sum-lbl">📄 Invoice / Date</div>
+                            <div class="sum-lbl" id="sum-invno-lbl">📄 Invoice / Date</div>
                             <div class="sum-val"><span id="sum-invno">—</span> • <span id="sum-date">—</span></div>
                         </div>
                         <div class="sum-item grand-item">
@@ -463,7 +599,65 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <!-- ══════════════ 📅 THEME-ALIGNED CALENDAR MODAL ══════════════ -->
+    <div id="custom-datepicker-modal" class="custom-datepicker-overlay hidden" onclick="handleDatePickerBackdrop(event)">
+        <div class="datepicker-card" onclick="event.stopPropagation()">
+            <!-- Header -->
+            <div class="dp-header">
+                <div class="dp-header-text">
+                    <span class="dp-header-subtitle">Select Date</span>
+                    <h3 class="dp-header-selected" id="dp-header-display">31 Aug 2026</h3>
+                </div>
+                <button type="button" class="dp-btn-close" onclick="closeCustomDatePicker()" aria-label="Close">✕</button>
+            </div>
+
+            <!-- Month & Year Controls -->
+            <div class="dp-nav-bar">
+                <button type="button" class="dp-nav-btn" onclick="prevDatePickerMonth()" aria-label="Previous Month">‹</button>
+                <div class="dp-month-year-wrap">
+                    <select id="dp-month-select" class="dp-select" onchange="onDatePickerMonthYearChange()">
+                        <option value="0">January</option>
+                        <option value="1">February</option>
+                        <option value="2">March</option>
+                        <option value="3">April</option>
+                        <option value="4">May</option>
+                        <option value="5">June</option>
+                        <option value="6">July</option>
+                        <option value="7">August</option>
+                        <option value="8">September</option>
+                        <option value="9">October</option>
+                        <option value="10">November</option>
+                        <option value="11">December</option>
+                    </select>
+                    <select id="dp-year-select" class="dp-select" onchange="onDatePickerMonthYearChange()">
+                        <!-- Populated dynamically (e.g. 2020 to 2035) -->
+                    </select>
+                </div>
+                <button type="button" class="dp-nav-btn" onclick="nextDatePickerMonth()" aria-label="Next Month">›</button>
+            </div>
+
+            <!-- Weekdays Header -->
+            <div class="dp-weekdays">
+                <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+            </div>
+
+            <!-- Days Grid -->
+            <div class="dp-days-grid" id="dp-days-grid">
+                <!-- 42 day cells dynamically generated -->
+            </div>
+
+            <!-- Quick Actions Footer -->
+            <div class="dp-footer">
+                <div class="dp-quick-btns">
+                    <button type="button" class="dp-quick-btn" onclick="setDatePickerPreset('today')">⚡ Today</button>
+                    <button type="button" class="dp-quick-btn" onclick="setDatePickerPreset('yesterday')">🗓️ Yesterday</button>
+                </div>
+                <button type="button" class="dp-btn-apply" onclick="applyCustomDatePicker()">Select Date</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js?v=2.7"></script>
 </body>
 
 </html>

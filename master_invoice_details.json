@@ -163,5 +163,35 @@
       "description": "Laying of New Strom water line in Partheshwer mahadev mandir to umiya dham And geban shah peer to aakash metro and different places in Lambha wards in south zone",
       "description_caps": "LAYING OF NEW STROM WATER LINE IN PARTHESHWER MAHADEV MANDIR TO UMIYA DHAM AND GEBAN SHAH PEER TO AAKASH METRO AND DIFFERENT PLACES IN LAMBHA WARDS IN SOUTH ZONE"
     }
-  ]
+  ],
+  "mop_rules": {
+    "default": {
+      "agency_tds_pct": 2.0,
+      "agency_sgst_tds_pct": 1.0,
+      "agency_cgst_tds_pct": 1.0,
+      "admin_expense_pct": 3.25,
+      "it_tds_pct": 1.0,
+      "retention_pct": 2.0,
+      "labour_cess_pct": 1.0,
+      "testing_fee_pct": 0.5
+    },
+    "contractor_overrides": {
+      "Jay Khodiyar Enterprise": {
+        "admin_expense_pct": 3.25,
+        "retention_pct": 2.0,
+        "it_tds_pct": 1.0
+      },
+      "JNP INFRASTRUCTURE": {
+        "admin_expense_pct": 3.25,
+        "retention_pct": 2.0,
+        "it_tds_pct": 1.0
+      },
+      "Shivam Builders": {
+        "admin_expense_pct": 3.0,
+        "retention_pct": 2.0,
+        "it_tds_pct": 1.0
+      }
+    },
+    "project_overrides": {}
+  }
 }
