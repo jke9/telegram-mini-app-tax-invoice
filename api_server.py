@@ -563,6 +563,7 @@ def api_einv_generate():
     project_key = data.get('project', 'AMC  Kali Lake')
     inv_no = data.get('inv_no', '2026/27-JNP-1')
     inv_date = data.get('inv_date', datetime.date.today().strftime('%d/%m/%Y'))
+    inv_time = data.get('inv_time') or data.get('time')
     amount = float(data.get('amount', 0))
     amount_mode = data.get('amount_mode', 'taxable')
     hsn_code = data.get('hsn', '995424')
@@ -595,6 +596,7 @@ def api_einv_generate():
         "project": project_key,
         "inv_no": inv_no,
         "inv_date": inv_date,
+        "inv_time": inv_time,
         "amount": amount,
         "amount_mode": amount_mode,
         "hsn": hsn_code,

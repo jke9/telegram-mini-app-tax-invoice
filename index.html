@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="app.css?v=2.7">
+    <link rel="stylesheet" href="app.css?v=2.8">
 </head>
 
 <body>
@@ -206,6 +206,14 @@
                 </div>
                 <!-- Additional E-Invoice Fields (visible when E-Invoice selected) -->
                 <div id="einv-extra-fields" class="einv-extra-fields" style="display:none;">
+                    <div class="field-group">
+                        <label class="field-label" for="einv-time">Generation Time (HH:MM:SS)</label>
+                        <div class="time-input-wrap">
+                            <input type="text" id="einv-time" class="field-input time-picker-input" placeholder="HH:MM:SS" readonly onclick="openCustomTimePicker('einv-time')">
+                            <button type="button" class="btn-clock-trigger" onclick="openCustomTimePicker('einv-time')" aria-label="Open Clock">🕒</button>
+                        </div>
+                        <p class="field-hint">Used for IRN Ack Date, Print Date, and Digital Signature</p>
+                    </div>
                     <div class="field-group">
                         <label class="field-label" for="einv-hsn">Main HSN / SAC Code</label>
                         <input type="text" id="einv-hsn" class="field-input" placeholder="e.g. 995424" value="995424">
@@ -657,7 +665,68 @@
         </div>
     </div>
 
-    <script src="app.js?v=2.7"></script>
+    <!-- ══════════════ 🕒 THEME-ALIGNED CLOCK / TIME PICKER MODAL ══════════════ -->
+    <div id="custom-timepicker-modal" class="custom-timepicker-overlay hidden" onclick="handleTimePickerBackdrop(event)">
+        <div class="timepicker-card" onclick="event.stopPropagation()">
+            <!-- Header -->
+            <div class="tp-header">
+                <div class="tp-header-text">
+                    <span class="tp-header-subtitle">Select Generation Time</span>
+                    <h3 class="tp-header-display" id="tp-header-display">11 : 42 : 36</h3>
+                </div>
+                <button type="button" class="tp-btn-close" onclick="closeCustomTimePicker()" aria-label="Close">✕</button>
+            </div>
+
+            <!-- 3-Column Clock Selectors (Hours, Minutes, Seconds) -->
+            <div class="tp-selectors-row">
+                <!-- Hours Column -->
+                <div class="tp-col">
+                    <span class="tp-col-label">HOURS</span>
+                    <div class="tp-select-wrap">
+                        <select id="tp-hour-select" class="tp-select" onchange="onTimePickerSelectChange()">
+                            <!-- 00 to 23 -->
+                        </select>
+                    </div>
+                </div>
+                <span class="tp-col-sep">:</span>
+                <!-- Minutes Column -->
+                <div class="tp-col">
+                    <span class="tp-col-label">MINUTES</span>
+                    <div class="tp-select-wrap">
+                        <select id="tp-min-select" class="tp-select" onchange="onTimePickerSelectChange()">
+                            <!-- 00 to 59 -->
+                        </select>
+                    </div>
+                </div>
+                <span class="tp-col-sep">:</span>
+                <!-- Seconds Column -->
+                <div class="tp-col">
+                    <span class="tp-col-label">SECONDS</span>
+                    <div class="tp-select-wrap">
+                        <select id="tp-sec-select" class="tp-select" onchange="onTimePickerSelectChange()">
+                            <!-- 00 to 59 -->
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Action Presets -->
+            <div class="tp-presets-row">
+                <button type="button" class="tp-preset-btn" onclick="setTimePickerPreset('now')">⚡ Current Time</button>
+                <button type="button" class="tp-preset-btn" onclick="setTimePickerPreset('random')">🎲 Realistic Random</button>
+                <button type="button" class="tp-preset-btn" onclick="setTimePickerPreset('morning')">🌅 11:15 AM</button>
+                <button type="button" class="tp-preset-btn" onclick="setTimePickerPreset('afternoon')">🌇 03:45 PM</button>
+            </div>
+
+            <!-- Footer -->
+            <div class="tp-footer">
+                <button type="button" class="tp-btn-cancel" onclick="closeCustomTimePicker()">Cancel</button>
+                <button type="button" class="tp-btn-apply" onclick="applyCustomTimePicker()">Set Time</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js?v=2.8"></script>
 </body>
 
 </html>

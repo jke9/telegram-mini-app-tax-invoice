@@ -390,6 +390,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (invDateEl) invDateEl.value = todayStr;
 
     initDatePicker();
+    initTimePicker();
 
     // Load all dropdown data
     await loadDropdowns();
@@ -1228,6 +1229,7 @@ function validateStep(step) {
         }
         if (currentDocType === 'e_invoice') {
             state.hsn = document.getElementById('einv-hsn')?.value.trim() || '995424';
+            state.inv_time = document.getElementById('einv-time')?.value.trim() || '11:15:30';
         }
     }
     if (step === 4) {
@@ -1247,7 +1249,11 @@ function populateSummary() {
     document.getElementById('sum-contractor').textContent = state.contractor || '—';
     document.getElementById('sum-customer').textContent = state.customer || '—';
     document.getElementById('sum-invno').textContent = state.inv_no || '—';
-    document.getElementById('sum-date').textContent = state.inv_date || '—';
+    if (currentDocType === 'e_invoice') {
+        document.getElementById('sum-date').textContent = `${state.inv_date} • ${state.inv_time || ''}`.trim();
+    } else {
+        document.getElementById('sum-date').textContent = state.inv_date || '—';
+    }
     document.getElementById('sum-grand').textContent = lastPreviewData
         ? `₹ ${lastPreviewData.grand_total}`
         : `₹ ${fmt(state.amount)}`;
@@ -1270,6 +1276,7 @@ async function generateInvoice() {
         state.project = '';
         state.include_stamp = false;
         state.hsn = document.getElementById('einv-hsn')?.value.trim() || '995424';
+        state.inv_time = document.getElementById('einv-time')?.value.trim() || '11:15:30';
     } else {
         state.include_stamp = document.getElementById('stamp-toggle').checked;
         state.project = document.getElementById('sel-project').value;
@@ -1302,6 +1309,7 @@ async function generateInvoice() {
             project: state.project,
             inv_no: state.inv_no,
             inv_date: state.inv_date,
+            inv_time: state.inv_time,
             bill_sr_no: state.bill_sr_no,
             date_of_record: state.date_of_record,
             hsn: state.hsn || '995424',
@@ -2219,4 +2227,181 @@ function applyCustomDatePicker() {
     if (tg) tg.HapticFeedback?.notificationOccurred('success');
     closeCustomDatePicker();
 }
+
+// ─── 🕒 Theme-Aligned Custom Time Picker Engine ───────────────────────────────
+let activeTimeInputId = null;
+let tpHour = 11;
+let tpMin = 15;
+let tpSec = 30;
+
+function initTimePicker() {
+    const hSel = document.getElementById('tp-hour-select');
+    const mSel = document.getElementById('tp-min-select');
+    const sSel = document.getElementById('tp-sec-select');
+
+    if (hSel) {
+        let hOpts = '';
+        for (let h = 0; h < 24; h++) {
+            const hStr = String(h).padStart(2, '0');
+            hOpts += `<option value="${hStr}">${hStr}</option>`;
+        }
+        hSel.innerHTML = hOpts;
+    }
+
+    if (mSel) {
+        let mOpts = '';
+        for (let m = 0; m < 60; m++) {
+            const mStr = String(m).padStart(2, '0');
+            mOpts += `<option value="${mStr}">${mStr}</option>`;
+        }
+        mSel.innerHTML = mOpts;
+    }
+
+    if (sSel) {
+        let sOpts = '';
+        for (let s = 0; s < 60; s++) {
+            const sStr = String(s).padStart(2, '0');
+            sOpts += `<option value="${sStr}">${sStr}</option>`;
+        }
+        sSel.innerHTML = sOpts;
+    }
+
+    // Set initial realistic time in #einv-time if empty
+    const einvTimeEl = document.getElementById('einv-time');
+    if (einvTimeEl && !einvTimeEl.value) {
+        const randMin = String(Math.floor(Math.random() * 58) + 1).padStart(2, '0');
+        const randSec = String(Math.floor(Math.random() * 55) + 5).padStart(2, '0');
+        const defaultTime = `11:${randMin}:${randSec}`;
+        einvTimeEl.value = defaultTime;
+        state.inv_time = defaultTime;
+    }
+}
+
+function parseTimeStr(str) {
+    if (!str || typeof str !== 'string') return { h: 11, m: 15, s: 30 };
+    const parts = str.trim().split(':');
+    if (parts.length >= 2) {
+        const h = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        const s = parts.length > 2 ? parseInt(parts[2], 10) : 0;
+        return {
+            h: isNaN(h) ? 11 : Math.max(0, Math.min(23, h)),
+            m: isNaN(m) ? 15 : Math.max(0, Math.min(59, m)),
+            s: isNaN(s) ? 30 : Math.max(0, Math.min(59, s))
+        };
+    }
+    return { h: 11, m: 15, s: 30 };
+}
+
+function openCustomTimePicker(inputId) {
+    activeTimeInputId = inputId;
+    const inputEl = document.getElementById(inputId);
+    const parsed = parseTimeStr(inputEl?.value);
+
+    tpHour = parsed.h;
+    tpMin = parsed.m;
+    tpSec = parsed.s;
+
+    updateTimePickerControls();
+
+    const modal = document.getElementById('custom-timepicker-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        if (tg) tg.HapticFeedback?.impactOccurred('light');
+    }
+}
+
+function closeCustomTimePicker() {
+    const modal = document.getElementById('custom-timepicker-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+    activeTimeInputId = null;
+}
+
+function handleTimePickerBackdrop(e) {
+    if (e.target.id === 'custom-timepicker-modal') {
+        closeCustomTimePicker();
+    }
+}
+
+function updateTimePickerControls() {
+    const hSel = document.getElementById('tp-hour-select');
+    const mSel = document.getElementById('tp-min-select');
+    const sSel = document.getElementById('tp-sec-select');
+    const display = document.getElementById('tp-header-display');
+
+    const hStr = String(tpHour).padStart(2, '0');
+    const mStr = String(tpMin).padStart(2, '0');
+    const sStr = String(tpSec).padStart(2, '0');
+
+    if (hSel) hSel.value = hStr;
+    if (mSel) mSel.value = mStr;
+    if (sSel) sSel.value = sStr;
+
+    if (display) {
+        display.textContent = `${hStr} : ${mStr} : ${sStr}`;
+    }
+}
+
+function onTimePickerSelectChange() {
+    const hSel = document.getElementById('tp-hour-select');
+    const mSel = document.getElementById('tp-min-select');
+    const sSel = document.getElementById('tp-sec-select');
+
+    tpHour = parseInt(hSel?.value || '11', 10);
+    tpMin = parseInt(mSel?.value || '15', 10);
+    tpSec = parseInt(sSel?.value || '30', 10);
+
+    updateTimePickerControls();
+    if (tg) tg.HapticFeedback?.selectionChanged();
+}
+
+function setTimePickerPreset(preset) {
+    const now = new Date();
+    if (preset === 'now') {
+        tpHour = now.getHours();
+        tpMin = now.getMinutes();
+        tpSec = now.getSeconds();
+    } else if (preset === 'random') {
+        tpHour = Math.floor(Math.random() * 8) + 10; // 10 to 17
+        tpMin = Math.floor(Math.random() * 58) + 1;  // 1 to 58
+        tpSec = Math.floor(Math.random() * 55) + 5;  // 5 to 59
+    } else if (preset === 'morning') {
+        tpHour = 11;
+        tpMin = Math.floor(Math.random() * 30) + 10;
+        tpSec = Math.floor(Math.random() * 55) + 5;
+    } else if (preset === 'afternoon') {
+        tpHour = 15;
+        tpMin = Math.floor(Math.random() * 30) + 15;
+        tpSec = Math.floor(Math.random() * 55) + 5;
+    }
+
+    updateTimePickerControls();
+    applyCustomTimePicker();
+}
+
+function applyCustomTimePicker() {
+    if (!activeTimeInputId) {
+        activeTimeInputId = 'einv-time';
+    }
+
+    const hStr = String(tpHour).padStart(2, '0');
+    const mStr = String(tpMin).padStart(2, '0');
+    const sStr = String(tpSec).padStart(2, '0');
+    const formatted = `${hStr}:${mStr}:${sStr}`;
+
+    const targetInput = document.getElementById(activeTimeInputId);
+    if (targetInput) {
+        targetInput.value = formatted;
+        targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+        targetInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    state.inv_time = formatted;
+
+    if (tg) tg.HapticFeedback?.notificationOccurred('success');
+    closeCustomTimePicker();
+}
+
 

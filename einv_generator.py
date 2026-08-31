@@ -77,10 +77,10 @@ def split_address_lines(addr_str, max_lines=3, max_chars_per_line=50):
     return lines[:max_lines]
 
 
-def build_realistic_timestamp(date_str, target_hour=11, target_min=15):
+def build_realistic_timestamp(date_str, custom_time_str=None, target_hour=11, target_min=15):
     """
     Constructs realistic randomized timestamps in accordance with SOP (never exact round times).
-    Example: 11:07:34, matching across ack_date, print_date, and signed_on.
+    If custom_time_str is provided (e.g. '11:42:36'), uses that directly.
     """
     # Parse date DD-MM-YYYY or DD/MM/YYYY
     clean_date = date_str.replace('/', '-')
@@ -95,10 +95,17 @@ def build_realistic_timestamp(date_str, target_hour=11, target_min=15):
         doc_date = now.strftime("%d-%m-%Y")
         doc_date_iso = now.strftime("%Y-%m-%d")
 
-    # Randomize minutes (1-58) and seconds (5-59)
-    minute = random.randint(1, 58)
-    second = random.randint(5, 59)
-    time_str = f"{target_hour:02d}:{minute:02d}:{second:02d}"
+    if custom_time_str and re.match(r'^\d{1,2}:\d{1,2}(:\d{1,2})?$', str(custom_time_str).strip()):
+        t_parts = str(custom_time_str).strip().split(':')
+        hh = int(t_parts[0])
+        mm = int(t_parts[1])
+        ss = int(t_parts[2]) if len(t_parts) > 2 else random.randint(5, 59)
+        time_str = f"{hh:02d}:{mm:02d}:{ss:02d}"
+    else:
+        # Randomize minutes (1-58) and seconds (5-59)
+        minute = random.randint(1, 58)
+        second = random.randint(5, 59)
+        time_str = f"{target_hour:02d}:{minute:02d}:{second:02d}"
 
     ack_date = f"{doc_date} {time_str}"
     print_date = f"{doc_date} {time_str}"
@@ -127,10 +134,11 @@ def generate_einv_pdf(payload, output_path):
 
     doc_no = payload.get("inv_no") or "2026/27-JNP-1"
     doc_date_raw = payload.get("inv_date") or datetime.now().strftime("%d/%m/%Y")
+    doc_time_raw = payload.get("inv_time") or payload.get("time")
     hsn_code = str(payload.get("hsn") or "995424").strip()
 
     # 2. Timestamps
-    doc_date, ack_date, print_date, signed_on = build_realistic_timestamp(doc_date_raw)
+    doc_date, ack_date, print_date, signed_on = build_realistic_timestamp(doc_date_raw, custom_time_str=doc_time_raw)
 
     # 3. Financial calculations
     amount_mode = payload.get("amount_mode", "taxable")
