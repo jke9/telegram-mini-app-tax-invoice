@@ -428,6 +428,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Update step UI
     updateStepUI();
+
+    // Set initial view
+    switchAppView('generator');
 });
 
 // ─── Load Dropdowns ───────────────────────────────────────────────────────────
@@ -1489,29 +1492,6 @@ async function sendPdfToChat() {
     }
 }
 
-// ─── Reset Form ───────────────────────────────────────────────────────────────
-function resetForm() {
-    currentStep = 1;
-    lastPreviewData = null;
-
-    // Hide success
-    const sc = document.getElementById('step-success');
-    sc.style.display = 'none'; sc.classList.remove('active');
-
-    // Reset all dots
-    for (let i = 1; i <= TOTAL_STEPS; i++) {
-        const dot = document.getElementById(`dot-${i}`);
-        if (dot) dot.classList.toggle('active', i === 1);
-    }
-    showStep(1);
-
-    // Reset inputs
-    document.getElementById('inv-no').value = 'RA BILL 1';
-    document.getElementById('inv-date').value = getTodayDDMMYYYY();
-    document.getElementById('bill-amount').value = '25000.24';
-    setMode('taxable');
-}
-
 // ─── Modal & Custom Data Handlers ─────────────────────────────────────────────
 function openAddDataModal(defaultTab = 'contractor', isNew = true) {
     if (isNew) {
@@ -1724,6 +1704,182 @@ async function submitAddProject(e) {
     } finally {
         btn.disabled = false;
         btn.textContent = '💾 Save Project';
+    }
+}
+
+// ─── Success Screen ───────────────────────────────────────────────────────────
+function showSuccess(pdfUrl, fname) {
+    for (let i = 1; i <= TOTAL_STEPS; i++) {
+        const el = document.getElementById(`step-${i}`);
+        if (el) { el.classList.remove('active'); el.style.display = 'none'; }
+    }
+    document.getElementById('progress-fill').style.width = '100%';
+    document.getElementById('step-badge').textContent = '✅ Complete';
+
+    const link = document.getElementById('download-link');
+    if (link) {
+        link.href = pdfUrl;
+        link.setAttribute('download', fname);
+    }
+
+    const detailsEl = document.getElementById('success-details');
+    if (detailsEl) {
+        detailsEl.innerHTML = `
+            <strong>Contractor:</strong> ${state.contractor}<br>
+            <strong>Customer:</strong> ${state.customer}<br>
+            <strong>Invoice No:</strong> ${state.inv_no}<br>
+            <strong>Date:</strong> ${state.inv_date}<br>
+            <strong>Grand Total:</strong> ₹ ${lastPreviewData ? lastPreviewData.grand_total : fmt(state.amount)}<br>
+            <strong>Stamp:</strong> ${state.include_stamp ? 'With Stamp & Sign ✒️' : 'Without Stamp'}
+        `;
+    }
+
+    const sc = document.getElementById('step-success');
+    if (sc) {
+        sc.style.display = 'block';
+        sc.classList.add('active');
+    }
+
+    log(`Invoice generated: ${fname}`, 'success');
+}
+
+// ─── Reset Form ───────────────────────────────────────────────────────────────
+function resetForm() {
+    currentStep = 1;
+    lastPreviewData = null;
+
+    const sc = document.getElementById('step-success');
+    if (sc) {
+        sc.style.display = 'none';
+        sc.classList.remove('active');
+    }
+
+    for (let i = 1; i <= TOTAL_STEPS; i++) {
+        const dot = document.getElementById(`dot-${i}`);
+        if (dot) { dot.classList.remove('active', 'done'); }
+        const card = document.getElementById(`step-${i}`);
+        if (card) { card.style.display = 'none'; card.classList.remove('active'); }
+    }
+
+    document.getElementById('bill-amount').value = '';
+    document.getElementById('tax-preview').style.display = 'none';
+
+    document.getElementById('step-1').style.display = 'block';
+    document.getElementById('step-1').classList.add('active');
+    document.getElementById('dot-1').classList.add('active');
+
+    updateStepUI();
+
+    if (tg) {
+        tg.MainButton.hide();
+        tg.BackButton.hide();
+        tg.HapticFeedback?.impactOccurred('light');
+    }
+}
+
+// ─── Error Helpers ────────────────────────────────────────────────────────────
+function showError(msg) {
+    const el = document.getElementById('error-banner');
+    if (el) {
+        document.getElementById('error-msg').textContent = msg;
+        el.classList.remove('hidden');
+    }
+    log(msg, 'error');
+}
+
+function hideError() {
+    const el = document.getElementById('error-banner');
+    if (el) el.classList.add('hidden');
+}
+
+// ─── Native App Navigation View Switcher ───────────────────────────────────────
+let currentAppView = 'generator';
+let currentMasterCategory = 'contractors';
+let fullContractorsData = [];
+let fullCustomersData = [];
+let fullProjectsData = [];
+
+function switchAppView(viewName) {
+    currentAppView = viewName;
+    const isGen = viewName === 'generator';
+
+    const generatorView = document.getElementById('view-generator');
+    const masterView = document.getElementById('view-master-data');
+
+    if (generatorView) generatorView.style.display = isGen ? 'block' : 'none';
+    if (masterView) masterView.style.display = isGen ? 'none' : 'block';
+
+    ['generator', 'contractors', 'customers', 'projects'].forEach(tab => {
+        const btn = document.getElementById(`nav-btn-${tab}`);
+        if (btn) btn.classList.toggle('active', tab === viewName);
+    });
+
+    const headerTextEl = document.querySelector('#app-header .header-text p');
+    const headerTitleMap = {
+        generator: 'Generator',
+        contractors: 'Contractors',
+        customers: 'Customers',
+        projects: 'Projects'
+    };
+    if (headerTextEl) headerTextEl.textContent = headerTitleMap[viewName] || 'Generator';
+
+    const stepBadge = document.getElementById('step-badge');
+    if (stepBadge) stepBadge.style.display = isGen ? 'flex' : 'none';
+
+    if (!isGen) {
+        switchMasterCategory(viewName);
+    }
+    if (tg) tg.HapticFeedback?.selectionChanged();
+}
+
+function switchMasterCategory(category) {
+    currentMasterCategory = category;
+    ['contractors', 'customers', 'projects'].forEach(cat => {
+        const pill = document.getElementById(`pill-${cat}`);
+        if (pill) pill.classList.toggle('active', cat === category);
+    });
+
+    const titleMap = {
+        contractors: '🏢 Contractors List',
+        customers: '🏛️ Customers List',
+        projects: '🚧 Projects List'
+    };
+    const titleEl = document.getElementById('master-view-title');
+    if (titleEl) titleEl.textContent = titleMap[category] || 'Master Data';
+
+    loadMasterCards(category);
+}
+
+function handleHeaderAddClick() {
+    const tabMap = {
+        contractors: 'contractor',
+        customers: 'customer',
+        projects: 'project'
+    };
+    openAddDataModal(tabMap[currentMasterCategory] || 'contractor', true);
+}
+
+async function loadMasterCards(category) {
+    const listContainer = document.getElementById('master-cards-list');
+    if (!listContainer) return;
+    listContainer.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--tg-theme-hint-color);">⏳ Loading ${category}...</div>`;
+
+    try {
+        if (category === 'contractors') {
+            const res = await fetch(`${API}/api/contractors/full`);
+            fullContractorsData = await res.json();
+            renderContractorCards(fullContractorsData);
+        } else if (category === 'customers') {
+            const res = await fetch(`${API}/api/customers/full`);
+            fullCustomersData = await res.json();
+            renderCustomerCards(fullCustomersData);
+        } else if (category === 'projects') {
+            const res = await fetch(`${API}/api/projects/full`);
+            fullProjectsData = await res.json();
+            renderProjectCards(fullProjectsData);
+        }
+    } catch (e) {
+        listContainer.innerHTML = `<div class="error-banner">⚠️ Failed to load ${category}: ${e.message}</div>`;
     }
 }
 
