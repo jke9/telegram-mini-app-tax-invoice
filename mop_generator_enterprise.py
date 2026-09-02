@@ -279,10 +279,10 @@ class EnterpriseMOP:
                 val_str += "..."
             self.pdf.drawString(x, y - 11, val_str)
 
-        cell_meta(c2_left + 10, top - 30, "Bill Sr. No.", self.bill_no, PRIMARY_NAVY, True, 8.2, 100)
-        cell_meta(mid_x + 5, top - 30, "Date of Record", self.record_date, TEXT_BODY, True, 7.8, 100)
-        cell_meta(c2_left + 10, top - 54, "RA Bill Ref.", self.ra_no, ACCENT_BLUE, True, 8.0, 100)
-        cell_meta(mid_x + 5, top - 54, "RA Bill Date", self.ra_date, TEXT_BODY, False, 7.6, 100)
+        cell_meta(c2_left + 10, top - 32, "RA Bill Reference", self.ra_no, PRIMARY_NAVY, True, 8.8, 105)
+        cell_meta(mid_x + 5, top - 32, "Date of Record", self.record_date, TEXT_BODY, True, 8.0, 105)
+        cell_meta(c2_left + 10, top - 56, "RA Bill Date", self.ra_date, ACCENT_BLUE, True, 8.0, 105)
+        cell_meta(mid_x + 5, top - 56, "Statement Type", "OFFICIAL SETTLEMENT", TEXT_BODY, False, 7.2, 105)
 
         return top - card_h - 8
 

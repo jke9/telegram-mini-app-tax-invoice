@@ -233,11 +233,6 @@ function updateDocTypeUI() {
         }
     }
 
-    const mopExtraFields = document.getElementById('mop-extra-fields');
-    if (mopExtraFields) {
-        mopExtraFields.style.display = currentDocType === 'mop' ? 'block' : 'none';
-    }
-
     const einvExtraFields = document.getElementById('einv-extra-fields');
     if (einvExtraFields) {
         einvExtraFields.style.display = currentDocType === 'e_invoice' ? 'block' : 'none';
@@ -1261,7 +1256,6 @@ function validateStep(step) {
         if (!state.inv_no) { showError(currentDocType === 'e_invoice' ? 'Please enter a Document Number.' : 'Please enter an Invoice / RA Bill Number.'); return false; }
         if (!state.inv_date) { showError('Please enter a Date (DD/MM/YYYY).'); return false; }
         if (currentDocType === 'mop') {
-            state.bill_sr_no = document.getElementById('mop-bill-sr-no')?.value.trim() || '15/26-27';
             state.date_of_record = state.inv_date;
         }
         if (currentDocType === 'e_invoice') {
@@ -1320,7 +1314,6 @@ async function generateInvoice() {
     }
 
     if (currentDocType === 'mop') {
-        state.bill_sr_no = document.getElementById('mop-bill-sr-no')?.value.trim() || '15/26-27';
         state.date_of_record = state.inv_date;
     }
 

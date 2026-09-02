@@ -213,14 +213,9 @@ def draw_mop_pdf(mop_data, output_pdf):
         draw_cell(x0, x3, y, work_h, "Name of Work / Project", work_name, fill_color=PALE_BLUE, font_size=7.5)
         y -= work_h
 
-        one_third = table_w / 3
-        draw_cell(x0, x0 + one_third, y, row_h, "Sr. No. of Bill", bill_sr_no)
-        draw_cell(x0 + one_third, x0 + 2 * one_third, y, row_h, "Date of Record", date_of_record)
-        draw_cell(x0 + 2 * one_third, x3, y, row_h, "Contractor GSTIN", contractor_gstin)
-        y -= row_h
-
-        draw_cell(x0, mid, y, row_h, "RA Bill No.", ra_bill_no, value_bold=True)
-        draw_cell(mid, x3, y, row_h, "RA Bill Date", ra_bill_date, value_bold=True)
+        one_half = table_w / 2
+        draw_cell(x0, x0 + one_half, y, row_h, "RA Bill No.", ra_bill_no, value_bold=True)
+        draw_cell(x0 + one_half, x3, y, row_h, "RA Bill Date", ra_bill_date, value_bold=True)
         y -= row_h
 
         fill(BRAND_NAVY)

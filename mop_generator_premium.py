@@ -387,7 +387,7 @@ class MOPRenderer:
         item(self.left + 13, top - 16, "Name of Agency", self.agency, 226, BRAND_BLUE, 1, 8.4)
         item(self.left + 13, top - 57, "Name of Work", self.work, 226, TEXT, 3, 7.5)
         item(c1 + 13, top - 16, "GST No.", self.agency_gstin, 130, BRAND_BLUE, 1, 7.8)
-        item(c1 + 13, top - 67, "Sr. No. of the Bill", self.bill_no, 130, TEXT, 1, 8.2)
+        item(c1 + 13, top - 67, "Bill Date", self.ra_date, 130, TEXT, 1, 8.2)
         item(c2 + 13, top - 16, "Date of Record", self.record_date, 92, TEXT, 1, 8.2)
         item(c2 + 13, top - 67, "RA Bill No.", self.ra_no, 92, TEXT, 2, 7.3)
         return top - h
