@@ -47,6 +47,8 @@ const state = {
         labour_cess_pct: 1.0,
         testing_fee_pct: 0.5
     }
+};  // ← CLOSES state object
+
 // Master data cache (Pre-initialized with immediate offline defaults)
 let contractorList = [
     'Shivam Builders',
@@ -84,9 +86,8 @@ let projectList = [
     { key: 'AMC Piplaj', label: 'AMC Piplaj' }
 ];
 
-// 🔒 Passcode Configuration (Default Passcode: 0101)
-const REQUIRED_PASSCODE = '0101';
-let currentPin = '';
+// 🔒 Passcode — defined in inline head script; reference here for app.js scope
+// REQUIRED_PASSCODE = '0101' (set in head inline script)
 let generatedPdfData = null;
 
 // ─── Document Type Selector Logic ─────────────────────────────────────────────
