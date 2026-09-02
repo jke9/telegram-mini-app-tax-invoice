@@ -196,6 +196,17 @@ function updateDocTypeUI() {
         if (step2Sub) step2Sub.textContent = 'Who is the main agency and for what project?';
         if (labelSelCustomer) labelSelCustomer.textContent = 'Agency / Main Contractor';
         if (projectFieldGroup) projectFieldGroup.style.display = 'block';
+
+        // For MOP, contractor is permanently fixed as Jay Khodiyar Enterprise
+        const cSel = document.getElementById('sel-contractor');
+        if (cSel) cSel.value = 'Jay Khodiyar Enterprise';
+        state.contractor = 'Jay Khodiyar Enterprise';
+        updateContractorPreview();
+
+        // Skip Step 1 and advance straight to Step 2 (Agency & Project)
+        if (currentStep === 1) {
+            goToStep(2);
+        }
     } else {
         if (step2Heading) step2Heading.textContent = 'Customer & Project';
         if (step2Sub) step2Sub.textContent = 'Who are you billing and for what work?';
@@ -280,6 +291,9 @@ function updateDocTypeUI() {
     if (btnGenText && !btnGenText.textContent.includes('Generating') && !btnGenText.textContent.includes('Closing') && !btnGenText.textContent.includes('Sent')) {
         btnGenText.textContent = info.btnText;
     }
+
+    // Update step UI indicators
+    updateStepUI();
 
     // Update page title
     document.title = `${info.title} Generator`;
@@ -427,7 +441,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Update step UI
-    updateStepUI();
+    if (currentDocType === 'mop') {
+        goToStep(2);
+    } else {
+        updateStepUI();
+    }
 
     // Set initial view
     switchAppView('generator');
@@ -1140,12 +1158,18 @@ function handleMainButton() {
 }
 
 function handleBackButton() {
-    if (currentStep > 1) {
+    const minStep = (currentDocType === 'mop') ? 2 : 1;
+    if (currentStep > minStep) {
         goToStep(currentStep - 1);
     }
 }
 
 function goToStep(step) {
+    // If MOP, ensure we never enter Step 1
+    if (currentDocType === 'mop' && step === 1) {
+        step = 2;
+    }
+
     // Hide current step
     const currCard = document.getElementById(`step-${currentStep}`);
     if (currCard) {
@@ -1183,19 +1207,29 @@ function goToStep(step) {
 }
 
 function updateStepUI() {
+    const isMop = currentDocType === 'mop';
+    const totalSteps = isMop ? 4 : TOTAL_STEPS;
+    const displayStep = isMop ? Math.max(1, currentStep - 1) : currentStep;
+
     // Progress bar (element may not exist if removed)
     const pf = document.getElementById('progress-fill');
-    if (pf) pf.style.width = `${(currentStep / TOTAL_STEPS) * 100}%`;
+    if (pf) pf.style.width = `${(displayStep / totalSteps) * 100}%`;
 
     // Step badge
     const badge = document.getElementById('step-badge');
-    if (badge) badge.textContent = `Step ${currentStep} / ${TOTAL_STEPS}`;
+    if (badge) badge.textContent = `Step ${displayStep} / ${totalSteps}`;
 
     // Telegram back button
     if (tg) {
-        if (currentStep > 1) tg.BackButton.show();
+        if (isMop ? currentStep > 2 : currentStep > 1) tg.BackButton.show();
         else tg.BackButton.hide();
         tg.MainButton.hide();
+    }
+
+    // In-page Back Button on Step 2 (Hide for MOP, show for others)
+    const step2BackBtn = document.querySelector('#step-2 .btn-back-step');
+    if (step2BackBtn) {
+        step2BackBtn.style.display = isMop ? 'none' : 'inline-block';
     }
 
     // On Step 5: populate summary
@@ -1746,7 +1780,6 @@ function showSuccess(pdfUrl, fname) {
 
 // ─── Reset Form ───────────────────────────────────────────────────────────────
 function resetForm() {
-    currentStep = 1;
     lastPreviewData = null;
 
     const sc = document.getElementById('step-success');
@@ -1763,11 +1796,28 @@ function resetForm() {
     }
 
     document.getElementById('bill-amount').value = '';
-    document.getElementById('tax-preview').style.display = 'none';
+    const taxPv = document.getElementById('tax-preview');
+    if (taxPv) taxPv.style.display = 'none';
+    const mopPv = document.getElementById('mop-preview');
+    if (mopPv) mopPv.style.display = 'none';
 
-    document.getElementById('step-1').style.display = 'block';
-    document.getElementById('step-1').classList.add('active');
-    document.getElementById('dot-1').classList.add('active');
+    const startStep = (currentDocType === 'mop') ? 2 : 1;
+    currentStep = startStep;
+
+    const startCard = document.getElementById(`step-${startStep}`);
+    if (startCard) {
+        startCard.style.display = 'block';
+        startCard.classList.add('active');
+    }
+    const startDot = document.getElementById(`dot-${startStep}`);
+    if (startDot) startDot.classList.add('active');
+
+    if (currentDocType === 'mop') {
+        const cSel = document.getElementById('sel-contractor');
+        if (cSel) cSel.value = 'Jay Khodiyar Enterprise';
+        state.contractor = 'Jay Khodiyar Enterprise';
+        updateContractorPreview();
+    }
 
     updateStepUI();
 
