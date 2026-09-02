@@ -334,6 +334,24 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// ─── Safe Haptic Helper ───────────────────────────────────────────────────────
+function triggerHaptic(type = 'impact', style = 'light') {
+    try {
+        if (window.Telegram?.WebApp?.HapticFeedback) {
+            const hf = window.Telegram.WebApp.HapticFeedback;
+            if (type === 'impact' && typeof hf.impactOccurred === 'function') {
+                hf.impactOccurred(style);
+            } else if (type === 'notification' && typeof hf.notificationOccurred === 'function') {
+                hf.notificationOccurred(style);
+            } else if (type === 'selection' && typeof hf.selectionChanged === 'function') {
+                hf.selectionChanged();
+            }
+        }
+    } catch (e) {
+        // Safe no-op on desktop browsers
+    }
+}
+
 // ─── Passcode Lock Logic ──────────────────────────────────────────────────────
 function checkPasscodeOnStart() {
     const isUnlocked = localStorage.getItem('jke_passcode_unlocked') === REQUIRED_PASSCODE;
@@ -347,9 +365,9 @@ function checkPasscodeOnStart() {
 
 function pressPin(num) {
     if (currentPin.length < 4) {
-        currentPin += num;
+        currentPin += String(num);
         updatePinDots();
-        if (tg) tg.HapticFeedback.impactOccurred('light');
+        triggerHaptic('impact', 'light');
         if (currentPin.length === 4) {
             setTimeout(verifyPin, 150);
         }
@@ -360,7 +378,7 @@ function clearPin() {
     currentPin = '';
     updatePinDots();
     document.getElementById('passcode-error')?.classList.add('hidden');
-    if (tg) tg.HapticFeedback.impactOccurred('medium');
+    triggerHaptic('impact', 'medium');
 }
 
 function backspacePin() {
@@ -368,7 +386,7 @@ function backspacePin() {
         currentPin = currentPin.slice(0, -1);
         updatePinDots();
         document.getElementById('passcode-error')?.classList.add('hidden');
-        if (tg) tg.HapticFeedback.impactOccurred('light');
+        triggerHaptic('impact', 'light');
     }
 }
 
@@ -387,13 +405,19 @@ function verifyPin() {
         localStorage.setItem('jke_passcode_unlocked', REQUIRED_PASSCODE);
         document.getElementById('passcode-screen')?.classList.add('hidden');
         document.getElementById('passcode-error')?.classList.add('hidden');
-        if (tg) tg.HapticFeedback.notificationOccurred('success');
+        triggerHaptic('notification', 'success');
     } else {
         document.getElementById('passcode-error')?.classList.remove('hidden');
-        if (tg) tg.HapticFeedback.notificationOccurred('error');
+        triggerHaptic('notification', 'error');
         currentPin = '';
         updatePinDots();
     }
+}
+
+function unlockWithDefault() {
+    currentPin = REQUIRED_PASSCODE;
+    updatePinDots();
+    setTimeout(verifyPin, 100);
 }
 
 function lockApp() {
@@ -402,8 +426,36 @@ function lockApp() {
     updatePinDots();
     document.getElementById('passcode-error')?.classList.add('hidden');
     document.getElementById('passcode-screen')?.classList.remove('hidden');
-    if (tg) tg.HapticFeedback.notificationOccurred('warning');
+    triggerHaptic('notification', 'warning');
 }
+
+// Attach globally to window
+window.pressPin = pressPin;
+window.clearPin = clearPin;
+window.backspacePin = backspacePin;
+window.verifyPin = verifyPin;
+window.unlockWithDefault = unlockWithDefault;
+window.lockApp = lockApp;
+
+// Desktop Physical Keyboard Support for Passcode
+document.addEventListener('keydown', (e) => {
+    const passcodeOverlay = document.getElementById('passcode-screen');
+    if (!passcodeOverlay || passcodeOverlay.classList.contains('hidden')) return;
+
+    if (e.key >= '0' && e.key <= '9') {
+        e.preventDefault();
+        pressPin(e.key);
+    } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        backspacePin();
+    } else if (e.key === 'Escape' || e.key === 'c' || e.key === 'C') {
+        e.preventDefault();
+        clearPin();
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (currentPin.length === 4) verifyPin();
+    }
+});
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
@@ -1522,7 +1574,7 @@ function goToStep(step) {
         updateFilteredProjects();
     }
 
-    if (tg) tg.HapticFeedback.impactOccurred('light');
+    triggerHaptic('impact', 'light');
 }
 
 function updateStepUI() {
@@ -1748,7 +1800,7 @@ async function generateInvoice() {
         btn.disabled = false;
         document.getElementById('btn-gen-icon').textContent = '⚡';
         document.getElementById('btn-gen-text').textContent = docInfo.btnText;
-        if (tg) tg.HapticFeedback.notificationOccurred('error');
+        triggerHaptic('notification', 'error');
     } finally {
         isGenerating = false;
     }
@@ -1838,7 +1890,7 @@ async function sendPdfToChat() {
         });
         
         if (btn) btn.textContent = '✅ Sent to Telegram Chat!';
-        if (tg) tg.HapticFeedback.notificationOccurred('success');
+        triggerHaptic('notification', 'success');
     } catch (e) {
         alert('Failed to send to Telegram chat: ' + e.message);
         if (btn) btn.textContent = '💬 Send PDF directly to Telegram Chat';

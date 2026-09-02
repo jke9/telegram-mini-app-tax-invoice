@@ -13,8 +13,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="app.css?v=11.0">
-    <link rel="stylesheet" href="mop_dynamic.css?v=11.0">
+    <link rel="stylesheet" href="app.css?v=12.0">
+    <link rel="stylesheet" href="mop_dynamic.css?v=12.0">
 </head>
 
 <body>
@@ -24,6 +24,7 @@
             <div class="passcode-icon">🔐</div>
             <h2>JKE Invoice Security</h2>
             <p>Enter 4-digit passcode to unlock app</p>
+            <p class="passcode-sub-hint">Passcode: <strong>0101</strong> (Press keypad or type on keyboard)</p>
             
             <div class="pin-dots" id="pin-dots">
                 <div class="pin-dot" id="pdot-1"></div>
@@ -48,6 +49,10 @@
                 <button type="button" class="key-btn key-action" onclick="clearPin()">C</button>
                 <button type="button" class="key-btn" onclick="pressPin('0')">0</button>
                 <button type="button" class="key-btn key-action" onclick="backspacePin()">⌫</button>
+            </div>
+
+            <div class="passcode-quick-unlock">
+                <button type="button" class="btn-quick-unlock" onclick="unlockWithDefault()">🔓 Quick Unlock (0101)</button>
             </div>
         </div>
     </div>
@@ -839,8 +844,8 @@
         </div>
     </div>
 
-    <script src="app.js?v=11.0"></script>
-    <script src="mop_dynamic.js?v=11.0"></script>
+    <script src="app.js?v=12.0"></script>
+    <script src="mop_dynamic.js?v=12.0"></script>
 </body>
 
 </html>
