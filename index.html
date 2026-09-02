@@ -189,15 +189,15 @@
 
     <div id="app-container">
 
-        <!-- ── Header with Animated Document Type Selector ── -->
-        <header id="app-header">
+        <!-- ── Top App Bar (Sleek FinTech Mobile Header) ── -->
+        <header id="app-header" class="fintech-header">
+            <button type="button" class="btn-app-back" onclick="handleBackButton()" aria-label="Go Back">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
             <div class="header-type-wrapper">
                 <button type="button" id="btn-doc-type-selector" class="btn-doc-type-selector" onclick="toggleDocTypeDropdown(event)" aria-expanded="false" aria-haspopup="true" title="Switch Invoice Type">
-                    <span class="header-icon" id="header-type-icon">🧾</span>
-                    <div class="header-text">
-                        <h1 id="header-doc-title">Tax Invoice</h1>
-                        <p id="header-doc-subtitle">Generator <span class="type-switch-indicator">▾</span></p>
-                    </div>
+                    <span class="header-text-main" id="header-doc-title">Proforma And Invoice</span>
+                    <span class="type-switch-indicator">▾</span>
                 </button>
 
                 <!-- Glassmorphic Dropdown Menu -->
@@ -236,8 +236,9 @@
                     </button>
                 </div>
             </div>
-            <div id="step-badge" class="step-badge">Step 1 / 5</div>
-            <button type="button" id="btn-lock-app" class="btn-lock-header" title="Lock App" onclick="lockApp()">🔒</button>
+            <button type="button" id="btn-lock-app" class="btn-menu-header" title="Options / Lock" onclick="lockApp()" aria-label="Menu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+            </button>
         </header>
 
         <!-- ══════════════ VIEW 1: INVOICE GENERATOR ══════════════ -->
@@ -412,17 +413,41 @@
                     <div class="tax-inline-grand"><span>Grand Total</span><span id="pv-grand">—</span></div>
                 </div>
 
+                <!-- 💰 INTRODUCTORY BILL AMOUNT CARD -->
+                <div class="bill-amount-intro-card" id="bill-amount-intro-card">
+                    <div class="bill-intro-icon-wrap">
+                        <span class="bill-intro-icon">💰</span>
+                    </div>
+                    <div class="bill-intro-info">
+                        <h3 class="bill-intro-title">Bill Amount</h3>
+                        <p class="bill-intro-sub">Enter amount and select type</p>
+                    </div>
+                </div>
+
                 <!-- 📑 UNIFIED MASTER MOP INTERACTIVE STATEMENT -->
                 <div class="mop-master-statement" id="mop-preview" style="display:none;">
                     <div class="mop-statement-header">
                         <div class="mop-st-title">
-                            <span class="mop-st-icon">📑</span>
+                            <div class="mop-doc-icon-badge">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="#4D8DFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="#0D1828"/>
+                                    <path d="M14 2v6h6" stroke="#4D8DFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <line x1="8" y1="13" x2="16" y2="13" stroke="#A8B3C7" stroke-width="1.5" stroke-linecap="round"/>
+                                    <line x1="8" y1="17" x2="14" y2="17" stroke="#A8B3C7" stroke-width="1.5" stroke-linecap="round"/>
+                                    <circle cx="18" cy="11" r="1.5" fill="#45C878"/>
+                                    <circle cx="18" cy="14" r="1.5" fill="#F5B942"/>
+                                    <circle cx="18" cy="17" r="1.5" fill="#FF6B6B"/>
+                                </svg>
+                            </div>
                             <div>
-                                <h3>MEMORANDUM OF PAYMENT STATEMENT</h3>
-                                <p>Interactive Financial Ledger & Live Settlement Engine</p>
+                                <h3 class="mop-main-h3">MEMORANDUM OF <span class="mop-highlight-blue">PAYMENT STATEMENT</span></h3>
+                                <p class="mop-sub-p">Interactive Financial Ledger &amp; Live Settlement Engine</p>
                             </div>
                         </div>
-                        <button type="button" class="btn-mop-reset" onclick="resetMopPercentages()" title="Reset all deductions to contractor defaults">↺ Reset Defaults</button>
+                        <button type="button" class="btn-mop-reset" onclick="resetMopPercentages()" title="Reset all deductions to contractor defaults">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                            Reset Defaults
+                        </button>
                     </div>
 
                     <!-- [A] WORK VALUE AS PER R.A. BILL -->
@@ -430,76 +455,114 @@
                         <div class="mop-st-section-title">[A] WORK VALUE AS PER R.A. BILL</div>
                         
                         <div class="mop-st-amount-box">
-                            <label for="bill-amount">Total Work Done Amount as per RA Bill (₹)</label>
+                            <label class="mop-amount-lbl" for="bill-amount">Total Work Done Amount as per RA Bill (₹)</label>
                             <div class="mop-st-amount-input-wrap">
                                 <span class="mop-st-curr">₹</span>
                                 <input type="number" id="bill-amount" class="mop-st-main-input" value="100000" placeholder="0.00" step="0.01" min="0" oninput="updateMopPreview()">
                             </div>
                         </div>
 
-                        <div class="mop-st-row mop-st-sub">
-                            <span>• Basic Work (Taxable) + GST 18%</span>
-                            <span id="mop-pv-work-breakdown" class="mop-val-txt">Basic INR 84,745.76 + GST INR 15,254.24</span>
+                        <!-- Refined GST Breakdown Summary Card -->
+                        <div class="mop-gst-card">
+                            <div class="mop-gst-icon-box">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4D8DFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="4" y="2" width="16" height="20" rx="2"/>
+                                    <line x1="8" y1="6" x2="16" y2="6"/>
+                                    <line x1="16" y1="14" x2="16" y2="18"/>
+                                    <path d="M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M8 18h.01M12 18h.01"/>
+                                </svg>
+                            </div>
+                            <div class="mop-gst-col-left">
+                                <div class="mop-gst-tag-blue">Basic Work</div>
+                                <div class="mop-gst-subtag">(Taxable) + GST <strong class="gst-18-white">18%</strong></div>
+                            </div>
+                            <div class="mop-gst-divider"></div>
+                            <div class="mop-gst-col-right">
+                                <div class="mop-gst-basic-txt" id="mop-pv-basic-txt">Basic INR 84,745.76</div>
+                                <div class="mop-gst-amt-row">
+                                    <span class="mop-gst-pct-lbl">+ GST 18%</span>
+                                    <span class="mop-gst-val-blue" id="mop-pv-gst-amt">₹ 15,254.24</span>
+                                </div>
+                            </div>
                         </div>
+                        <span id="mop-pv-work-breakdown" style="display:none;"></span>
                     </div>
 
                     <!-- [B] STATUTORY & AGENCY DEDUCTIONS -->
                     <div class="mop-st-section">
                         <div class="mop-st-section-title-flex">
-                            <span>[B] STATUTORY & AGENCY DEDUCTIONS</span>
+                            <span class="mop-sec-title-b">[B] STATUTORY &amp; AGENCY DEDUCTIONS</span>
                             <span id="mop-pv-agency-ded" class="mop-val-red">- INR 3,389.83</span>
                         </div>
 
                         <div class="mop-st-calc-row">
                             <div class="mop-st-calc-lbl">
-                                <span>• Income Tax / TDS</span>
+                                <span class="mop-row-icon doc-icon">📄</span>
+                                <span class="mop-row-text">Income Tax / TDS</span>
+                            </div>
+                            <div class="mop-row-right">
                                 <div class="mop-inline-pct-wrap">
                                     <input type="number" id="mop-pct-agency-tds" class="mop-inline-pct" value="2.00" step="0.1" min="0" oninput="onMopConfigChange()">
                                     <span>%</span>
                                 </div>
+                                <span id="mop-pv-agency-tds" class="mop-val-red-sub">- INR 1,694.92</span>
                             </div>
-                            <span id="mop-pv-agency-tds" class="mop-val-sub">- INR 1,694.92</span>
                         </div>
 
                         <div class="mop-st-calc-row">
                             <div class="mop-st-calc-lbl">
-                                <span>• SGST TDS</span>
+                                <span class="mop-row-icon pct-icon">%</span>
+                                <span class="mop-row-text">SGST TDS</span>
+                            </div>
+                            <div class="mop-row-right">
                                 <div class="mop-inline-pct-wrap">
                                     <input type="number" id="mop-pct-agency-sgst" class="mop-inline-pct" value="1.00" step="0.1" min="0" oninput="onMopConfigChange()">
                                     <span>%</span>
                                 </div>
+                                <span id="mop-pv-agency-sgst" class="mop-val-red-sub">- INR 847.46</span>
                             </div>
-                            <span id="mop-pv-agency-sgst" class="mop-val-sub">- INR 847.46</span>
                         </div>
 
                         <div class="mop-st-calc-row">
                             <div class="mop-st-calc-lbl">
-                                <span>• CGST TDS</span>
+                                <span class="mop-row-icon pct-icon">%</span>
+                                <span class="mop-row-text">CGST TDS</span>
+                            </div>
+                            <div class="mop-row-right">
                                 <div class="mop-inline-pct-wrap">
                                     <input type="number" id="mop-pct-agency-cgst" class="mop-inline-pct" value="1.00" step="0.1" min="0" oninput="onMopConfigChange()">
                                     <span>%</span>
                                 </div>
+                                <span id="mop-pv-agency-cgst" class="mop-val-red-sub">- INR 847.46</span>
                             </div>
-                            <span id="mop-pv-agency-cgst" class="mop-val-sub">- INR 847.46</span>
                         </div>
                     </div>
 
                     <!-- [A - B] NET WORK VALUE & OVERHEADS -->
-                    <div class="mop-st-section mop-st-highlight-box">
+                    <div class="mop-st-section mop-st-net-card">
                         <div class="mop-st-section-title-flex">
-                            <span class="mop-green-lbl">[A - B] NET WORK VALUE & OVERHEADS</span>
-                            <span id="mop-pv-net-ab" class="mop-val-green">INR 96,610.17</span>
+                            <div class="mop-net-lbl-wrap">
+                                <svg class="mop-trend-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#45C878" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                                    <polyline points="17 6 23 6 23 12"/>
+                                </svg>
+                                <span class="mop-green-lbl">[A - B] NET WORK VALUE &amp; OVERHEADS</span>
+                            </div>
+                            <span id="mop-pv-net-ab" class="mop-val-green">₹ 96,610.17</span>
                         </div>
 
-                        <div class="mop-st-calc-row">
+                        <div class="mop-st-calc-row mop-admin-exp-row">
                             <div class="mop-st-calc-lbl">
-                                <span>• Admin & Head Office Expense</span>
+                                <span class="mop-row-icon admin-icon">⚙️</span>
+                                <span class="mop-row-text">Admin &amp; Head Office Expense</span>
+                            </div>
+                            <div class="mop-row-right">
                                 <div class="mop-inline-pct-wrap">
                                     <input type="number" id="mop-pct-admin" class="mop-inline-pct" value="3.25" step="0.05" min="0" oninput="onMopConfigChange()">
                                     <span>%</span>
                                 </div>
+                                <span id="mop-pv-admin" class="mop-val-red-sub">- INR 3,250.00</span>
                             </div>
-                            <span id="mop-pv-admin" class="mop-val-red">- INR 3,250.00</span>
                         </div>
                     </div>
 
@@ -518,52 +581,64 @@
                     <!-- [D] FINAL RECOVERIES & ADJUSTMENTS (Core + Dynamic Addons) -->
                     <div class="mop-st-section">
                         <div class="mop-st-section-title-flex">
-                            <span>[D] FINAL RECOVERIES & ADJUSTMENTS</span>
+                            <span>[D] FINAL RECOVERIES &amp; ADJUSTMENTS</span>
                             <span id="mop-pv-our-ded" class="mop-val-red">- INR 4,138.65</span>
                         </div>
 
                         <div class="mop-st-calc-row" id="mop-pv-core-it">
                             <div class="mop-st-calc-lbl">
-                                <span>• Contractor Income Tax (TDS)</span>
+                                <span class="mop-row-icon doc-icon">📄</span>
+                                <span class="mop-row-text">Contractor Income Tax (TDS)</span>
+                            </div>
+                            <div class="mop-row-right">
                                 <div class="mop-inline-pct-wrap">
                                     <input type="number" id="mop-pct-it-tds" class="mop-inline-pct" value="1.00" step="0.05" min="0" oninput="onMopConfigChange()">
                                     <span>%</span>
                                 </div>
+                                <span id="mop-pv-it-tds" class="mop-val-red-sub">- INR 791.19</span>
                             </div>
-                            <span id="mop-pv-it-tds" class="mop-val-sub">- INR 791.19</span>
                         </div>
 
                         <div class="mop-st-calc-row" id="mop-pv-core-retention">
                             <div class="mop-st-calc-lbl">
-                                <span>• Retention Money S.D.</span>
+                                <span class="mop-row-icon shield-icon">🛡️</span>
+                                <span class="mop-row-text">Retention Money S.D.</span>
+                            </div>
+                            <div class="mop-row-right">
                                 <div class="mop-inline-pct-wrap">
                                     <input type="number" id="mop-pct-retention" class="mop-inline-pct" value="2.00" step="0.1" min="0" oninput="onMopConfigChange()">
                                     <span>%</span>
                                 </div>
+                                <span id="mop-pv-retention" class="mop-val-red-sub">- INR 2,000.00</span>
                             </div>
-                            <span id="mop-pv-retention" class="mop-val-sub">- INR 2,000.00</span>
                         </div>
 
                         <div class="mop-st-calc-row" id="mop-pv-core-cess">
                             <div class="mop-st-calc-lbl">
-                                <span>• Labour Welfare Cess</span>
+                                <span class="mop-row-icon tool-icon">🏗️</span>
+                                <span class="mop-row-text">Labour Welfare Cess</span>
+                            </div>
+                            <div class="mop-row-right">
                                 <div class="mop-inline-pct-wrap">
                                     <input type="number" id="mop-pct-cess" class="mop-inline-pct" value="1.00" step="0.1" min="0" oninput="onMopConfigChange()">
                                     <span>%</span>
                                 </div>
+                                <span id="mop-pv-cess" class="mop-val-red-sub">- INR 847.46</span>
                             </div>
-                            <span id="mop-pv-cess" class="mop-val-sub">- INR 847.46</span>
                         </div>
 
                         <div class="mop-st-calc-row" id="mop-pv-core-testing">
                             <div class="mop-st-calc-lbl">
-                                <span>• Quality & Testing Fee</span>
+                                <span class="mop-row-icon test-icon">🔬</span>
+                                <span class="mop-row-text">Quality &amp; Testing Fee</span>
+                            </div>
+                            <div class="mop-row-right">
                                 <div class="mop-inline-pct-wrap">
                                     <input type="number" id="mop-pct-testing" class="mop-inline-pct" value="0.50" step="0.05" min="0" oninput="onMopConfigChange()">
                                     <span>%</span>
                                 </div>
+                                <span id="mop-pv-testing" class="mop-val-red-sub">- INR 500.00</span>
                             </div>
-                            <span id="mop-pv-testing" class="mop-val-sub">- INR 500.00</span>
                         </div>
 
                         <!-- ➕ DYNAMIC CUSTOM PROJECT ADDONS / DEDUCTIONS EMBEDDED DIRECTLY IN SECTION D -->
@@ -572,7 +647,7 @@
                                 <div class="mop-adj-title">
                                     <span class="mop-adj-icon">🏷️</span>
                                     <div>
-                                        <h3>Custom Deductions & Addons</h3>
+                                        <h3>Custom Deductions &amp; Addons</h3>
                                         <p>Add project-specific deductions (e.g. <em>SD for Project</em>, Security Deposit, Penalty)</p>
                                     </div>
                                 </div>
@@ -703,19 +778,39 @@
     <!-- ══════════════ NATIVE BOTTOM NAVIGATION BAR ══════════════ -->
     <nav id="bottom-nav" class="bottom-nav">
         <button type="button" id="nav-btn-generator" class="nav-item active" onclick="switchAppView('generator')">
-            <span class="nav-icon">🧾</span>
+            <span class="nav-icon-wrap">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/>
+                    <line x1="8" y1="7" x2="16" y2="7"/>
+                    <line x1="8" y1="11" x2="16" y2="11"/>
+                    <line x1="8" y1="15" x2="13" y2="15"/>
+                </svg>
+            </span>
             <span class="nav-label">Generator</span>
         </button>
         <button type="button" id="nav-btn-contractors" class="nav-item" onclick="switchAppView('contractors')">
-            <span class="nav-icon">🏢</span>
+            <span class="nav-icon-wrap">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="2" width="16" height="20" rx="2"/>
+                    <path d="M9 22v-4h6v4M8 6h.01M16 6h.01M8 10h.01M16 10h.01M8 14h.01M16 14h.01"/>
+                </svg>
+            </span>
             <span class="nav-label">Contractors</span>
         </button>
         <button type="button" id="nav-btn-customers" class="nav-item" onclick="switchAppView('customers')">
-            <span class="nav-icon">🏛️</span>
+            <span class="nav-icon-wrap">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 21h18M3 10h18M5 10v11M19 10v11M9 10v11M15 10v11M12 2l10 5H2l10-5z"/>
+                </svg>
+            </span>
             <span class="nav-label">Customers</span>
         </button>
         <button type="button" id="nav-btn-projects" class="nav-item" onclick="switchAppView('projects')">
-            <span class="nav-icon">🚧</span>
+            <span class="nav-icon-wrap">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 6h16M4 18h16M7 6v12M17 6v12M2 22h20M2 2h20M6 10l4 4M14 10l4 4"/>
+                </svg>
+            </span>
             <span class="nav-label">Projects</span>
         </button>
     </nav>

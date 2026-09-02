@@ -1,30 +1,48 @@
 /* ═══════════════════════════════════════════════════════
-   JKE Tax Invoice Generator — Telegram Mini App Styles
+   JKE Tax Invoice Generator — FinTech Dark Navy System
    ═══════════════════════════════════════════════════════ */
 
 :root {
-    --tg-theme-bg-color: #0f0f1a;
-    --tg-theme-text-color: #e8eaf6;
-    --tg-theme-hint-color: #7986cb;
-    --tg-theme-link-color: #82b1ff;
-    --tg-theme-button-color: #3d5afe;
+    --app-bg: #050B14;
+    --surface-primary: #091321;
+    --surface-secondary: #0D1828;
+    --surface-elevated: #101C2D;
+    --input-bg: #060C15;
+
+    --primary-blue: #4D8DFF;
+    --soft-blue: #79A8FF;
+    --blue-border: rgba(77, 141, 255, 0.38);
+    --blue-border-focus: #4D8DFF;
+
+    --primary-text: #F5F7FB;
+    --secondary-text: #A8B3C7;
+    --muted-text: #718096;
+    --divider: rgba(148, 163, 184, 0.16);
+
+    --success: #45C878;
+    --success-surface: rgba(69, 200, 120, 0.08);
+    --success-border: rgba(69, 200, 120, 0.35);
+
+    --danger: #FF6B6B;
+    --danger-surface: rgba(255, 107, 107, 0.07);
+
+    --warning: #F5B942;
+    --warning-surface: rgba(245, 185, 66, 0.10);
+
+    /* Legacy telegram variable mappings for seamless compatibility */
+    --tg-theme-bg-color: #050B14;
+    --tg-theme-text-color: #F5F7FB;
+    --tg-theme-hint-color: #718096;
+    --tg-theme-link-color: #4D8DFF;
+    --tg-theme-button-color: #4D8DFF;
     --tg-theme-button-text-color: #ffffff;
-    --tg-theme-secondary-bg-color: #1a1a2e;
+    --tg-theme-secondary-bg-color: #091321;
 
-    --accent: #3d5afe;
-    --accent-glow: rgba(61, 90, 254, 0.35);
-    --success: #00e676;
-    --success-bg: rgba(0, 230, 118, 0.12);
-    --warning: #ffab40;
-    --warning-bg: rgba(255, 171, 64, 0.12);
-    --danger: #ff5252;
-    --danger-bg: rgba(255, 82, 82, 0.12);
+    --accent: #4D8DFF;
+    --accent-glow: rgba(77, 141, 255, 0.35);
 
-    --glass-bg: rgba(255, 255, 255, 0.04);
-    --glass-border: rgba(255, 255, 255, 0.09);
-    --glass-hover: rgba(255, 255, 255, 0.07);
-
-    --radius-lg: 20px;
+    --radius-xl: 24px;
+    --radius-lg: 18px;
     --radius-md: 14px;
     --radius-sm: 10px;
     --gap: 14px;
@@ -34,15 +52,15 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Inter', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-tap-highlight-color: transparent;
 }
 
 body {
-    background-color: var(--tg-theme-bg-color);
-    color: var(--tg-theme-text-color);
+    background-color: var(--app-bg);
+    color: var(--primary-text);
     min-height: 100vh;
-    padding: 14px 14px 80px 14px;
+    padding: 12px 14px 88px 14px;
     display: flex;
     justify-content: center;
     overflow-x: hidden;
@@ -50,7 +68,7 @@ body {
 
 #app-container {
     width: 100%;
-    max-width: 480px;
+    max-width: 440px;
     display: flex;
     flex-direction: column;
     gap: var(--gap);
@@ -68,30 +86,53 @@ body {
     gap: var(--gap);
 }
 
-/* By default master-data is hidden */
 #view-master-data {
     display: none;
 }
 
-/* ── Header ─────────────────────────────────────────── */
-#app-header {
+/* ── Top App Bar (Sleek FinTech Mobile Header) ── */
+#app-header.fintech-header {
     position: relative;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 14px 16px;
-    background: linear-gradient(135deg, rgba(61, 90, 254, 0.18), rgba(0, 176, 255, 0.10));
-    border: 1px solid rgba(61, 90, 254, 0.3);
-    border-radius: var(--radius-lg);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    margin-bottom: 14px;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 4px 8px 4px;
+    background: transparent;
+    border: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    margin-bottom: 4px;
     z-index: 100;
+}
+
+.btn-app-back,
+.btn-menu-header {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-primary);
+    border: 1px solid rgba(77, 141, 255, 0.20);
+    border-radius: 12px;
+    color: var(--primary-text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.btn-app-back:hover,
+.btn-menu-header:hover {
+    background: var(--surface-elevated);
+    border-color: var(--primary-blue);
 }
 
 .header-type-wrapper {
     position: relative;
     flex: 1;
+    display: flex;
+    justify-content: center;
     min-width: 0;
 }
 
@@ -100,67 +141,32 @@ body {
     border: 1px solid transparent;
     outline: none;
     cursor: pointer;
-    text-align: left;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 4px 8px 4px 4px;
+    justify-content: center;
+    gap: 8px;
+    padding: 6px 12px;
     border-radius: var(--radius-md);
-    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-    width: 100%;
+    transition: all 0.22s ease;
 }
 
 .btn-doc-type-selector:hover,
-.btn-doc-type-selector:focus-visible,
 .btn-doc-type-selector.active-open {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(61, 90, 254, 0.35);
+    background: var(--surface-primary);
+    border-color: rgba(77, 141, 255, 0.30);
 }
 
-.header-icon {
-    font-size: 1.85rem;
-    line-height: 1;
-    filter: drop-shadow(0 0 8px rgba(61, 90, 254, 0.6));
-    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.btn-doc-type-selector:hover .header-icon {
-    transform: scale(1.08);
-}
-
-.header-text {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-}
-
-.header-text h1 {
+.header-text-main {
     font-size: 1.15rem;
     font-weight: 700;
-    letter-spacing: 0.2px;
-    line-height: 1.2;
-    margin: 0;
-    color: var(--tg-theme-text-color, #ffffff);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.header-text p {
-    font-size: 0.76rem;
-    color: var(--tg-theme-hint-color, rgba(255, 255, 255, 0.6));
-    font-weight: 400;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+    color: var(--primary-text);
+    letter-spacing: -0.2px;
 }
 
 .type-switch-indicator {
-    font-size: 0.82rem;
-    color: #82b1ff;
+    font-size: 0.95rem;
+    color: var(--secondary-text);
     transition: transform 0.25s ease;
-    font-weight: 700;
 }
 
 .btn-doc-type-selector.active-open .type-switch-indicator {
@@ -309,13 +315,14 @@ body {
 
 /* ── Step Cards ──────────────────────────────────────── */
 .step-card {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-lg);
+    background: var(--surface-primary);
+    border: 1px solid rgba(77, 141, 255, 0.20);
+    border-radius: var(--radius-xl);
     padding: 20px;
     display: none;
     animation: slideUp 0.35s ease;
     overflow: visible;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
 }
 
 .step-card.active {
@@ -341,14 +348,15 @@ body {
 }
 
 .step-title h2 {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     font-weight: 700;
     line-height: 1.2;
+    color: var(--primary-text);
 }
 
 .step-sub {
     font-size: 0.82rem;
-    color: var(--tg-theme-hint-color);
+    color: var(--secondary-text);
     margin-top: 2px;
 }
 
@@ -359,9 +367,9 @@ body {
 
 .field-label {
     display: block;
-    font-size: 0.82rem;
-    font-weight: 500;
-    color: var(--tg-theme-hint-color);
+    font-size: 0.80rem;
+    font-weight: 600;
+    color: var(--secondary-text);
     margin-bottom: 8px;
     text-transform: uppercase;
     letter-spacing: 0.6px;
@@ -369,14 +377,14 @@ body {
 
 .field-input {
     width: 100%;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid var(--glass-border);
+    background: var(--input-bg);
+    border: 1px solid var(--blue-border);
     border-radius: var(--radius-sm);
     padding: 13px 16px;
     font-size: 0.95rem;
     font-weight: 500;
-    color: var(--tg-theme-text-color);
-    font-family: 'Outfit', sans-serif;
+    color: var(--primary-text);
+    font-family: inherit;
     transition: border-color 0.2s, box-shadow 0.2s;
     outline: none;
     -webkit-appearance: none;
@@ -390,14 +398,14 @@ body {
     display: block;
     position: relative;
     z-index: 1;
-    background-color: #121d33 !important;
-    border: 1.5px solid rgba(130, 177, 255, 0.35) !important;
+    background-color: var(--surface-secondary) !important;
+    border: 1.5px solid var(--blue-border) !important;
     border-radius: var(--radius-sm);
     padding: 12px 42px 12px 16px !important;
     font-size: 0.95rem;
     font-weight: 600;
-    color: #ffffff !important;
-    font-family: 'Outfit', sans-serif;
+    color: var(--primary-text) !important;
+    font-family: inherit;
     transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
     outline: none;
     -webkit-appearance: none;
@@ -410,15 +418,15 @@ body {
 }
 
 .field-input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-glow);
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(77, 141, 255, 0.25);
 }
 
 .field-select:focus,
 .field-select:hover {
-    background-color: #182642 !important;
-    border-color: #3d5afe !important;
-    box-shadow: 0 0 0 3px rgba(61, 90, 254, 0.3) !important;
+    background-color: var(--surface-elevated) !important;
+    border-color: var(--primary-blue) !important;
+    box-shadow: 0 0 0 3px rgba(77, 141, 255, 0.25) !important;
     color: #ffffff !important;
 }
 
@@ -1773,17 +1781,16 @@ input[type=number]::-webkit-outer-spin-button {
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
-    max-width: 480px;
-    height: 64px;
-    background: rgba(18, 18, 30, 0.92);
-    backdrop-filter: blur(16px);
-    border-top: 1px solid var(--glass-border);
+    max-width: 440px;
+    height: 68px;
+    background: var(--app-bg);
+    border-top: 1px solid var(--divider);
     display: flex;
     align-items: center;
     justify-content: space-around;
     z-index: 999;
-    padding: 0 10px;
-    box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+    padding: 0 10px max(0px, env(safe-area-inset-bottom, 0px)) 10px;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.6);
 }
 
 .nav-item {
@@ -1793,34 +1800,38 @@ input[type=number]::-webkit-outer-spin-button {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
-    color: var(--tg-theme-hint-color);
+    gap: 4px;
+    color: var(--muted-text);
     cursor: pointer;
     flex: 1;
     padding: 6px 0;
     transition: all 0.2s ease;
-    font-family: 'Outfit', sans-serif;
+    font-family: inherit;
 }
 
-.nav-icon {
-    font-size: 1.25rem;
-    line-height: 1;
-    transition: transform 0.2s ease;
+.nav-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 28px;
+    border-radius: 14px;
+    transition: all 0.2s ease;
 }
 
 .nav-label {
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     font-weight: 600;
     letter-spacing: 0.2px;
 }
 
 .nav-item.active {
-    color: var(--accent);
+    color: var(--primary-blue);
 }
 
-.nav-item.active .nav-icon {
-    transform: translateY(-2px) scale(1.15);
-    filter: drop-shadow(0 0 8px var(--accent-glow));
+.nav-item.active .nav-icon-wrap {
+    background: rgba(77, 141, 255, 0.14);
+    color: var(--primary-blue);
 }
 
 .nav-item.active .nav-label {
@@ -2252,157 +2263,198 @@ input[type=number]::-webkit-outer-spin-button {
 /* ═══════════════════════════════════════════════════════════════════════
    📑 UNIFIED MASTER MOP INTERACTIVE STATEMENT STYLES
    ═══════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════
+   📑 FINTECH DARK NAVY MEMORANDUM OF PAYMENT (MOP) MASTER STATEMENT
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Introductory Bill Amount Card ── */
+.bill-amount-intro-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface-primary);
+    border: 1px solid rgba(77, 141, 255, 0.20);
+    border-radius: var(--radius-lg);
+    padding: 14px 18px;
+    margin-bottom: 6px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+.bill-intro-icon-wrap {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: rgba(245, 185, 66, 0.12);
+    border: 1px solid rgba(245, 185, 66, 0.28);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.55rem;
+    flex-shrink: 0;
+}
+
+.bill-intro-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.bill-intro-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--primary-text);
+    margin: 0 0 2px 0;
+    letter-spacing: -0.2px;
+}
+
+.bill-intro-sub {
+    font-size: 0.78rem;
+    color: var(--secondary-text);
+    margin: 0;
+}
+
+/* ── Master MOP Statement Container ── */
 .mop-master-statement {
-    background: linear-gradient(145deg, rgba(16, 26, 44, 0.92) 0%, rgba(8, 14, 26, 0.98) 100%);
-    border: 1px solid rgba(130, 177, 255, 0.35);
-    border-radius: 16px;
+    background: var(--surface-primary);
+    border: 1px solid var(--blue-border);
+    border-radius: var(--radius-xl);
     padding: 16px;
-    margin-top: 14px;
-    box-shadow: 0 10px 36px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    margin-top: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
 }
 
 .mop-statement-header {
     display: flex;
+    align-items: flex-start;
     justify-content: space-between;
-    align-items: center;
-    gap: 10px;
+    gap: 12px;
     padding-bottom: 12px;
-    margin-bottom: 12px;
-    border-bottom: 1px solid rgba(130, 177, 255, 0.25);
+    border-bottom: 1px solid var(--divider);
 }
 
 .mop-st-title {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
 }
 
-.mop-st-icon {
-    font-size: 1.4rem;
-}
-
-.mop-st-title h3 {
-    margin: 0;
-    font-size: 0.88rem;
-    font-weight: 700;
-    color: #82b1ff;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-}
-
-.mop-st-title p {
-    margin: 2px 0 0 0;
-    font-size: 0.67rem;
-    color: rgba(255, 255, 255, 0.6);
-}
-
-/* Section Box */
-.mop-st-section {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+.mop-doc-icon-badge {
+    width: 42px;
+    height: 42px;
     border-radius: 12px;
-    padding: 12px;
-    margin-bottom: 12px;
+    background: var(--surface-secondary);
+    border: 1px solid rgba(77, 141, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
-.mop-st-section-title {
+.mop-main-h3 {
+    margin: 0;
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: var(--primary-text);
+    letter-spacing: 0.3px;
+    line-height: 1.25;
+}
+
+.mop-highlight-blue {
+    color: var(--primary-blue);
+    display: block;
+}
+
+.mop-sub-p {
+    margin: 3px 0 0 0;
+    font-size: 0.70rem;
+    color: var(--secondary-text);
+    line-height: 1.3;
+}
+
+.btn-mop-reset {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface-secondary);
+    border: 1px solid rgba(77, 141, 255, 0.30);
+    color: var(--soft-blue);
+    border-radius: 10px;
+    padding: 6px 10px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.btn-mop-reset:hover {
+    background: var(--surface-elevated);
+    border-color: var(--primary-blue);
+    color: #ffffff;
+}
+
+/* ── Section Cards ── */
+.mop-st-section {
+    background: var(--surface-secondary);
+    border: 1px solid rgba(77, 141, 255, 0.16);
+    border-radius: 16px;
+    padding: 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.mop-st-section-title,
+.mop-sec-title-b {
     font-size: 0.76rem;
-    font-weight: 700;
-    color: #90caf9;
-    letter-spacing: 0.4px;
+    font-weight: 800;
+    color: var(--primary-blue);
+    letter-spacing: 0.6px;
     text-transform: uppercase;
-    margin-bottom: 8px;
 }
 
 .mop-st-section-title-flex {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: #90caf9;
-    letter-spacing: 0.4px;
-    margin-bottom: 8px;
+    justify-content: space-between;
 }
 
-.mop-st-highlight-box {
-    background: rgba(0, 230, 118, 0.05);
-    border-color: rgba(0, 230, 118, 0.25);
-}
-
-.mop-green-lbl {
-    color: #00e676 !important;
-}
-
-.mop-gold-lbl {
-    color: #ffd54f !important;
-}
-
-.mop-val-txt {
-    color: rgba(255, 255, 255, 0.65);
-    font-size: 0.74rem;
-}
-
-.mop-val-sub {
-    color: #ef9a9a;
-    font-weight: 600;
-    font-size: 0.78rem;
-}
-
-.mop-val-red {
-    color: #ff5252;
-    font-weight: 700;
-    font-size: 0.85rem;
-}
-
-.mop-val-green {
-    color: #00e676;
-    font-weight: 800;
-    font-size: 0.90rem;
-}
-
-.mop-val-gold {
-    color: #ffd54f;
-    font-weight: 800;
-    font-size: 0.90rem;
-}
-
-/* Main Amount Input in Section A */
-.mop-st-amount-box {
-    margin-bottom: 8px;
-}
-
-.mop-st-amount-box label {
-    display: block;
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: #e3f2fd;
+.mop-amount-lbl {
+    font-size: 0.76rem;
+    color: var(--secondary-text);
     margin-bottom: 6px;
+    display: block;
+    font-weight: 500;
+}
+
+.mop-st-amount-box {
+    margin-bottom: 2px;
 }
 
 .mop-st-amount-input-wrap {
     display: flex;
     align-items: center;
-    background: rgba(0, 0, 0, 0.55);
-    border: 1.5px solid rgba(61, 90, 254, 0.5);
-    border-radius: 10px;
-    padding: 2px 12px;
+    background: var(--input-bg);
+    border: 1.5px solid var(--blue-border);
+    border-radius: 14px;
+    padding: 6px 14px;
     transition: all 0.2s ease;
 }
 
 .mop-st-amount-input-wrap:focus-within {
-    border-color: #82b1ff;
-    box-shadow: 0 0 10px rgba(61, 90, 254, 0.5);
-    background: rgba(0, 0, 0, 0.75);
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(77, 141, 255, 0.20);
+    background: #040810;
 }
 
 .mop-st-curr {
-    font-size: 1.1rem;
+    font-size: 1.35rem;
     font-weight: 700;
-    color: #82b1ff;
-    margin-right: 8px;
+    color: var(--primary-blue);
+    margin-right: 10px;
 }
 
 .mop-st-main-input {
@@ -2410,83 +2462,267 @@ input[type=number]::-webkit-outer-spin-button {
     background: transparent;
     border: none;
     outline: none;
-    color: #ffffff;
-    font-size: 1.15rem;
+    color: var(--primary-text);
+    font-size: 1.55rem;
     font-weight: 700;
-    font-family: 'Outfit', sans-serif;
-    padding: 8px 0;
-}
-
-.mop-st-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.80rem;
-    color: #e0e0e0;
-    padding: 3px 0;
-}
-
-.mop-st-sub {
-    font-size: 0.73rem;
-    color: rgba(255, 255, 255, 0.6);
+    font-variant-numeric: tabular-nums;
+    font-family: inherit;
     padding: 2px 0;
 }
 
-/* Calc Row with Inline Percentage */
+/* ── Refined GST Breakdown Summary Card ── */
+.mop-gst-card {
+    display: flex;
+    align-items: center;
+    background: var(--surface-primary);
+    border: 1px solid var(--divider);
+    border-radius: 12px;
+    padding: 10px 12px;
+    gap: 12px;
+}
+
+.mop-gst-icon-box {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(77, 141, 255, 0.10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.mop-gst-col-left {
+    flex: 1;
+}
+
+.mop-gst-tag-blue {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--soft-blue);
+}
+
+.mop-gst-subtag {
+    font-size: 0.73rem;
+    color: var(--secondary-text);
+    margin-top: 1px;
+}
+
+.gst-18-white {
+    color: var(--primary-text);
+    font-weight: 700;
+}
+
+.mop-gst-divider {
+    width: 1px;
+    height: 32px;
+    background: var(--divider);
+}
+
+.mop-gst-col-right {
+    text-align: right;
+}
+
+.mop-gst-basic-txt {
+    font-size: 0.76rem;
+    color: var(--secondary-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.mop-gst-amt-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-top: 2px;
+}
+
+.mop-gst-pct-lbl {
+    font-size: 0.74rem;
+    color: var(--secondary-text);
+}
+
+.mop-gst-val-blue {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--soft-blue);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Section B & D Deductions Rows ── */
 .mop-st-calc-row {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 4px 0;
-    font-size: 0.78rem;
-    color: #e0e0e0;
+    justify-content: space-between;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+.mop-st-calc-row:last-child {
+    border-bottom: none;
 }
 
 .mop-st-calc-lbl {
     display: flex;
     align-items: center;
-    gap: 8px;
-    color: rgba(255, 255, 255, 0.85);
+    gap: 9px;
+}
+
+.mop-row-icon {
+    font-size: 0.90rem;
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: rgba(77, 141, 255, 0.12);
+    color: var(--soft-blue);
+    font-weight: 700;
+}
+
+.mop-row-text {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--primary-text);
+}
+
+.mop-row-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .mop-inline-pct-wrap {
     display: inline-flex;
     align-items: center;
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(130, 177, 255, 0.35);
-    border-radius: 6px;
-    padding: 1px 5px;
+    background: var(--input-bg);
+    border: 1px solid rgba(77, 141, 255, 0.35);
+    border-radius: 8px;
+    padding: 2px 6px;
+    transition: all 0.2s ease;
 }
 
 .mop-inline-pct-wrap:focus-within {
-    border-color: #3d5afe;
-    box-shadow: 0 0 4px rgba(61, 90, 254, 0.5);
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 2px rgba(77, 141, 255, 0.25);
 }
 
 .mop-inline-pct {
-    width: 42px;
+    width: 44px;
     background: transparent;
     border: none;
     outline: none;
-    color: #82b1ff;
-    font-size: 0.78rem;
+    color: var(--soft-blue);
+    font-size: 0.80rem;
     font-weight: 700;
     text-align: right;
-    font-family: 'Outfit', sans-serif;
-    padding: 2px 0;
+    font-family: inherit;
+    font-variant-numeric: tabular-nums;
+    padding: 1px 0;
 }
 
 .mop-inline-pct-wrap span {
-    font-size: 0.68rem;
-    color: #82b1ff;
+    font-size: 0.70rem;
+    color: var(--soft-blue);
     font-weight: 600;
     margin-left: 2px;
 }
 
-/* Embedded Adjustments Box in Section D */
+.mop-val-red {
+    color: var(--danger);
+    font-weight: 800;
+    font-size: 0.86rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.mop-val-red-sub {
+    color: var(--danger);
+    font-weight: 700;
+    font-size: 0.80rem;
+    font-variant-numeric: tabular-nums;
+    min-width: 86px;
+    text-align: right;
+}
+
+/* ── [A - B] NET WORK VALUE SUCCESS CARD ── */
+.mop-st-section.mop-st-net-card {
+    background: var(--success-surface);
+    border: 1.5px solid var(--success-border);
+    border-radius: 16px;
+    padding: 14px 14px;
+    box-shadow: 0 4px 18px rgba(69, 200, 120, 0.06);
+}
+
+.mop-net-lbl-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mop-trend-icon {
+    flex-shrink: 0;
+}
+
+.mop-green-lbl {
+    font-size: 0.80rem;
+    font-weight: 800;
+    color: var(--success);
+    letter-spacing: 0.4px;
+}
+
+.mop-val-green {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--success);
+    font-variant-numeric: tabular-nums;
+}
+
+.mop-admin-exp-row {
+    border-top: 1px solid rgba(69, 200, 120, 0.20) !important;
+    margin-top: 6px;
+    padding-top: 8px;
+}
+
+/* ── [C] CONTRACTOR GROSS BILL AMOUNT ── */
+.mop-gold-lbl {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--warning);
+    letter-spacing: 0.5px;
+}
+
+.mop-val-gold {
+    color: var(--warning);
+    font-weight: 800;
+    font-size: 0.95rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.mop-st-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.78rem;
+    color: var(--secondary-text);
+    padding: 2px 0;
+}
+
+.mop-st-sub {
+    font-size: 0.73rem;
+    color: var(--muted-text);
+}
+
+.mop-val-txt {
+    color: var(--secondary-text);
+    font-weight: 600;
+}
+
+/* ── Section D Dynamic Embedded Adjustments ── */
 .mop-embedded-adjustments {
-    margin-top: 10px;
+    margin-top: 8px;
     padding-top: 10px;
-    border-top: 1px dashed rgba(130, 177, 255, 0.25);
+    border-top: 1px dashed var(--divider);
 }
 
 .mop-emb-header {
@@ -2497,47 +2733,171 @@ input[type=number]::-webkit-outer-spin-button {
     margin-bottom: 8px;
 }
 
-/* Grand Panel */
+.mop-adj-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mop-adj-title h3 {
+    margin: 0;
+    font-size: 0.80rem;
+    font-weight: 700;
+    color: var(--primary-text);
+}
+
+.mop-adj-title p {
+    margin: 0;
+    font-size: 0.68rem;
+    color: var(--muted-text);
+}
+
+.btn-mop-add-row {
+    background: var(--surface-primary);
+    border: 1px solid rgba(77, 141, 255, 0.35);
+    color: var(--soft-blue);
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-mop-add-row:hover {
+    background: var(--surface-elevated);
+    border-color: var(--primary-blue);
+    color: #fff;
+}
+
+.mop-quick-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.mop-chip-lbl {
+    font-size: 0.70rem;
+    color: var(--muted-text);
+}
+
+.mop-chip-btn {
+    background: var(--surface-primary);
+    border: 1px solid rgba(148, 163, 184, 0.20);
+    color: var(--secondary-text);
+    font-size: 0.70rem;
+    padding: 3px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.mop-chip-btn:hover {
+    border-color: var(--primary-blue);
+    color: var(--soft-blue);
+    background: var(--surface-secondary);
+}
+
+/* ── Round Off Row ── */
+.mop-ro-interactive-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0 2px 0;
+    margin-top: 4px;
+    border-top: 1px solid var(--divider);
+}
+
+.ro-lbl-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.80rem;
+    font-weight: 600;
+    color: var(--primary-text);
+}
+
+.ro-badge {
+    font-size: 0.64rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.4px;
+}
+
+.ro-badge-auto {
+    background: rgba(77, 141, 255, 0.15);
+    color: var(--soft-blue);
+    border: 1px solid rgba(77, 141, 255, 0.30);
+}
+
+.ro-ctrl-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-ro-reset {
+    background: transparent;
+    border: 1px solid rgba(77, 141, 255, 0.30);
+    color: var(--soft-blue);
+    font-size: 0.70rem;
+    padding: 2px 6px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.inline-ro-input {
+    width: 60px;
+    background: var(--input-bg);
+    border: 1px solid rgba(77, 141, 255, 0.30);
+    border-radius: 6px;
+    color: var(--primary-text);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-align: right;
+    padding: 2px 6px;
+    outline: none;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── 🏆 TOTAL NET AMOUNT PAYABLE GRAND PANEL ── */
 .mop-st-grand-panel {
-    background: linear-gradient(135deg, rgba(255, 213, 79, 0.12), rgba(0, 230, 118, 0.08));
-    border: 1.5px solid rgba(255, 213, 79, 0.45);
-    border-radius: 12px;
-    padding: 12px 14px;
-    margin-top: 12px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    background: linear-gradient(135deg, rgba(245, 185, 66, 0.10), rgba(69, 200, 120, 0.08));
+    border: 1.5px solid rgba(245, 185, 66, 0.40);
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-top: 6px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
 }
 
 .mop-st-grand-flex {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.88rem;
+    font-size: 0.84rem;
     font-weight: 800;
-    color: #ffd54f;
+    color: var(--warning);
     letter-spacing: 0.5px;
 }
 
 .mop-grand-num {
-    font-size: 1.15rem;
+    font-size: 1.25rem;
     font-weight: 800;
-    color: #ffd54f;
+    color: var(--warning);
+    font-variant-numeric: tabular-nums;
 }
 
 .mop-pv-words {
     font-size: 0.74rem;
     font-style: italic;
-    color: #ffd54f;
+    color: var(--warning);
     margin-top: 6px;
     text-align: right;
-    line-height: 1.3;
-}
-
-.mop-ro-interactive-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 3px 0;
-    margin-top: 6px;
+    line-height: 1.35;
+    opacity: 0.92;
 }
 
 

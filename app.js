@@ -1179,17 +1179,21 @@ function updateMopPreview() {
 
     // (A) Total Work Done
     setTxt('mop-pv-gross', `INR ${fmt(G)}`);
+    setTxt('mop-pv-basic-txt', `Basic INR ${fmt(b_work)}`);
+    setTxt('mop-pv-gst-amt', `₹ ${fmt(gst_work)}`);
     setTxt('mop-pv-work-breakdown', `Basic INR ${fmt(b_work)} + GST 18% INR ${fmt(gst_work)}`);
 
     // (B) Less Agency Deductions
     setTxt('mop-pv-agency-ded', `- INR ${fmt(agency_ded_total)}`);
     setTxt('mop-pv-agency-tds-lbl', `• TDS ${agency_tds_pct}%`);
-    setTxt('mop-pv-agency-tds', `INR ${fmt(agency_tds)}`);
+    setTxt('mop-pv-agency-tds', `- INR ${fmt(agency_tds)}`);
+    setTxt('mop-pv-agency-sgst', `- INR ${fmt(agency_sgst)}`);
+    setTxt('mop-pv-agency-cgst', `- INR ${fmt(agency_cgst)}`);
     setTxt('mop-pv-agency-gst-lbl', `• SGST ${agency_sgst_pct}% + CGST ${agency_cgst_pct}%`);
-    setTxt('mop-pv-agency-gst', `INR ${fmt(agency_sgst + agency_cgst)}`);
+    setTxt('mop-pv-agency-gst', `- INR ${fmt(agency_sgst + agency_cgst)}`);
 
     // (A - B) Net Work Done
-    setTxt('mop-pv-net-ab', `INR ${fmt(net_ab)}`);
+    setTxt('mop-pv-net-ab', `₹ ${fmt(net_ab)}`);
 
     // Admin & Head Expense
     setTxt('mop-pv-admin-lbl', `Admin & Head Expense (${admin_pct}%)`);
