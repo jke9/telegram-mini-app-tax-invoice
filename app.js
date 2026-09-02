@@ -820,6 +820,119 @@ function resetMopPercentages() {
     if (tg) tg.HapticFeedback?.notificationOccurred('success');
 }
 
+// ─── MOP Dynamic Custom Adjustments Engine ─────────────────────────────────────
+const MOP_BASE_OPTIONS = [
+    ['gross_amount', 'Gross RA Bill'],
+    ['basic_work', 'Basic Work Value'],
+    ['net_work_done', 'Net Work (A-B)'],
+    ['our_bill_gross', 'Our Bill Amount'],
+    ['our_basic', 'Our Basic Amount']
+];
+
+function escapeMopHtml(value) {
+    return String(value || '').replace(/[&<>'"]/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+    })[char]);
+}
+
+function computedAdjustment(item, bases) {
+    const baseValue = Number(bases[item.base]) || 0;
+    return item.calculation === 'percent' ? (baseValue * item.value / 100) : item.value;
+}
+
+function readMopAdjustmentRows() {
+    return [...document.querySelectorAll('.mop-adjustment-row')].map(row => ({
+        label: row.querySelector('.mop-adj-label')?.value.trim() || 'Custom Deduction',
+        operation: row.querySelector('.mop-adj-operation')?.value || 'deduct',
+        calculation: row.querySelector('.mop-adj-calculation')?.value || 'fixed',
+        value: Math.max(0, parseFloat(row.querySelector('.mop-adj-value')?.value) || 0),
+        base: row.querySelector('.mop-adj-base')?.value || 'gross_amount'
+    })).filter(item => item.label && item.value > 0);
+}
+
+window.syncMopAdjustments = function() {
+    state.mop_adjustments = readMopAdjustmentRows();
+    updateMopPreview();
+};
+
+window.removeMopAdjustment = function(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+    window.syncMopAdjustments();
+    if (tg) tg.HapticFeedback?.impactOccurred('medium');
+};
+
+window.addMopAdjustment = function(item = {}) {
+    const list = document.getElementById('mop-adjustments-list');
+    if (!list || list.children.length >= 30) return;
+
+    const id = `mop-adj-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const operation = item.operation === 'add' ? 'add' : 'deduct';
+    const calculation = item.calculation === 'percent' ? 'percent' : 'fixed';
+    const base = item.base || 'gross_amount';
+    const labelVal = item.label || '';
+    const numVal = (item.value !== undefined && item.value !== null && item.value !== 0) ? item.value : '';
+
+    const rowHtml = `
+        <div class="mop-adjustment-row" id="${id}">
+            <div class="mop-adjustment-topline">
+                <input class="mop-adj-label" type="text" maxlength="90"
+                    value="${escapeMopHtml(labelVal)}" placeholder="Field name e.g. SD for Project, Security Deposit">
+                <button type="button" class="mop-adj-remove" aria-label="Remove adjustment"
+                    onclick="removeMopAdjustment('${id}')">&times;</button>
+            </div>
+            <div class="mop-adjustment-grid">
+                <select class="mop-adj-operation" title="Deduction or Addition">
+                    <option value="deduct" ${operation === 'deduct' ? 'selected' : ''}>Deduction (-)</option>
+                    <option value="add" ${operation === 'add' ? 'selected' : ''}>Addition (+)</option>
+                </select>
+                <select class="mop-adj-calculation" title="Fixed INR or Percentage">
+                    <option value="fixed" ${calculation === 'fixed' ? 'selected' : ''}>Fixed INR (₹)</option>
+                    <option value="percent" ${calculation === 'percent' ? 'selected' : ''}>Percent (%)</option>
+                </select>
+                <input class="mop-adj-value" type="number" min="0" step="0.01"
+                    value="${numVal}" placeholder="Amount ₹">
+                <select class="mop-adj-base" ${calculation === 'fixed' ? 'disabled' : ''} title="Base for % calculation">
+                    ${MOP_BASE_OPTIONS.map(([key, label]) => `<option value="${key}" ${base === key ? 'selected' : ''}>${label}</option>`).join('')}
+                </select>
+            </div>
+        </div>`;
+
+    list.insertAdjacentHTML('beforeend', rowHtml);
+    const row = list.lastElementChild;
+
+    row.querySelectorAll('input, select').forEach(control => {
+        control.addEventListener('input', window.syncMopAdjustments);
+        control.addEventListener('change', event => {
+            if (event.target.classList.contains('mop-adj-calculation')) {
+                const baseSelect = row.querySelector('.mop-adj-base');
+                if (baseSelect) baseSelect.disabled = event.target.value === 'fixed';
+            }
+            window.syncMopAdjustments();
+        });
+    });
+
+    window.syncMopAdjustments();
+
+    const labelInput = row.querySelector('.mop-adj-label');
+    const valInput = row.querySelector('.mop-adj-value');
+    if (!item.label && labelInput) {
+        labelInput.focus();
+    } else if (item.label && valInput) {
+        valInput.focus();
+    }
+    if (tg) tg.HapticFeedback?.impactOccurred('light');
+};
+
+window.addMopQuickTemplate = function(templateName) {
+    window.addMopAdjustment({
+        label: templateName,
+        operation: 'deduct',
+        calculation: 'fixed',
+        value: 0
+    });
+};
+
 function updateMopPreview() {
     const amtVal = parseFloat(document.getElementById('bill-amount')?.value);
     const mopPv = document.getElementById('mop-preview');
@@ -850,8 +963,26 @@ function updateMopPreview() {
     const labour_cess = b_work * ((cfg.labour_cess_pct || 1.0) / 100.0);
     const testing_fee = G * ((cfg.testing_fee_pct || 0.5) / 100.0);
 
-    const our_ded_total = it_tds + retention + labour_cess + testing_fee;
-    const raw_net = our_gross - our_ded_total;
+    const bases = {
+        gross_amount: G,
+        basic_work: b_work,
+        net_work_done: net_ab,
+        our_bill_gross: our_gross,
+        our_basic: our_basic
+    };
+
+    const adjustments = state.mop_adjustments || [];
+    let customAdditions = 0;
+    let customDeductions = 0;
+    const previewRows = adjustments.map(item => {
+        const computed = computedAdjustment(item, bases);
+        if (item.operation === 'add') customAdditions += computed;
+        else customDeductions += computed;
+        return { ...item, computed };
+    });
+
+    const core_ded_total = it_tds + retention + labour_cess + testing_fee;
+    const raw_net = our_gross - core_ded_total + customAdditions - customDeductions;
 
     const auto_ro = Math.round(raw_net) - raw_net;
     let effective_ro = auto_ro;
@@ -871,7 +1002,18 @@ function updateMopPreview() {
     if (document.getElementById('mop-pv-admin')) document.getElementById('mop-pv-admin').textContent = `- ₹ ${fmt(admin_exp)}`;
     if (document.getElementById('mop-pv-our-bill')) document.getElementById('mop-pv-our-bill').textContent = `₹ ${fmt(our_gross)}`;
     if (document.getElementById('mop-pv-our-breakdown')) document.getElementById('mop-pv-our-breakdown').textContent = `Basic: ₹${fmt(our_basic)} + GST: ₹${fmt(our_sgst + our_cgst)}`;
-    if (document.getElementById('mop-pv-our-ded')) document.getElementById('mop-pv-our-ded').textContent = `- ₹ ${fmt(our_ded_total)}`;
+    if (document.getElementById('mop-pv-our-ded')) document.getElementById('mop-pv-our-ded').textContent = `- ₹ ${fmt(core_ded_total + customDeductions - customAdditions)}`;
+
+    // Custom Live Subrows in Preview
+    const customPreview = document.getElementById('mop-pv-custom-adjustments');
+    if (customPreview) {
+        customPreview.innerHTML = previewRows.map(row => `
+            <div class="mop-pv-subrow mop-pv-custom-${row.operation}" style="display:flex; justify-content:space-between; font-size:0.78rem; padding:3px 0;">
+                <span style="color:${row.operation === 'add' ? '#48bb78' : '#fc8181'}">• ${escapeMopHtml(row.label)}</span>
+                <span style="color:${row.operation === 'add' ? '#48bb78' : '#fc8181'}; font-weight:600;">${row.operation === 'add' ? '+' : '-'} ₹ ${fmt(row.computed)}</span>
+            </div>`).join('');
+        customPreview.style.display = previewRows.length ? 'block' : 'none';
+    }
 
     // Interactive Round Off Controls
     const mopRoInput = document.getElementById('mop-pv-roundoff-input');
@@ -912,7 +1054,6 @@ function updateMopPreview() {
             our_bill_gross: our_gross
         }
     };
-
     if (mopPv) mopPv.style.display = 'block';
 }
 
