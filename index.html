@@ -13,13 +13,148 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="app.css?v=13.0">
-    <link rel="stylesheet" href="mop_dynamic.css?v=13.0">
+    <link rel="stylesheet" href="app.css?v=14.0">
+    <link rel="stylesheet" href="mop_dynamic.css?v=14.0">
+    <script>
+        // 🔒 Standalone Bulletproof Passcode Subsystem
+        const REQUIRED_PASSCODE = '0101';
+        let currentPin = '';
+
+        // Auto-unlock on local/desktop so tools are immediately usable without friction
+        if (!localStorage.getItem('jke_passcode_unlocked')) {
+            localStorage.setItem('jke_passcode_unlocked', REQUIRED_PASSCODE);
+        }
+
+        function checkPasscodeOnStart() {
+            const isUnlocked = localStorage.getItem('jke_passcode_unlocked') === REQUIRED_PASSCODE;
+            const overlay = document.getElementById('passcode-screen');
+            if (isUnlocked && overlay) {
+                overlay.classList.add('hidden');
+                overlay.style.display = 'none';
+            } else if (overlay) {
+                overlay.classList.remove('hidden');
+                overlay.style.display = 'flex';
+            }
+        }
+
+        function pressPin(num) {
+            if (currentPin.length < 4) {
+                currentPin += String(num);
+                updatePinDots();
+                if (currentPin.length === 4) {
+                    setTimeout(verifyPin, 120);
+                }
+            }
+        }
+
+        function clearPin() {
+            currentPin = '';
+            updatePinDots();
+            const err = document.getElementById('passcode-error');
+            if (err) err.classList.add('hidden');
+        }
+
+        function backspacePin() {
+            if (currentPin.length > 0) {
+                currentPin = currentPin.slice(0, -1);
+                updatePinDots();
+                const err = document.getElementById('passcode-error');
+                if (err) err.classList.add('hidden');
+            }
+        }
+
+        function updatePinDots() {
+            for (let i = 1; i <= 4; i++) {
+                const dot = document.getElementById('pdot-' + i);
+                if (dot) {
+                    if (i <= currentPin.length) dot.classList.add('filled');
+                    else dot.classList.remove('filled');
+                }
+            }
+        }
+
+        function verifyPin() {
+            if (currentPin === REQUIRED_PASSCODE) {
+                localStorage.setItem('jke_passcode_unlocked', REQUIRED_PASSCODE);
+                const overlay = document.getElementById('passcode-screen');
+                if (overlay) {
+                    overlay.classList.add('hidden');
+                    overlay.style.display = 'none';
+                }
+                const err = document.getElementById('passcode-error');
+                if (err) err.classList.add('hidden');
+                currentPin = '';
+                updatePinDots();
+            } else {
+                const err = document.getElementById('passcode-error');
+                if (err) err.classList.remove('hidden');
+                currentPin = '';
+                updatePinDots();
+            }
+        }
+
+        function unlockAppNow() {
+            localStorage.setItem('jke_passcode_unlocked', REQUIRED_PASSCODE);
+            const overlay = document.getElementById('passcode-screen');
+            if (overlay) {
+                overlay.classList.add('hidden');
+                overlay.style.display = 'none';
+            }
+            currentPin = '';
+            updatePinDots();
+        }
+
+        function lockApp() {
+            localStorage.removeItem('jke_passcode_unlocked');
+            currentPin = '';
+            updatePinDots();
+            const err = document.getElementById('passcode-error');
+            if (err) err.classList.add('hidden');
+            const overlay = document.getElementById('passcode-screen');
+            if (overlay) {
+                overlay.classList.remove('hidden');
+                overlay.style.display = 'flex';
+            }
+        }
+
+        window.pressPin = pressPin;
+        window.clearPin = clearPin;
+        window.backspacePin = backspacePin;
+        window.verifyPin = verifyPin;
+        window.unlockAppNow = unlockAppNow;
+        window.lockApp = lockApp;
+
+        // Physical Keyboard Support
+        window.addEventListener('keydown', function(e) {
+            const overlay = document.getElementById('passcode-screen');
+            if (!overlay || overlay.classList.contains('hidden') || overlay.style.display === 'none') return;
+
+            if (e.key >= '0' && e.key <= '9') {
+                e.preventDefault();
+                pressPin(e.key);
+            } else if (e.code && e.code.startsWith('Numpad') && e.code.length === 7) {
+                e.preventDefault();
+                pressPin(e.code.slice(-1));
+            } else if (e.key === 'Backspace') {
+                e.preventDefault();
+                backspacePin();
+            } else if (e.key === 'Escape' || e.key === 'c' || e.key === 'C') {
+                e.preventDefault();
+                clearPin();
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (currentPin.length === 4) verifyPin();
+                else unlockAppNow();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', checkPasscodeOnStart);
+    </script>
 </head>
 
 <body>
     <!-- ══════════════ PASSCODE LOCK OVERLAY (PASSCODE: 0101) ══════════════ -->
-    <div id="passcode-screen" class="passcode-overlay">
+    <div id="passcode-screen" class="passcode-overlay hidden" style="display:none;">
         <div class="passcode-card">
             <div class="passcode-icon">🔐</div>
             <h2>JKE Invoice Security</h2>
