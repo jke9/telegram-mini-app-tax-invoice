@@ -47,12 +47,42 @@ const state = {
         labour_cess_pct: 1.0,
         testing_fee_pct: 0.5
     }
-};
+// Master data cache (Pre-initialized with immediate offline defaults)
+let contractorList = [
+    'Shivam Builders',
+    'Jay Khodiyar Enterprise',
+    'Jay Varudi',
+    'JNP INFRASTRUCTURE',
+    'YOGI CONSTRUCTION CO.',
+    'Sarthi Construction'
+];
 
-// Master data cache
-let contractorList = [];
-let customerList = [];
-let projectList = [];
+let customerList = [
+    'Ahmedabad Municipal Corporation',
+    'GUDC',
+    'GWSSB',
+    'Anjar Nagarpalika',
+    'GUDA'
+];
+
+let projectList = [
+    { key: 'AMC Chiloda', label: 'AMC Chiloda' },
+    { key: 'AMC Muthiya', label: 'AMC Muthiya' },
+    { key: 'AMC  Kali Lake', label: 'AMC Kali Lake' },
+    { key: 'AMC ASARWA 4', label: 'AMC ASARWA 4' },
+    { key: 'AMC ASARWA 3', label: 'AMC ASARWA 3' },
+    { key: 'GUDC Zalod', label: 'GUDC Zalod' },
+    { key: 'GWSSSB Zalod', label: 'GWSSSB Zalod' },
+    { key: 'ANJAR', label: 'ANJAR' },
+    { key: 'AMC Vatva', label: 'AMC Vatva' },
+    { key: 'AMC Sardarnagar', label: 'AMC Sardarnagar' },
+    { key: 'AMC Science City', label: 'AMC Science City' },
+    { key: 'GUDC Kheda', label: 'GUDC Kheda' },
+    { key: 'GUDC Mahemdabad', label: 'GUDC Mahemdabad' },
+    { key: 'AMC ARC', label: 'AMC ARC' },
+    { key: 'AMC Partheshwer', label: 'AMC Partheshwer' },
+    { key: 'AMC Piplaj', label: 'AMC Piplaj' }
+];
 
 // 🔒 Passcode Configuration (Default Passcode: 0101)
 const REQUIRED_PASSCODE = '0101';
@@ -646,12 +676,21 @@ function getCustomerForProject(projKey) {
     return null;
 }
 
+function normalizeProjectItem(p) {
+    if (!p) return { key: '', label: '' };
+    if (typeof p === 'string') return { key: p.trim(), label: p.trim() };
+    const key = (p.key || p.location_key || p.name || p.label || '').trim();
+    const label = (p.label || p.location_key || p.name || p.key || '').trim();
+    return { key, label };
+}
+
 function updateFilteredProjects() {
-    const contractorName = document.getElementById('sel-contractor')?.value || '';
-    const customerName = document.getElementById('sel-customer')?.value || '';
+    const customerName = (document.getElementById('sel-customer')?.value || '').trim();
     const projSel = document.getElementById('sel-project');
     if (!projSel) return;
-    const currProj = projSel.value;
+    const currProj = (projSel.value || '').trim();
+
+    const normalizedProjects = (projectList || []).map(normalizeProjectItem).filter(p => p.key);
 
     let filtered = [];
 
@@ -663,23 +702,24 @@ function updateFilteredProjects() {
         const preferred = [];
         const others = [];
 
-        projectList.forEach(p => {
-            const cleanKey = (p.key || '').replace(/\s+/g, ' ').trim().toUpperCase();
+        normalizedProjects.forEach(p => {
+            const cleanKey = p.key.replace(/\s+/g, ' ').trim().toUpperCase();
             const isMatch = agencyAllowed.some(ap => ap.replace(/\s+/g, ' ').trim().toUpperCase() === cleanKey);
             if (isMatch) preferred.push(p);
             else others.push(p);
         });
 
         // Put preferred agency projects at top, followed by all remaining projects
-        filtered = preferred.length > 0 ? [...preferred, ...others] : [...projectList];
+        filtered = preferred.length > 0 ? [...preferred, ...others] : [...normalizedProjects];
     } else {
         // In Standard modes (Tax / Proforma / E-Invoice): customerName is Client (e.g. AMC, GUDC)
+        const contractorName = (document.getElementById('sel-contractor')?.value || '').trim();
         const cRule = CONTRACTOR_MAP[contractorName] || {};
         const custPrefixes = CUSTOMER_PREFIX_MAP[customerName] || [];
 
         if (custPrefixes.length > 0) {
-            filtered = projectList.filter(p => {
-                const cleanKey = (p.key || '').replace(/\s+/g, ' ').trim().toUpperCase();
+            filtered = normalizedProjects.filter(p => {
+                const cleanKey = p.key.replace(/\s+/g, ' ').trim().toUpperCase();
                 return custPrefixes.some(px => cleanKey.startsWith(px.toUpperCase()));
             });
         }
@@ -689,7 +729,7 @@ function updateFilteredProjects() {
             const preferred = [];
             const others = [];
             filtered.forEach(p => {
-                const cleanKey = (p.key || '').replace(/\s+/g, ' ').trim().toUpperCase();
+                const cleanKey = p.key.replace(/\s+/g, ' ').trim().toUpperCase();
                 const isPref = cRule.allowedProjects.some(ap => ap.replace(/\s+/g, ' ').trim().toUpperCase() === cleanKey);
                 if (isPref) preferred.push(p);
                 else others.push(p);
@@ -697,15 +737,27 @@ function updateFilteredProjects() {
             filtered = [...preferred, ...others];
         }
 
-        // Fallback: if no project matches the customer filter or projectList was empty, use all projects
         if (filtered.length === 0) {
-            filtered = [...projectList];
+            filtered = [...normalizedProjects];
         }
     }
 
-    projSel.innerHTML = filtered.map(p => `<option value="${p.key}">${p.label}</option>`).join('');
+    // Safety fallback
+    if (filtered.length === 0) {
+        filtered = [
+            { key: 'AMC Chiloda', label: 'AMC Chiloda' },
+            { key: 'AMC Muthiya', label: 'AMC Muthiya' },
+            { key: 'AMC Kali Lake', label: 'AMC Kali Lake' },
+            { key: 'AMC ASARWA 4', label: 'AMC ASARWA 4' },
+            { key: 'GUDC Zalod', label: 'GUDC Zalod' },
+            { key: 'ANJAR', label: 'ANJAR' }
+        ];
+    }
 
-    if (filtered.some(p => p.key === currProj)) {
+    // Render options
+    projSel.innerHTML = filtered.map(p => `<option value="${escapeMopHtml(p.key)}">${escapeMopHtml(p.label)}</option>`).join('');
+
+    if (currProj && filtered.some(p => p.key === currProj)) {
         projSel.value = currProj;
     } else if (filtered.length > 0) {
         projSel.value = filtered[0].key;

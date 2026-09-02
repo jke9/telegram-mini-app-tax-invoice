@@ -385,10 +385,13 @@ body {
 
 .field-select {
     width: 100%;
+    min-height: 48px;
+    line-height: 1.4;
+    display: block;
     background-color: #121d33 !important;
     border: 1.5px solid rgba(130, 177, 255, 0.35) !important;
     border-radius: var(--radius-sm);
-    padding: 13px 40px 13px 16px;
+    padding: 12px 42px 12px 16px !important;
     font-size: 0.95rem;
     font-weight: 600;
     color: #ffffff !important;
@@ -396,9 +399,11 @@ body {
     transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
     outline: none;
     -webkit-appearance: none;
+    -moz-appearance: none;
     appearance: none;
     cursor: pointer;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    box-sizing: border-box;
 }
 
 .field-input:focus {
