@@ -1,7 +1,7 @@
 """
 NIC Standard E-Invoice PDF Generator
 ====================================
-Generates pixel-perfect, compliant NIC Standard E-Invoices (A3 Portrait format)
+Generates pixel-perfect NIC-style E-Invoice PDFs on A4 portrait pages
 with dynamic JWT signed QR codes, Code 128 barcodes, and realistic timestamps.
 """
 
@@ -13,7 +13,7 @@ import random
 import re
 import hashlib
 from datetime import datetime
-from reportlab.lib.pagesizes import A3
+from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 from reportlab.graphics.shapes import Drawing
@@ -51,7 +51,11 @@ try:
 except Exception:
     pass
 
-PAGE_W, PAGE_H = 842.0, 1190.0  # Portrait A3 dimensions in points
+# The source layout was measured on an 842 x 1190 point reference canvas.
+# Keep those design coordinates and scale the complete drawing onto true A4,
+# preserving the reference proportions without clipping individual elements.
+DESIGN_W, DESIGN_H = 842.0, 1190.0
+PAGE_W, PAGE_H = A4
 
 
 def split_address_lines(addr_str, max_lines=3, max_chars_per_line=50):
@@ -187,12 +191,13 @@ def generate_einv_pdf(payload, output_path):
 
     # 5. Canvas Drawing
     os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
-    c = canvas.Canvas(output_path, pagesize=(PAGE_W, PAGE_H))
+    c = canvas.Canvas(output_path, pagesize=A4)
+    c.scale(PAGE_W / DESIGN_W, PAGE_H / DESIGN_H)
 
     def draw_str(text, bbox, font_name="Helvetica", size=10.5, align="left"):
         x0, y0, x1, y1 = bbox
         char_h = y1 - y0
-        rl_y = PAGE_H - y1 + char_h * 0.15
+        rl_y = DESIGN_H - y1 + char_h * 0.15
         c.setFont(font_name, size)
         c.setFillColorRGB(0, 0, 0)
         if align == "left":
@@ -227,7 +232,7 @@ def generate_einv_pdf(payload, output_path):
         x0, y0, x1, y1 = rect
         w = x1 - x0
         h = y1 - y0
-        rl_y = PAGE_H - y1
+        rl_y = DESIGN_H - y1
         c.setLineWidth(line_width)
         if stroke:
             c.setStrokeColorRGB(*color)
@@ -245,7 +250,7 @@ def generate_einv_pdf(payload, output_path):
     def draw_line(x1, y1, x2, y2, color=(0.75, 0.75, 0.75)):
         c.setLineWidth(0.5)
         c.setStrokeColorRGB(*color)
-        c.line(x1, PAGE_H - y1, x2, PAGE_H - y2)
+        c.line(x1, DESIGN_H - y1, x2, DESIGN_H - y2)
 
     # ─── 1. Outer Box Border ──────────────────────────────────────────────────
     draw_rect([15.0, 15.0, 827.0, 1175.0], color=(0.75, 0.75, 0.75), radius=20.0)
@@ -256,7 +261,7 @@ def generate_einv_pdf(payload, output_path):
 
     # ─── 3. Dynamic QR Code (JWT signed payload) ──────────────────────────────
     qr_w, qr_h = 190.1, 190.1
-    qr_x, qr_y = 617.2, PAGE_H - 224.8
+    qr_x, qr_y = 617.2, DESIGN_H - 224.8
 
     header = {"alg": "RS256", "typ": "JWT"}
     header_json = json.dumps(header, separators=(',', ':'))
@@ -431,7 +436,7 @@ def generate_einv_pdf(payload, output_path):
 
     # Code 128 Barcode
     bar_w, bar_h = 146.0, 52.0
-    bar_x, bar_y = 321.3, PAGE_H - 763.7
+    bar_x, bar_y = 321.3, DESIGN_H - 763.7
     c_bar = createBarcodeDrawing('Code128', value=str(ack_no), width=bar_w, height=bar_h, barWidth=1.0, barHeight=bar_h, lquiet=6.0, rquiet=6.0, humanReadable=False)
     c_bar.drawOn(c, bar_x, bar_y)
     draw_str(str(ack_no), [321.3, 764.5, 467.3, 778.9], font_name="DRKrapkaRhombus-Regular", align="center")
@@ -439,7 +444,7 @@ def generate_einv_pdf(payload, output_path):
     # eSign Logo
     esign_path = os.path.join(ASSETS_DIR, "esign_logo.png")
     if os.path.exists(esign_path):
-        c.drawImage(ImageReader(esign_path), 691.0, PAGE_H - 761.65, 94.0, 50.0, mask='auto')
+        c.drawImage(ImageReader(esign_path), 691.0, DESIGN_H - 761.65, 94.0, 50.0, mask='auto')
 
     # eSign Text Labels
     draw_str("Digitally Signed by NIC-IRP", [630.0, 761.5, 785.0, 775.9], font_name="Helvetica", align="right")

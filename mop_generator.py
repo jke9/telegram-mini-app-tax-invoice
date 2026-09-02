@@ -255,8 +255,8 @@ def draw_mop_pdf(mop_data, output_pdf):
 
     # Subtitle
     curr_y -= 14.0
-    c.setFont(B, 10)
-    c.drawCentredString(PAGE_W / 2.0, curr_y, "SUBLATE BILL PAYMENT")
+    c.setFont(B, 10.5)
+    c.drawCentredString(PAGE_W / 2.0, curr_y, "MEMORANDUM OF PAYMENT")
 
     # Dividing Header Line
     curr_y -= 8.0

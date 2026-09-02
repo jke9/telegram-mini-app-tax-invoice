@@ -79,7 +79,7 @@ function getDocTypeInfo(type = currentDocType) {
             icon: '📑',
             badge: 'MOP',
             fileSuffix: 'MOP_Statement',
-            desc: 'Sublet billing & deduction statement',
+            desc: 'Official payment & deduction statement',
             btnText: 'Generate MOP Statement PDF'
         };
     }
@@ -1322,6 +1322,7 @@ async function generateInvoice() {
             doc_type: currentDocType,
             config: state.mop_config,
             custom_round_off: state.is_manual_round_off ? state.custom_round_off : null,
+            custom_adjustments: state.mop_adjustments || [],
             user_id: tg?.initDataUnsafe?.user?.id,
             return_json: true
         };

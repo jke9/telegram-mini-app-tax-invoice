@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
-Tax Invoice Generator — API Backend Server
+Tax Invoice Generator â€” API Backend Server
 Runs on Port 8031. Serves contractor/customer/project data and generates PDF invoices.
 """
 import sys
@@ -24,7 +24,7 @@ from flask import Flask, jsonify, request, send_file
 
 # Import the invoice, MOP, and E-Invoice generators
 from generate_from_form import create_invoice_with_autolookup
-from mop_generator import calculate_mop, draw_mop_pdf
+from mop_generator_enterprise import calculate_mop, draw_mop_pdf
 from einv_generator import generate_einv_pdf
 
 # Load master details
@@ -49,7 +49,7 @@ except ImportError:
         return response
 
 
-# ─── Helper: Indian Number Formatting ────────────────────────────────────────
+# â”€â”€â”€ Helper: Indian Number Formatting â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def fmt_indian(val):
     try:
         fval = abs(float(val))
@@ -74,7 +74,7 @@ def fmt_indian(val):
         return str(val)
 
 
-# ─── GET /api/contractors ─────────────────────────────────────────────────────
+# â”€â”€â”€ GET /api/contractors â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @app.route('/contractors', methods=['GET'])
 @app.route('/api/contractors', methods=['GET'])
 def get_contractors():
@@ -89,7 +89,7 @@ def get_contractors_full():
     return jsonify(MASTER.get('contractors', []))
 
 
-# ─── GET /api/customers ───────────────────────────────────────────────────────
+# â”€â”€â”€ GET /api/customers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @app.route('/customers', methods=['GET'])
 @app.route('/api/customers', methods=['GET'])
 def get_customers():
@@ -104,7 +104,7 @@ def get_customers_full():
     return jsonify(MASTER.get('customers', []))
 
 
-# ─── GET /api/projects ────────────────────────────────────────────────────────
+# â”€â”€â”€ GET /api/projects â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @app.route('/projects', methods=['GET'])
 @app.route('/api/projects', methods=['GET'])
 def get_projects():
@@ -123,7 +123,7 @@ def get_projects_full():
     return jsonify(MASTER.get('projects', []))
 
 
-# ─── POST /api/master/toggle-status ───────────────────────────────────────────
+# â”€â”€â”€ POST /api/master/toggle-status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @app.route('/master/toggle-status', methods=['POST'])
 @app.route('/api/master/toggle-status', methods=['POST'])
 @app.route('/toggle-status', methods=['POST'])
@@ -155,7 +155,7 @@ def toggle_master_status():
     return jsonify({'status': 'success', 'category': cat, 'id': item_id, 'active': new_active})
 
 
-# ─── POST /api/preview ────────────────────────────────────────────────────────
+# â”€â”€â”€ POST /api/preview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @app.route('/preview', methods=['POST'])
 @app.route('/api/preview', methods=['POST'])
 def preview_invoice():
@@ -211,7 +211,7 @@ def preview_invoice():
     })
 
 
-# ─── POST /api/generate ───────────────────────────────────────────────────────
+# â”€â”€â”€ POST /api/generate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @app.route('/generate', methods=['POST'])
 @app.route('/api/generate', methods=['POST'])
 def generate_invoice():
@@ -302,9 +302,9 @@ def generate_invoice():
     if user_id and bot_token and bot_token != "YOUR_BOT_TOKEN_FROM_BOTFATHER":
         try:
             telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
-            icon = "📋" if is_proforma else "🧾"
+            icon = "ðŸ“‹" if is_proforma else "ðŸ§¾"
             with open(output_path, 'rb') as f:
-                caption = f"{icon} *{doc_title_label} Generated*\n• Invoice No: `{inv_no}`\n• Project: `{project}`\n• Contractor: `{contractor}`"
+                caption = f"{icon} *{doc_title_label} Generated*\nâ€¢ Invoice No: `{inv_no}`\nâ€¢ Project: `{project}`\nâ€¢ Contractor: `{contractor}`"
                 resp = requests.post(
                     telegram_api_url,
                     data={'chat_id': user_id, 'caption': caption, 'parse_mode': 'Markdown'},
@@ -341,7 +341,7 @@ def generate_invoice():
     )
 
 
-# ─── GET & POST /api/mop/config ──────────────────────────────────────────────
+# â”€â”€â”€ GET & POST /api/mop/config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @app.route('/mop/config', methods=['GET', 'POST'])
 @app.route('/api/mop/config', methods=['GET', 'POST'])
 def handle_mop_config():
@@ -394,7 +394,7 @@ def handle_mop_config():
     })
 
 
-# ─── POST /api/mop/calculate ──────────────────────────────────────────────────
+# â”€â”€â”€ POST /api/mop/calculate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @app.route('/mop/calculate', methods=['POST'])
 @app.route('/api/mop/calculate', methods=['POST'])
 def api_mop_calculate():
@@ -426,8 +426,9 @@ def api_mop_calculate():
     # Overlay user custom percentages
     effective.update(user_config)
     custom_round_off = data.get('custom_round_off')
+    custom_adjustments = data.get('custom_adjustments') or []
 
-    calcs = calculate_mop(amount, effective, custom_round_off)
+    calcs = calculate_mop(amount, effective, custom_round_off, custom_adjustments)
     return jsonify({
         'status': 'success',
         'calculations': calcs,
@@ -435,7 +436,7 @@ def api_mop_calculate():
     })
 
 
-# ─── POST /api/mop/generate ───────────────────────────────────────────────────
+# â”€â”€â”€ POST /api/mop/generate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @app.route('/mop/generate', methods=['POST'])
 @app.route('/api/mop/generate', methods=['POST'])
 def api_mop_generate():
@@ -452,16 +453,19 @@ def api_mop_generate():
     amount = float(data.get('amount', 0))
     include_stamp = bool(data.get('include_stamp', True))
     custom_round_off = data.get('custom_round_off')
+    custom_adjustments = data.get('custom_adjustments') or []
     user_config = data.get('config') or {}
 
     # Lookup GSTINs
     c_info = next((c for c in MASTER.get('contractors', []) if c['name'] == contractor_name), None)
     contractor_gstin = c_info.get('gstin', '') if c_info else ''
+    contractor_address = c_info.get('address', '') if c_info else ''
 
     a_info = next((c for c in MASTER.get('contractors', []) if c['name'] == agency_name), None)
     if not a_info:
         a_info = next((c for c in MASTER.get('customers', []) if c['name'] == agency_name), None)
     agency_gstin = a_info.get('gstin', '') if a_info else ''
+    agency_address = a_info.get('address', '') if a_info else ''
 
     p_info = next((p for p in MASTER.get('projects', []) if p['location_key'] == project_key), None)
     work_name = p_info.get('description', project_key) if p_info else project_key
@@ -484,7 +488,7 @@ def api_mop_generate():
         effective.update(mop_rules['project_overrides'][project_key])
     effective.update(user_config)
 
-    calcs = calculate_mop(amount, effective, custom_round_off)
+    calcs = calculate_mop(amount, effective, custom_round_off, custom_adjustments)
 
     safe_project = project_key.strip().replace('/', '-').replace('\\', '-').replace(' ', '_')
     safe_inv = inv_no.strip().replace('/', '-').replace('\\', '-').replace(' ', '_')
@@ -504,8 +508,10 @@ def api_mop_generate():
     mop_payload = {
         "contractor_name": contractor_name,
         "contractor_gstin": contractor_gstin,
+        "contractor_address": contractor_address,
         "agency_name": agency_name,
         "agency_gstin": agency_gstin,
+        "agency_address": agency_address,
         "work_name": work_name,
         "bill_sr_no": bill_sr_no,
         "date_of_record": date_of_record,
@@ -514,7 +520,9 @@ def api_mop_generate():
         "amount": amount,
         "config": effective,
         "calculations": calcs,
-        "include_stamp": include_stamp
+        "include_stamp": include_stamp,
+        "custom_adjustments": custom_adjustments,
+        "custom_round_off": custom_round_off
     }
 
     try:
@@ -550,7 +558,7 @@ def api_mop_generate():
         try:
             telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
             with open(output_path, 'rb') as f:
-                caption = f"📑 *MOP (Memorandum of Payment) Generated*\n• Bill No: `{inv_no}`\n• Project: `{project_key}`\n• Net Payable: `INR {calcs['str_net_payable']}`"
+                caption = f"ðŸ“‘ *MOP (Memorandum of Payment) Generated*\nâ€¢ Bill No: `{inv_no}`\nâ€¢ Project: `{project_key}`\nâ€¢ Net Payable: `INR {calcs['str_net_payable']}`"
                 resp = requests.post(
                     telegram_api_url,
                     data={'chat_id': user_id, 'caption': caption, 'parse_mode': 'Markdown'},
@@ -587,7 +595,7 @@ def api_mop_generate():
     )
 
 
-# ─── POST /api/einv/generate ──────────────────────────────────────────────────
+# â”€â”€â”€ POST /api/einv/generate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @app.route('/einv/generate', methods=['POST'])
 @app.route('/api/einv/generate', methods=['POST'])
 def api_einv_generate():
@@ -672,7 +680,7 @@ def api_einv_generate():
         try:
             telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
             with open(output_path, 'rb') as f:
-                caption = f"⚡ *E-Invoice (NIC Standard) Generated*\n• Invoice No: `{inv_no}`\n• IRN: `{calcs['irn'][:16]}...`\n• Total: `INR {calcs['total_inv_amt']}`"
+                caption = f"âš¡ *E-Invoice (NIC Standard) Generated*\nâ€¢ Invoice No: `{inv_no}`\nâ€¢ IRN: `{calcs['irn'][:16]}...`\nâ€¢ Total: `INR {calcs['total_inv_amt']}`"
                 resp = requests.post(
                     telegram_api_url,
                     data={'chat_id': user_id, 'caption': caption, 'parse_mode': 'Markdown'},
@@ -709,7 +717,7 @@ def api_einv_generate():
     )
 
 
-# ─── Health Check ─────────────────────────────────────────────────────────────
+# â”€â”€â”€ Health Check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @app.route('/health', methods=['GET'])
 @app.route('/api/health', methods=['GET'])
 def health():
@@ -731,7 +739,7 @@ def save_master_json():
             pass
 
 
-# ─── POST /api/add-contractor ────────────────────────────────────────────────
+# â”€â”€â”€ POST /api/add-contractor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @app.route('/add-contractor', methods=['POST'])
 @app.route('/api/add-contractor', methods=['POST'])
 def add_contractor():
@@ -785,7 +793,7 @@ def add_contractor():
         return jsonify({'error': str(e)}), 500
 
 
-# ─── POST /api/add-customer ──────────────────────────────────────────────────
+# â”€â”€â”€ POST /api/add-customer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @app.route('/add-customer', methods=['POST'])
 @app.route('/api/add-customer', methods=['POST'])
 def add_customer():
@@ -816,7 +824,7 @@ def add_customer():
         return jsonify({'error': str(e)}), 500
 
 
-# ─── POST /api/add-project ───────────────────────────────────────────────────
+# â”€â”€â”€ POST /api/add-project â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @app.route('/add-project', methods=['POST'])
 @app.route('/api/add-project', methods=['POST'])
 def add_project():
@@ -851,7 +859,7 @@ def add_project():
         return jsonify({'error': str(e)}), 500
 
 
-# ─── Telegram Webhook Routes (Vercel Serverless 24/7 Bot) ─────────────────────
+# â”€â”€â”€ Telegram Webhook Routes (Vercel Serverless 24/7 Bot) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @app.route('/webhook', methods=['POST'])
 @app.route('/api/webhook', methods=['POST'])
 def telegram_webhook():
@@ -942,8 +950,8 @@ def telegram_webhook():
                 )
 
                 # Send document back to user chat
-                icon = "📋" if is_proforma else "🧾"
-                caption = f"{icon} *{doc_title_label} Generated*\n• Invoice No: `{inv_no}`\n• Project: `{project}`\n• Contractor: `{contractor}`"
+                icon = "ðŸ“‹" if is_proforma else "ðŸ§¾"
+                caption = f"{icon} *{doc_title_label} Generated*\nâ€¢ Invoice No: `{inv_no}`\nâ€¢ Project: `{project}`\nâ€¢ Contractor: `{contractor}`"
                 telegram_send_url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
                 with open(output_path, 'rb') as f:
                     requests.post(
@@ -955,7 +963,7 @@ def telegram_webhook():
             except Exception as gen_err:
                 requests.post(
                     f"https://api.telegram.org/bot{bot_token}/sendMessage",
-                    json={'chat_id': chat_id, 'text': f"❌ Error creating invoice: {gen_err}"}
+                    json={'chat_id': chat_id, 'text': f"âŒ Error creating invoice: {gen_err}"}
                 )
             return jsonify({'status': 'web_app_data_processed'}), 200
 
@@ -963,14 +971,14 @@ def telegram_webhook():
         if text.startswith('/start'):
             webapp_url = os.environ.get("MINI_APP_URL", "https://txtinv.vercel.app")
             welcome_text = (
-                f"👋 *Welcome, {user_first_name}!*\n\n"
-                f"🧾 *Tax & Proforma Invoice Generator*\n"
+                f"ðŸ‘‹ *Welcome, {user_first_name}!*\n\n"
+                f"ðŸ§¾ *Tax & Proforma Invoice Generator*\n"
                 f"Create GST Tax and Proforma Invoices with Indian numbering (`1,00,000`), Round Off and Company Stamps 24/7!\n\n"
                 f"Tap the button below to open the Mini App:"
             )
             keyboard = {
                 "inline_keyboard": [
-                    [{"text": "📱 Open Invoice Generator", "web_app": {"url": webapp_url}}]
+                    [{"text": "ðŸ“± Open Invoice Generator", "web_app": {"url": webapp_url}}]
                 ]
             }
             requests.post(
@@ -1054,7 +1062,9 @@ def webhook_info():
 if __name__ == '__main__':
     sys.stdout.reconfigure(encoding='utf-8')
     print("=" * 60)
-    print("  TAX INVOICE GENERATOR — API BACKEND")
+    print("  TAX INVOICE GENERATOR â€” API BACKEND")
     print("  Port: 8031  |  http://localhost:8031")
     print("=" * 60)
     app.run(host='0.0.0.0', port=8031, debug=False, threaded=True)
+
+

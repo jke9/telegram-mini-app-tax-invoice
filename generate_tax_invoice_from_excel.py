@@ -27,7 +27,7 @@ try:
 except ImportError:
     num2words = None
 
-PAGE_W, PAGE_H = 595.0, 842.0
+PAGE_W, PAGE_H = A4
 
 # Register standard fonts
 try:
@@ -145,7 +145,7 @@ def draw_wrapped_text(c, text, x, y, max_width, font_name, font_size, leading=11
 
 def draw_excel_tax_invoice(output_pdf: str, invoice_data: dict):
     """Renders clean ReportLab PDF Tax Invoice matching Reference Excel layout exactly."""
-    c = canvas.Canvas(output_pdf, pagesize=(PAGE_W, PAGE_H))
+    c = canvas.Canvas(output_pdf, pagesize=A4)
     
     # ── Page Geometry & Outer Borders ─────────────────────────────────────────
     X_L, X_R = 28.0, 567.0
