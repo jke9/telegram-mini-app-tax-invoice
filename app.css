@@ -1082,44 +1082,6 @@ input[type=number]::-webkit-outer-spin-button {
     transform: scale(0.92);
 }
 
-.passcode-sub-hint {
-    font-size: 0.74rem;
-    color: #82b1ff;
-    margin-top: -12px;
-    margin-bottom: 16px;
-    letter-spacing: 0.2px;
-}
-
-.passcode-sub-hint strong {
-    color: #ffd54f;
-}
-
-.passcode-quick-unlock {
-    margin-top: 16px;
-    display: flex;
-    justify-content: center;
-}
-
-.btn-quick-unlock {
-    background: linear-gradient(135deg, rgba(61, 90, 254, 0.25), rgba(0, 230, 118, 0.2));
-    border: 1px dashed rgba(130, 177, 255, 0.4);
-    color: #82b1ff;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    font-family: 'Outfit', sans-serif;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.btn-quick-unlock:hover, .btn-quick-unlock:active {
-    background: linear-gradient(135deg, rgba(61, 90, 254, 0.5), rgba(0, 230, 118, 0.4));
-    border-color: #82b1ff;
-    color: #ffffff;
-    transform: translateY(-1px);
-}
-
 .key-action {
     font-size: 1rem;
     color: #94a3b8;
