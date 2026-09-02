@@ -1668,6 +1668,30 @@ function populateSummary() {
         : `₹ ${fmt(state.amount)}`;
 }
 
+function getTelegramUserId() {
+    if (window.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
+        return window.Telegram.WebApp.initDataUnsafe.user.id;
+    }
+    if (window.Telegram?.WebApp?.initDataUnsafe?.chat?.id) {
+        return window.Telegram.WebApp.initDataUnsafe.chat.id;
+    }
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('user_id')) return params.get('user_id');
+    if (params.get('chat_id')) return params.get('chat_id');
+    if (params.get('tgWebAppStartParam')) return params.get('tgWebAppStartParam');
+    if (window.Telegram?.WebApp?.initData) {
+        try {
+            const rawParams = new URLSearchParams(window.Telegram.WebApp.initData);
+            const userJson = rawParams.get('user');
+            if (userJson) {
+                const u = JSON.parse(userJson);
+                if (u && u.id) return u.id;
+            }
+        } catch (_) {}
+    }
+    return null;
+}
+
 let isGenerating = false;
 
 // ─── Generate Invoice / MOP / E-Invoice ──────────────────────────────────────
@@ -1710,6 +1734,7 @@ async function generateInvoice() {
     const docInfo = getDocTypeInfo(currentDocType);
 
     try {
+        const telegramUserId = getTelegramUserId();
         const payload = {
             contractor: state.contractor,
             customer: state.customer,
@@ -1728,7 +1753,9 @@ async function generateInvoice() {
             config: state.mop_config,
             custom_round_off: state.is_manual_round_off ? state.custom_round_off : null,
             custom_adjustments: state.mop_adjustments || [],
-            user_id: tg?.initDataUnsafe?.user?.id,
+            user_id: telegramUserId,
+            chat_id: telegramUserId,
+            init_data: window.Telegram?.WebApp?.initData || '',
             return_json: true
         };
 

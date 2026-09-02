@@ -49,7 +49,87 @@ except ImportError:
         return response
 
 
-# â”€â”€â”€ Helper: Indian Number Formatting â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ─── Telegram Bot Dispatch Helpers ───────────────────────────────────────────
+DEFAULT_BOT_TOKEN = "8869317601:AAFesNJpvb0XzkRPUYdLgwA9wXu-9_vljWs"
+
+def get_telegram_bot_token():
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    if token and token != "YOUR_BOT_TOKEN_FROM_BOTFATHER":
+        return token
+    _env = os.path.join(BASE_DIR, '.env')
+    if os.path.exists(_env):
+        try:
+            with open(_env, 'r', encoding='utf-8') as _f:
+                for _l in _f:
+                    if _l.strip().startswith('TELEGRAM_BOT_TOKEN='):
+                        val = _l.strip().split('=', 1)[1].strip().strip('"').strip("'")
+                        if val and val != "YOUR_BOT_TOKEN_FROM_BOTFATHER":
+                            return val
+        except Exception:
+            pass
+    _creds = os.path.join(BASE_DIR, 'bot_credentials.json')
+    if os.path.exists(_creds):
+        try:
+            with open(_creds, 'r', encoding='utf-8') as _f:
+                val = json.load(_f).get('telegram_bot_token')
+                if val and val != "YOUR_BOT_TOKEN_FROM_BOTFATHER":
+                    return val
+        except Exception:
+            pass
+    return DEFAULT_BOT_TOKEN
+
+
+def extract_telegram_user_id(data):
+    if not isinstance(data, dict):
+        return None
+    uid = data.get('user_id') or data.get('chat_id') or data.get('id')
+    if uid:
+        try:
+            return int(uid)
+        except (ValueError, TypeError):
+            return str(uid)
+    init_data = data.get('init_data') or data.get('initData')
+    if init_data and isinstance(init_data, str):
+        try:
+            import urllib.parse
+            parsed = urllib.parse.parse_qs(init_data)
+            if 'user' in parsed:
+                u_obj = json.loads(parsed['user'][0])
+                if 'id' in u_obj:
+                    return u_obj['id']
+            if 'chat_id' in parsed:
+                return parsed['chat_id'][0]
+        except Exception:
+            pass
+    return None
+
+
+def send_pdf_to_telegram_chat(user_id, output_path, fname, caption):
+    if not user_id:
+        return False
+    bot_token = get_telegram_bot_token()
+    if not bot_token:
+        return False
+    try:
+        telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
+        with open(output_path, 'rb') as f:
+            resp = requests.post(
+                telegram_api_url,
+                data={'chat_id': user_id, 'caption': caption, 'parse_mode': 'Markdown'},
+                files={'document': (fname, f, 'application/pdf')},
+                timeout=12
+            )
+            if resp.status_code == 200:
+                print(f"[+] Successfully delivered {fname} to Telegram user {user_id}")
+                return True
+            else:
+                print(f"[-] Telegram API returned {resp.status_code}: {resp.text}")
+    except Exception as tel_err:
+        print(f"[-] Failed to send document via Telegram Bot API: {tel_err}")
+    return False
+
+
+# ─── Helper: Indian Number Formatting ─────────────────────────────────────────
 def fmt_indian(val):
     try:
         fval = abs(float(val))
@@ -273,56 +353,21 @@ def generate_invoice():
     import base64
     import requests
 
-    user_id = data.get('user_id') or data.get('chat_id')
+    user_id = extract_telegram_user_id(data)
     return_json = data.get('return_json') or bool(user_id) or request.headers.get('Accept') == 'application/json'
 
-    # Check if Telegram chat delivery is requested
-    sent_to_telegram = False
-    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
-    if not bot_token:
-        # Check local .env or bot_credentials.json if running locally
-        _env = os.path.join(BASE_DIR, '.env')
-        if os.path.exists(_env):
-            try:
-                with open(_env, 'r', encoding='utf-8') as _f:
-                    for _l in _f:
-                        if _l.strip().startswith('TELEGRAM_BOT_TOKEN='):
-                            bot_token = _l.strip().split('=', 1)[1].strip().strip('"').strip("'")
-            except Exception:
-                pass
-        if not bot_token:
-            _creds = os.path.join(BASE_DIR, 'bot_credentials.json')
-            if os.path.exists(_creds):
-                try:
-                    with open(_creds, 'r', encoding='utf-8') as _f:
-                        bot_token = json.load(_f).get('telegram_bot_token')
-                except Exception:
-                    pass
-    
-    if user_id and bot_token and bot_token != "YOUR_BOT_TOKEN_FROM_BOTFATHER":
-        try:
-            telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
-            icon = "📋" if is_proforma else "🧾"
-            with open(output_path, 'rb') as f:
-                caption = (
-                    f"{icon} *{doc_title_label} Generated*\n\n"
-                    f"🏢 *Contractor:* {contractor}\n"
-                    f"🏛️ *Customer:* {customer}\n"
-                    f"📍 *Project:* {project}\n"
-                    f"📄 *Invoice No:* `{inv_no}` | *Date:* `{inv_date}`\n"
-                    f"💰 *Grand Total:* *₹ {calcs.get('str_grand_total', fmt_indian(calcs.get('grand_total', amount)))}*\n\n"
-                    f"✅ *Status:* Official Vector PDF Generated"
-                )
-                resp = requests.post(
-                    telegram_api_url,
-                    data={'chat_id': user_id, 'caption': caption, 'parse_mode': 'Markdown'},
-                    files={'document': (fname, f, 'application/pdf')},
-                    timeout=8
-                )
-                if resp.status_code == 200:
-                    sent_to_telegram = True
-        except Exception as tel_err:
-            print(f"[-] Failed to send document via Telegram Bot API: {tel_err}")
+    # Send directly to user's Telegram chat
+    icon = "📋" if is_proforma else "🧾"
+    caption = (
+        f"{icon} *{doc_title_label} Generated*\n\n"
+        f"🏢 *Contractor:* {contractor}\n"
+        f"🏛️ *Customer:* {customer}\n"
+        f"📍 *Project:* {project}\n"
+        f"📄 *Invoice No:* `{inv_no}` | *Date:* `{inv_date}`\n"
+        f"💰 *Grand Total:* *₹ {calcs.get('str_grand_total', fmt_indian(calcs.get('grand_total', amount)))}*\n\n"
+        f"✅ *Status:* Official Vector PDF Generated"
+    )
+    sent_to_telegram = send_pdf_to_telegram_chat(user_id, output_path, fname, caption)
 
     # Read base64 string for mobile webview inline viewer
     with open(output_path, 'rb') as f:
@@ -538,54 +583,21 @@ def api_mop_generate():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-    user_id = data.get('user_id') or data.get('chat_id')
+    user_id = extract_telegram_user_id(data)
     return_json = data.get('return_json') or bool(user_id) or request.headers.get('Accept') == 'application/json'
 
-    sent_to_telegram = False
-    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
-    if not bot_token:
-        _env = os.path.join(BASE_DIR, '.env')
-        if os.path.exists(_env):
-            try:
-                with open(_env, 'r', encoding='utf-8') as _f:
-                    for _l in _f:
-                        if _l.strip().startswith('TELEGRAM_BOT_TOKEN='):
-                            bot_token = _l.strip().split('=', 1)[1].strip().strip('"').strip("'")
-            except Exception:
-                pass
-        if not bot_token:
-            _creds = os.path.join(BASE_DIR, 'bot_credentials.json')
-            if os.path.exists(_creds):
-                try:
-                    with open(_creds, 'r', encoding='utf-8') as _f:
-                        bot_token = json.load(_f).get('telegram_bot_token')
-                except Exception:
-                    pass
-
-    if user_id and bot_token and bot_token != "YOUR_BOT_TOKEN_FROM_BOTFATHER":
-        try:
-            telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
-            with open(output_path, 'rb') as f:
-                caption = (
-                    f"📑 *MOP (Memorandum of Payment) Generated*\n\n"
-                    f"🏢 *Contractor:* {contractor_name}\n"
-                    f"🏛️ *Agency:* {agency_name}\n"
-                    f"📍 *Project:* {work_name}\n"
-                    f"📄 *RA Bill Ref:* `{inv_no}` | *Date:* `{inv_date}`\n"
-                    f"💰 *Gross Amount:* ₹ {calcs.get('str_gross_amount', fmt_indian(amount))}\n"
-                    f"💵 *Net Payable:* *₹ {calcs.get('str_net_payable', '')}*\n\n"
-                    f"✅ *Status:* Verified Settlement Statement"
-                )
-                resp = requests.post(
-                    telegram_api_url,
-                    data={'chat_id': user_id, 'caption': caption, 'parse_mode': 'Markdown'},
-                    files={'document': (fname, f, 'application/pdf')},
-                    timeout=8
-                )
-                if resp.status_code == 200:
-                    sent_to_telegram = True
-        except Exception as tel_err:
-            print(f"[-] Failed to send MOP via Telegram Bot API: {tel_err}")
+    # Send directly to user's Telegram chat
+    caption = (
+        f"📑 *MOP (Memorandum of Payment) Generated*\n\n"
+        f"🏢 *Contractor:* {contractor_name}\n"
+        f"🏛️ *Agency:* {agency_name}\n"
+        f"📍 *Project:* {work_name}\n"
+        f"📄 *RA Bill Ref:* `{inv_no}` | *Date:* `{inv_date}`\n"
+        f"💰 *Gross Amount:* ₹ {calcs.get('str_gross_amount', fmt_indian(amount))}\n"
+        f"💵 *Net Payable:* *₹ {calcs.get('str_net_payable', '')}*\n\n"
+        f"✅ *Status:* Verified Settlement Statement"
+    )
+    sent_to_telegram = send_pdf_to_telegram_chat(user_id, output_path, fname, caption)
 
     with open(output_path, 'rb') as f:
         pdf_bytes = f.read()
@@ -669,53 +681,20 @@ def api_einv_generate():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-    user_id = data.get('user_id') or data.get('chat_id')
+    user_id = extract_telegram_user_id(data)
     return_json = data.get('return_json') or bool(user_id) or request.headers.get('Accept') == 'application/json'
 
-    sent_to_telegram = False
-    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
-    if not bot_token:
-        _env = os.path.join(BASE_DIR, '.env')
-        if os.path.exists(_env):
-            try:
-                with open(_env, 'r', encoding='utf-8') as _f:
-                    for _l in _f:
-                        if _l.strip().startswith('TELEGRAM_BOT_TOKEN='):
-                            bot_token = _l.strip().split('=', 1)[1].strip().strip('"').strip("'")
-            except Exception:
-                pass
-        if not bot_token:
-            _creds = os.path.join(BASE_DIR, 'bot_credentials.json')
-            if os.path.exists(_creds):
-                try:
-                    with open(_creds, 'r', encoding='utf-8') as _f:
-                        bot_token = json.load(_f).get('telegram_bot_token')
-                except Exception:
-                    pass
-
-    if user_id and bot_token and bot_token != "YOUR_BOT_TOKEN_FROM_BOTFATHER":
-        try:
-            telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
-            with open(output_path, 'rb') as f:
-                caption = (
-                    f"⚡ *E-Invoice (NIC Standard) Generated*\n\n"
-                    f"🏢 *Seller:* {seller_name}\n"
-                    f"🏛️ *Buyer:* {buyer_name}\n"
-                    f"📄 *Invoice No:* `{inv_no}` | *Date:* `{inv_date}`\n"
-                    f"🔑 *IRN:* `{calcs.get('irn', '')[:20]}...`\n"
-                    f"💰 *Total Invoice Value:* *₹ {calcs.get('str_total_inv_amt', '')}*\n\n"
-                    f"✅ *Status:* Official E-Invoice with Signed QR"
-                )
-                resp = requests.post(
-                    telegram_api_url,
-                    data={'chat_id': user_id, 'caption': caption, 'parse_mode': 'Markdown'},
-                    files={'document': (fname, f, 'application/pdf')},
-                    timeout=8
-                )
-                if resp.status_code == 200:
-                    sent_to_telegram = True
-        except Exception as tel_err:
-            print(f"[-] Failed to send E-Invoice via Telegram Bot API: {tel_err}")
+    # Send directly to user's Telegram chat
+    caption = (
+        f"⚡ *E-Invoice (NIC Standard) Generated*\n\n"
+        f"🏢 *Seller:* {seller_name}\n"
+        f"🏛️ *Buyer:* {buyer_name}\n"
+        f"📄 *Invoice No:* `{inv_no}` | *Date:* `{inv_date}`\n"
+        f"🔑 *IRN:* `{calcs.get('irn', '')[:20]}...`\n"
+        f"💰 *Total Invoice Value:* *₹ {calcs.get('str_total_inv_amt', '')}*\n\n"
+        f"✅ *Status:* Official E-Invoice with Signed QR"
+    )
+    sent_to_telegram = send_pdf_to_telegram_chat(user_id, output_path, fname, caption)
 
     with open(output_path, 'rb') as f:
         pdf_bytes = f.read()
