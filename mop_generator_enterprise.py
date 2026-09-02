@@ -114,33 +114,8 @@ class EnterpriseMOP:
         self.pdf.setLineWidth(width)
 
     def top_accent_bar(self):
-        """Draws a crisp dual-tone geometric corporate brand bar at top edge."""
-        h = 3.5
-        top_y = self.page_h - h
-        self.fill(PRIMARY_NAVY)
-        self.pdf.rect(0, top_y, self.page_w, h, stroke=0, fill=1)
-        
-        # Center angled orange transition slash
-        x1 = self.page_w * 0.68
-        x2 = x1 + 16
-        path = self.pdf.beginPath()
-        path.moveTo(x1, top_y)
-        path.lineTo(x2, top_y)
-        path.lineTo(x2 + 8, self.page_h)
-        path.lineTo(x1 + 8, self.page_h)
-        path.close()
-        self.fill(ACCENT_ORANGE)
-        self.pdf.drawPath(path, stroke=0, fill=1)
-
-        # Right sapphire blue segment
-        path2 = self.pdf.beginPath()
-        path2.moveTo(x2, top_y)
-        path2.lineTo(self.page_w, top_y)
-        path2.lineTo(self.page_w, self.page_h)
-        path2.lineTo(x2 + 8, self.page_h)
-        path2.close()
-        self.fill(ACCENT_BLUE)
-        self.pdf.drawPath(path2, stroke=0, fill=1)
+        """Clean top edge for plain blank paper printing without edge-bleed lines."""
+        pass
 
     def draw_watermark(self):
         """Draws a faint, prestigious corporate watermark in the page background."""
@@ -502,7 +477,7 @@ class EnterpriseMOP:
         return top - h
 
     def letterhead_footer(self):
-        """Draws the bottom contact footer and geometric brand accent bar."""
+        """Draws the bottom contact footer cleanly for plain blank paper."""
         y = 34
         self.stroke(BORDER_LIGHT, 0.45)
         self.pdf.line(self.left, y + 10, self.right, y + 10)
@@ -511,33 +486,6 @@ class EnterpriseMOP:
         self.fill(TEXT_MUTED)
         contact_str = f"Phone: {self.phone}   •   Email: {self.email}   •   Website: {self.website}"
         self.pdf.drawCentredString(self.page_w / 2, y, contact_str)
-
-        # Bottom dual-tone geometric bar
-        h = 3.5
-        self.fill(PRIMARY_NAVY)
-        self.pdf.rect(0, 0, self.page_w, h, stroke=0, fill=1)
-        
-        # Center angled orange transition slash
-        x1 = self.page_w * 0.65
-        x2 = x1 + 16
-        path = self.pdf.beginPath()
-        path.moveTo(x1, 0)
-        path.lineTo(x2, 0)
-        path.lineTo(x2 - 8, h)
-        path.lineTo(x1 - 8, h)
-        path.close()
-        self.fill(ACCENT_ORANGE)
-        self.pdf.drawPath(path, stroke=0, fill=1)
-
-        # Right sapphire blue
-        path2 = self.pdf.beginPath()
-        path2.moveTo(x2, 0)
-        path2.lineTo(self.page_w, 0)
-        path2.lineTo(self.page_w, h)
-        path2.lineTo(x2 - 8, h)
-        path2.close()
-        self.fill(ACCENT_BLUE)
-        self.pdf.drawPath(path2, stroke=0, fill=1)
 
     def render_core_financial_sections(self, y):
         # Section A: Work Value
