@@ -148,9 +148,10 @@ def draw_excel_tax_invoice(output_pdf: str, invoice_data: dict):
     c = canvas.Canvas(output_pdf, pagesize=A4)
     
     # ── Page Geometry & Outer Borders ─────────────────────────────────────────
-    X_L, X_R = 28.0, 567.0
-    Y_B, Y_T = 28.0, 814.0
-    BOX_W = X_R - X_L  # 539.0 pt
+    # Margins: 42pt = 14.8mm safe print zone on all 4 sides (avoids printer clip)
+    X_L, X_R = 42.0, PAGE_W - 42.0   # 42 → 553  (width = 511pt)
+    Y_B, Y_T = 42.0, PAGE_H - 42.0   # 42 → 800  (height = 758pt)
+    BOX_W = X_R - X_L                 # 511.0 pt usable width
     
     # ── Fix 9: Use thin 0.5pt lines for all section dividers ─────────────────
     DIVIDER_W = 0.5
@@ -179,7 +180,7 @@ def draw_excel_tax_invoice(output_pdf: str, invoice_data: dict):
 
     # ── 1. Supplier Company Header ───────────────────────────────────────────
     # Fix 2: Reduce address font to 7.5pt, add 18pt padding before Invoice Details
-    Y_HDR_BOTTOM = 725.0  # Moved up to add padding gap
+    Y_HDR_BOTTOM = Y_T - 89.0    # proportional: was 814-89=725, now 800-89=711
     
     c.setFont(B, 14)
     supplier_name = clean_str(invoice_data.get("supplier_name", "Shivam Builders"))
@@ -197,8 +198,8 @@ def draw_excel_tax_invoice(output_pdf: str, invoice_data: dict):
     c.line(X_L, Y_HDR_BOTTOM, X_R, Y_HDR_BOTTOM)
 
     # ── 2. Invoice Details vs Bill To Box (2 Columns) ─────────────────────────
-    Y_BILLTO_BOTTOM = 645.0
-    X_MID = 270.0
+    Y_BILLTO_BOTTOM = Y_T - 169.0     # proportional: was 814-169=645, now 800-169=631
+    X_MID = X_L + 228.0               # proportional center split (was 270-28=242 offset, scaled to 511/539)
     
     # Vertical line dividing left and right columns
     c.setLineWidth(DIVIDER_W)
@@ -252,8 +253,19 @@ def draw_excel_tax_invoice(output_pdf: str, invoice_data: dict):
     c.drawString(X_MID + 5.0, Y_BILLTO_BOTTOM + 5.0, str(invoice_data.get("cust_gst", "24AAALA0024C3Z7")))
 
     # ── 3. Items Table Headers ───────────────────────────────────────────────
-    # Fix: Widen HSN Code column slightly
-    COL_X = [28.0, 70.0, 270.0, 320.0, 355.0, 430.0, 475.0, 567.0]
+    # Columns proportionally rescaled from 539pt → 511pt usable width
+    # Scale factor: 511/539 ≈ 0.948. Offsets from X_L=42:
+    # Old: [28,70,270,320,355,430,475,567] → subtract 28, scale ×511/539, add 42
+    COL_X = [
+        X_L,                    # 42  (was 28)
+        X_L + 40.0,             # 82  (was 70)
+        X_L + 226.0,            # 268 (was 270, near same)
+        X_L + 274.0,            # 316 (was 320)
+        X_L + 308.0,            # 350 (was 355)
+        X_L + 379.0,            # 421 (was 430)
+        X_L + 422.0,            # 464 (was 475)
+        X_R,                    # 553 (was 567)
+    ]
     Y_TABLE_HEADER_TOP = Y_BILLTO_BOTTOM
     Y_TABLE_HEADER_BOTTOM = Y_BILLTO_BOTTOM - 18.0
     
@@ -272,7 +284,8 @@ def draw_excel_tax_invoice(output_pdf: str, invoice_data: dict):
     c.drawCentredString((COL_X[6] + COL_X[7]) / 2.0, Y_TABLE_HEADER_BOTTOM + 5.0, "Taxable Amount")
 
     # ── 4. Items Table Data & Vertical Grid Lines ─────────────────────────────
-    Y_WORDS_BAR_TOP = 320.0
+    # Bottom of items area: leave proportional space for totals + bank details
+    Y_WORDS_BAR_TOP = Y_B + 278.0   # proportional: was 320-28=292 above bottom, keep 278 above Y_B=42
     
     # Draw vertical grid lines for table columns
     c.setLineWidth(DIVIDER_W)

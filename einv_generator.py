@@ -192,7 +192,11 @@ def generate_einv_pdf(payload, output_path):
     # 5. Canvas Drawing
     os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
     c = canvas.Canvas(output_path, pagesize=A4)
-    c.scale(PAGE_W / DESIGN_W, PAGE_H / DESIGN_H)
+    # Apply safe print margin (18pt / ~6.5mm) so outer borders and text are never clipped on physical printers
+    SAFE_MARGIN_X = 18.0
+    SAFE_MARGIN_Y = 18.0
+    c.translate(SAFE_MARGIN_X, SAFE_MARGIN_Y)
+    c.scale((PAGE_W - 2 * SAFE_MARGIN_X) / DESIGN_W, (PAGE_H - 2 * SAFE_MARGIN_Y) / DESIGN_H)
 
     def draw_str(text, bbox, font_name="Helvetica", size=10.5, align="left"):
         x0, y0, x1, y1 = bbox

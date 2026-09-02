@@ -503,7 +503,7 @@ class EnterpriseMOP:
 
     def letterhead_footer(self):
         """Draws the bottom contact footer and geometric brand accent bar."""
-        y = 28
+        y = 34
         self.stroke(BORDER_LIGHT, 0.45)
         self.pdf.line(self.left, y + 10, self.right, y + 10)
         
@@ -513,7 +513,7 @@ class EnterpriseMOP:
         self.pdf.drawCentredString(self.page_w / 2, y, contact_str)
 
         # Bottom dual-tone geometric bar
-        h = 3.0
+        h = 3.5
         self.fill(PRIMARY_NAVY)
         self.pdf.rect(0, 0, self.page_w, h, stroke=0, fill=1)
         
