@@ -255,11 +255,16 @@ function updateDocTypeUI() {
         if (billAmountLabel) billAmountLabel.textContent = 'Total Work Done Amount as per RA Bill (₹)';
         if (step4Heading) step4Heading.textContent = 'RA Bill Work Amount';
         if (step4Sub) step4Sub.textContent = 'Enter gross work done and adjust deductions';
+        const bInput = document.getElementById('bill-amount');
+        if (bInput && (!bInput.value || parseFloat(bInput.value) <= 0)) {
+            bInput.value = '100000';
+        }
         if (mopConfigCard) mopConfigCard.style.display = 'block';
         if (mopAdjustmentsCard) mopAdjustmentsCard.style.display = 'block';
         if (mopPreview) mopPreview.style.display = 'block';
         if (taxPreview) taxPreview.style.display = 'none';
         fetchMopDefaults();
+        updateMopPreview();
     } else {
         if (amountTypeToggleWrap) amountTypeToggleWrap.style.display = 'flex';
         if (amountTypeHint) amountTypeHint.style.display = 'block';
@@ -934,34 +939,51 @@ window.addMopQuickTemplate = function(templateName) {
 };
 
 function updateMopPreview() {
-    const amtVal = parseFloat(document.getElementById('bill-amount')?.value);
+    let amtVal = parseFloat(document.getElementById('bill-amount')?.value);
     const mopPv = document.getElementById('mop-preview');
-    if (!amtVal || amtVal <= 0) {
-        if (mopPv) mopPv.style.display = 'none';
-        return;
+    if (isNaN(amtVal) || amtVal <= 0) {
+        if (currentDocType === 'mop') {
+            amtVal = 100000;
+            const bInput = document.getElementById('bill-amount');
+            if (bInput && !bInput.value) bInput.value = '100000';
+        } else {
+            if (mopPv) mopPv.style.display = 'none';
+            return;
+        }
     }
 
     const cfg = state.mop_config || {};
     const G = amtVal;
     const b_work = G / 1.18;
+    const gst_work = G - b_work;
 
-    const agency_tds = b_work * ((cfg.agency_tds_pct || 2.0) / 100.0);
-    const agency_sgst = b_work * ((cfg.agency_sgst_tds_pct || 1.0) / 100.0);
-    const agency_cgst = b_work * ((cfg.agency_cgst_tds_pct || 1.0) / 100.0);
+    const agency_tds_pct = cfg.agency_tds_pct !== undefined ? cfg.agency_tds_pct : 2.0;
+    const agency_sgst_pct = cfg.agency_sgst_tds_pct !== undefined ? cfg.agency_sgst_tds_pct : 1.0;
+    const agency_cgst_pct = cfg.agency_cgst_tds_pct !== undefined ? cfg.agency_cgst_tds_pct : 1.0;
+
+    const agency_tds = b_work * (agency_tds_pct / 100.0);
+    const agency_sgst = b_work * (agency_sgst_pct / 100.0);
+    const agency_cgst = b_work * (agency_cgst_pct / 100.0);
     const agency_ded_total = agency_tds + agency_sgst + agency_cgst;
 
     const net_ab = G - agency_ded_total;
-    const admin_exp = G * ((cfg.admin_expense_pct || 3.25) / 100.0);
+    const admin_pct = cfg.admin_expense_pct !== undefined ? cfg.admin_expense_pct : 3.25;
+    const admin_exp = G * (admin_pct / 100.0);
 
     const our_gross = net_ab - admin_exp;
     const our_basic = our_gross / 1.18;
     const our_sgst = our_basic * 0.09;
     const our_cgst = our_basic * 0.09;
 
-    const it_tds = our_basic * ((cfg.it_tds_pct || 1.0) / 100.0);
-    const retention = G * ((cfg.retention_pct || 2.0) / 100.0);
-    const labour_cess = b_work * ((cfg.labour_cess_pct || 1.0) / 100.0);
-    const testing_fee = G * ((cfg.testing_fee_pct || 0.5) / 100.0);
+    const it_tds_pct = cfg.it_tds_pct !== undefined ? cfg.it_tds_pct : 1.0;
+    const retention_pct = cfg.retention_pct !== undefined ? cfg.retention_pct : 2.0;
+    const cess_pct = cfg.labour_cess_pct !== undefined ? cfg.labour_cess_pct : 1.0;
+    const test_pct = cfg.testing_fee_pct !== undefined ? cfg.testing_fee_pct : 0.5;
+
+    const it_tds = our_basic * (it_tds_pct / 100.0);
+    const retention = G * (retention_pct / 100.0);
+    const labour_cess = b_work * (cess_pct / 100.0);
+    const testing_fee = G * (test_pct / 100.0);
 
     const bases = {
         gross_amount: G,
@@ -993,25 +1015,68 @@ function updateMopPreview() {
         net_payable = Math.round((raw_net + effective_ro) * 100) / 100;
     }
 
-    // Update DOM elements
-    if (document.getElementById('mop-pv-gross')) document.getElementById('mop-pv-gross').textContent = `₹ ${fmt(G)}`;
-    if (document.getElementById('mop-pv-agency-ded')) document.getElementById('mop-pv-agency-ded').textContent = `- ₹ ${fmt(agency_ded_total)}`;
-    if (document.getElementById('mop-pv-agency-tds')) document.getElementById('mop-pv-agency-tds').textContent = `₹ ${fmt(agency_tds)}`;
-    if (document.getElementById('mop-pv-agency-gst')) document.getElementById('mop-pv-agency-gst').textContent = `₹ ${fmt(agency_sgst + agency_cgst)}`;
-    if (document.getElementById('mop-pv-net-ab')) document.getElementById('mop-pv-net-ab').textContent = `₹ ${fmt(net_ab)}`;
-    if (document.getElementById('mop-pv-admin')) document.getElementById('mop-pv-admin').textContent = `- ₹ ${fmt(admin_exp)}`;
-    if (document.getElementById('mop-pv-our-bill')) document.getElementById('mop-pv-our-bill').textContent = `₹ ${fmt(our_gross)}`;
-    if (document.getElementById('mop-pv-our-breakdown')) document.getElementById('mop-pv-our-breakdown').textContent = `Basic: ₹${fmt(our_basic)} + GST: ₹${fmt(our_sgst + our_cgst)}`;
-    if (document.getElementById('mop-pv-our-ded')) document.getElementById('mop-pv-our-ded').textContent = `- ₹ ${fmt(core_ded_total + customDeductions - customAdditions)}`;
+    const setTxt = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    };
 
-    // Custom Live Subrows in Preview
+    // (A) Total Work Done
+    setTxt('mop-pv-gross', `INR ${fmt(G)}`);
+    setTxt('mop-pv-work-breakdown', `Basic INR ${fmt(b_work)} + GST 18% INR ${fmt(gst_work)}`);
+
+    // (B) Less Agency Deductions
+    setTxt('mop-pv-agency-ded', `- INR ${fmt(agency_ded_total)}`);
+    setTxt('mop-pv-agency-tds-lbl', `• TDS ${agency_tds_pct}%`);
+    setTxt('mop-pv-agency-tds', `INR ${fmt(agency_tds)}`);
+    setTxt('mop-pv-agency-gst-lbl', `• SGST ${agency_sgst_pct}% + CGST ${agency_cgst_pct}%`);
+    setTxt('mop-pv-agency-gst', `INR ${fmt(agency_sgst + agency_cgst)}`);
+
+    // (A - B) Net Work Done
+    setTxt('mop-pv-net-ab', `INR ${fmt(net_ab)}`);
+
+    // Admin & Head Expense
+    setTxt('mop-pv-admin-lbl', `Admin & Head Expense (${admin_pct}%)`);
+    setTxt('mop-pv-admin', `- INR ${fmt(admin_exp)}`);
+
+    // (C) Contractor Bill Amount
+    setTxt('mop-pv-our-bill', `INR ${fmt(our_gross)}`);
+    setTxt('mop-pv-our-breakdown', `Basic INR ${fmt(our_basic)} + GST 18% INR ${fmt(our_sgst + our_cgst)}`);
+
+    // (D) Recoveries & Deductions
+    setTxt('mop-pv-our-ded', `- INR ${fmt(core_ded_total + customDeductions - customAdditions)}`);
+    
+    setTxt('mop-pv-it-tds-lbl', `• Income Tax TDS (${it_tds_pct}%)`);
+    setTxt('mop-pv-it-tds', `- INR ${fmt(it_tds)}`);
+    const wrapIt = document.getElementById('mop-pv-core-it');
+    if (wrapIt) wrapIt.style.display = it_tds > 0 || it_tds_pct > 0 ? 'flex' : 'none';
+
+    setTxt('mop-pv-retention-lbl', `• Retention Money (${retention_pct}%)`);
+    setTxt('mop-pv-retention', `- INR ${fmt(retention)}`);
+    const wrapRet = document.getElementById('mop-pv-core-retention');
+    if (wrapRet) wrapRet.style.display = retention > 0 || retention_pct > 0 ? 'flex' : 'none';
+
+    setTxt('mop-pv-cess-lbl', `• Labour Cess (${cess_pct}%)`);
+    setTxt('mop-pv-cess', `- INR ${fmt(labour_cess)}`);
+    const wrapCess = document.getElementById('mop-pv-core-cess');
+    if (wrapCess) wrapCess.style.display = labour_cess > 0 || cess_pct > 0 ? 'flex' : 'none';
+
+    setTxt('mop-pv-testing-lbl', `• Quality & Testing Fee (${test_pct}%)`);
+    setTxt('mop-pv-testing', `- INR ${fmt(testing_fee)}`);
+    const wrapTest = document.getElementById('mop-pv-core-testing');
+    if (wrapTest) wrapTest.style.display = testing_fee > 0 || test_pct > 0 ? 'flex' : 'none';
+
+    // ➕ Custom Live Dynamic Addon Subrows in Preview
     const customPreview = document.getElementById('mop-pv-custom-adjustments');
     if (customPreview) {
-        customPreview.innerHTML = previewRows.map(row => `
-            <div class="mop-pv-subrow mop-pv-custom-${row.operation}" style="display:flex; justify-content:space-between; font-size:0.78rem; padding:3px 0;">
-                <span style="color:${row.operation === 'add' ? '#48bb78' : '#fc8181'}">• ${escapeMopHtml(row.label)}</span>
-                <span style="color:${row.operation === 'add' ? '#48bb78' : '#fc8181'}; font-weight:600;">${row.operation === 'add' ? '+' : '-'} ₹ ${fmt(row.computed)}</span>
-            </div>`).join('');
+        customPreview.innerHTML = previewRows.map(row => {
+            const isAdd = row.operation === 'add';
+            const rateLabel = row.calculation === 'percent' ? ` (${row.value}%)` : '';
+            return `
+                <div class="mop-pv-subrow mop-pv-custom-${row.operation}" style="display:flex; justify-content:space-between; font-size:0.78rem; padding:3px 0;">
+                    <span style="color:${isAdd ? '#48bb78' : '#fc8181'}">• ${escapeMopHtml(row.label)}${rateLabel}</span>
+                    <span style="color:${isAdd ? '#48bb78' : '#fc8181'}; font-weight:600;">${isAdd ? '+' : '-'} INR ${fmt(row.computed)}</span>
+                </div>`;
+        }).join('');
         customPreview.style.display = previewRows.length ? 'block' : 'none';
     }
 
@@ -1039,8 +1104,8 @@ function updateMopPreview() {
         }
     }
 
-    if (document.getElementById('mop-pv-net-payable')) document.getElementById('mop-pv-net-payable').textContent = `₹ ${fmt(net_payable)}`;
-    if (document.getElementById('mop-pv-words')) document.getElementById('mop-pv-words').textContent = `"${numToWordsIndian(net_payable)}"`;
+    setTxt('mop-pv-net-payable', `INR ${fmt(net_payable)}`);
+    setTxt('mop-pv-words', `"${numToWordsIndian(net_payable)}"`);
 
     lastPreviewData = {
         grand_total: fmt(net_payable),

@@ -13,8 +13,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="app.css?v=7.0">
-    <link rel="stylesheet" href="mop_dynamic.css?v=7.0">
+    <link rel="stylesheet" href="app.css?v=8.0">
+    <link rel="stylesheet" href="mop_dynamic.css?v=8.0">
 </head>
 
 <body>
@@ -372,18 +372,82 @@
                     <div class="tax-inline-grand"><span>Grand Total</span><span id="pv-grand">—</span></div>
                 </div>
 
-                <!-- 📑 Dedicated MOP Statement Live Preview -->
+                <!-- 📑 Dedicated MOP Statement Live Preview (Master Vector PDF Breakdown) -->
                 <div class="mop-preview-inline" id="mop-preview" style="display:none;">
                     <div class="mop-pv-header">📑 Memorandum of Payment Statement</div>
-                    <div class="mop-pv-row mop-pv-highlight"><span>(A) Total Work Done</span><span id="mop-pv-gross">—</span></div>
-                    <div class="mop-pv-row"><span>(B) Less Agency Deductions</span><span id="mop-pv-agency-ded">—</span></div>
-                    <div class="mop-pv-subrow"><span>• TDS 2%</span><span id="mop-pv-agency-tds">—</span></div>
-                    <div class="mop-pv-subrow"><span>• SGST 1% + CGST 1%</span><span id="mop-pv-agency-gst">—</span></div>
-                    <div class="mop-pv-row mop-pv-subtotal"><span>(A - B) Net Work Done</span><span id="mop-pv-net-ab">—</span></div>
-                    <div class="mop-pv-row"><span>Admin & Head Expense</span><span id="mop-pv-admin">—</span></div>
-                    <div class="mop-pv-row mop-pv-highlight"><span>OUR BILL AMOUNT</span><span id="mop-pv-our-bill">—</span></div>
-                    <div class="mop-pv-subrow"><span>• Basic + SGST 9% + CGST 9%</span><span id="mop-pv-our-breakdown">—</span></div>
-                    <div class="mop-pv-row"><span>Less Deductions (TDS, Retention, Cess, Testing)</span><span id="mop-pv-our-ded">—</span></div>
+                    
+                    <!-- Section A -->
+                    <div class="mop-pv-row mop-pv-highlight">
+                        <span>(A) Total Work Done</span>
+                        <span id="mop-pv-gross">—</span>
+                    </div>
+                    <div class="mop-pv-subrow">
+                        <span>• Basic Work + GST 18%</span>
+                        <span id="mop-pv-work-breakdown">—</span>
+                    </div>
+
+                    <!-- Section B -->
+                    <div class="mop-pv-row">
+                        <span>(B) Less Agency Deductions</span>
+                        <span id="mop-pv-agency-ded">—</span>
+                    </div>
+                    <div class="mop-pv-subrow" id="mop-pv-wrap-agency-tds">
+                        <span id="mop-pv-agency-tds-lbl">• TDS 2%</span>
+                        <span id="mop-pv-agency-tds">—</span>
+                    </div>
+                    <div class="mop-pv-subrow" id="mop-pv-wrap-agency-gst">
+                        <span id="mop-pv-agency-gst-lbl">• SGST 1% + CGST 1%</span>
+                        <span id="mop-pv-agency-gst">—</span>
+                    </div>
+
+                    <!-- Net Work Done (A - B) -->
+                    <div class="mop-pv-row mop-pv-subtotal">
+                        <span>(A - B) Net Work Done</span>
+                        <span id="mop-pv-net-ab">—</span>
+                    </div>
+
+                    <!-- Administrative Expense -->
+                    <div class="mop-pv-row">
+                        <span id="mop-pv-admin-lbl">Admin & Head Expense</span>
+                        <span id="mop-pv-admin">—</span>
+                    </div>
+
+                    <!-- Section C -->
+                    <div class="mop-pv-row mop-pv-highlight">
+                        <span>OUR BILL AMOUNT</span>
+                        <span id="mop-pv-our-bill">—</span>
+                    </div>
+                    <div class="mop-pv-subrow">
+                        <span>• Basic + SGST 9% + CGST 9%</span>
+                        <span id="mop-pv-our-breakdown">—</span>
+                    </div>
+
+                    <!-- Section D (Core & Dynamic Adjustments) -->
+                    <div class="mop-pv-row">
+                        <span>Less Deductions (TDS, Retention, Cess, Testing)</span>
+                        <span id="mop-pv-our-ded">—</span>
+                    </div>
+                    <div class="mop-pv-subrow" id="mop-pv-core-it">
+                        <span id="mop-pv-it-tds-lbl">• Income Tax TDS</span>
+                        <span id="mop-pv-it-tds">—</span>
+                    </div>
+                    <div class="mop-pv-subrow" id="mop-pv-core-retention">
+                        <span id="mop-pv-retention-lbl">• Retention Money</span>
+                        <span id="mop-pv-retention">—</span>
+                    </div>
+                    <div class="mop-pv-subrow" id="mop-pv-core-cess">
+                        <span id="mop-pv-cess-lbl">• Labour Cess</span>
+                        <span id="mop-pv-cess">—</span>
+                    </div>
+                    <div class="mop-pv-subrow" id="mop-pv-core-testing">
+                        <span id="mop-pv-testing-lbl">• Quality & Testing Fee</span>
+                        <span id="mop-pv-testing">—</span>
+                    </div>
+
+                    <!-- ➕ Dynamic Custom Addons Section inside Preview -->
+                    <div id="mop-pv-custom-adjustments" style="display:none;"></div>
+
+                    <!-- Round Off -->
                     <div class="mop-pv-row mop-ro-interactive-row" id="mop-pv-roundoff-row">
                         <div class="ro-lbl-wrap">
                             <span>Round Off</span>
@@ -396,8 +460,13 @@
                             </div>
                         </div>
                     </div>
-                    <div class="mop-pv-grand"><span>Net Amount Payable</span><span id="mop-pv-net-payable">—</span></div>
-                    <div class="mop-pv-words" id="mop-pv-words">One Crore...</div>
+
+                    <!-- Net Amount Payable -->
+                    <div class="mop-pv-grand">
+                        <span>Net Amount Payable</span>
+                        <span id="mop-pv-net-payable">—</span>
+                    </div>
+                    <div class="mop-pv-words" id="mop-pv-words">One Lakh Rupees Only</div>
                 </div>
 
                 <div class="step-nav">
@@ -763,8 +832,8 @@
         </div>
     </div>
 
-    <script src="app.js?v=7.0"></script>
-    <script src="mop_dynamic.js?v=7.0"></script>
+    <script src="app.js?v=8.0"></script>
+    <script src="mop_dynamic.js?v=8.0"></script>
 </body>
 
 </html>
