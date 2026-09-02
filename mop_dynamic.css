@@ -1,56 +1,130 @@
-.mop-adjustments-panel {
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid rgba(130, 177, 255, 0.2);
+/* ═══════════════════════════════════════════════════════════════════════
+   MOP Dynamic Custom Adjustments Card & Controls (Glassmorphic Luxury)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.mop-adjustments-card {
+    background: rgba(13, 27, 42, 0.72);
+    border: 1px solid rgba(130, 177, 255, 0.28);
+    border-radius: 16px;
+    padding: 16px;
+    margin-top: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: all 0.3s ease;
 }
 
-.mop-adjustments-heading {
+.mop-adjustments-card:hover {
+    border-color: rgba(130, 177, 255, 0.45);
+}
+
+.mop-adjustments-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.mop-adj-title {
+    display: flex;
+    align-items: center;
     gap: 10px;
-    margin-bottom: 10px;
 }
 
-.mop-adjustments-heading strong,
-.mop-adjustments-heading span {
-    display: block;
+.mop-adj-icon {
+    font-size: 1.4rem;
+    line-height: 1;
 }
 
-.mop-adjustments-heading strong {
-    color: #f5f8ff;
-    font-size: 0.82rem;
+.mop-adj-title h3 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #f0f6ff;
+    letter-spacing: 0.2px;
 }
 
-.mop-adjustments-heading span {
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 0.67rem;
-    margin-top: 2px;
+.mop-adj-title p {
+    margin: 3px 0 0 0;
+    font-size: 0.72rem;
+    color: rgba(220, 235, 255, 0.65);
+    line-height: 1.3;
+}
+
+.mop-adj-title em {
+    color: #8fcaff;
+    font-style: normal;
+    font-weight: 600;
 }
 
 .btn-mop-add-row {
     flex: 0 0 auto;
-    border: 1px solid rgba(35, 127, 194, 0.55);
-    background: rgba(35, 127, 194, 0.17);
-    color: #8fcaff;
-    border-radius: 8px;
-    padding: 7px 10px;
-    font: 700 0.7rem 'Outfit', sans-serif;
+    border: 1px solid rgba(66, 153, 225, 0.6);
+    background: linear-gradient(135deg, rgba(30, 90, 150, 0.4) 0%, rgba(15, 55, 100, 0.6) 100%);
+    color: #e2f1ff;
+    border-radius: 10px;
+    padding: 9px 14px;
+    font: 700 0.78rem 'Outfit', sans-serif;
     cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
+.btn-mop-add-row:hover, .btn-mop-add-row:active {
+    background: linear-gradient(135deg, rgba(45, 120, 190, 0.6) 0%, rgba(20, 75, 130, 0.8) 100%);
+    border-color: #63b3ed;
+    transform: translateY(-1px);
+}
+
+/* Quick Chips */
+.mop-quick-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.mop-chip-btn {
+    border: 1px dashed rgba(130, 177, 255, 0.35);
+    background: rgba(255, 255, 255, 0.04);
+    color: #b8dcff;
+    border-radius: 20px;
+    padding: 4px 10px;
+    font: 600 0.68rem 'Outfit', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mop-chip-btn:hover {
+    background: rgba(130, 177, 255, 0.15);
+    border-color: #82b1ff;
+    color: #fff;
+}
+
+/* Adjustment Row Card */
 .mop-adjustment-row {
-    padding: 10px;
-    margin-top: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 10px;
-    background: rgba(3, 12, 25, 0.28);
+    padding: 12px;
+    margin-top: 10px;
+    border: 1px solid rgba(130, 177, 255, 0.2);
+    border-radius: 12px;
+    background: rgba(4, 15, 30, 0.55);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    animation: fadeInRow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInRow {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .mop-adjustment-topline {
     display: flex;
     gap: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 }
 
 .mop-adj-label,
@@ -59,51 +133,74 @@
     min-width: 0;
     width: 100%;
     box-sizing: border-box;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    background: rgba(0, 0, 0, 0.34);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(0, 0, 0, 0.45);
     color: #fff;
-    border-radius: 7px;
-    padding: 8px;
-    font: 500 0.74rem 'Outfit', sans-serif;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font: 500 0.82rem 'Outfit', sans-serif;
     outline: none;
+    transition: all 0.2s ease;
 }
 
 .mop-adj-label:focus,
 .mop-adjustment-grid input:focus,
 .mop-adjustment-grid select:focus {
-    border-color: #237fc2;
-    box-shadow: 0 0 0 2px rgba(35, 127, 194, 0.18);
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.25);
+    background: rgba(0, 0, 0, 0.65);
 }
 
 .mop-adj-label {
     flex: 1;
+    font-weight: 600;
 }
 
 .mop-adj-remove {
-    width: 34px;
-    flex: 0 0 34px;
-    border: 1px solid rgba(255, 102, 102, 0.3);
-    background: rgba(255, 82, 82, 0.12);
+    width: 38px;
+    flex: 0 0 38px;
+    border: 1px solid rgba(255, 102, 102, 0.35);
+    background: rgba(255, 82, 82, 0.15);
     color: #ff9a9a;
-    border-radius: 7px;
-    font-size: 1.1rem;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mop-adj-remove:hover {
+    background: rgba(255, 82, 82, 0.3);
+    color: #fff;
+    border-color: #ff6b6b;
 }
 
 .mop-adjustment-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 7px;
+    grid-template-columns: 1.1fr 1fr 1.3fr 1.2fr;
+    gap: 8px;
+}
+
+@media (max-width: 480px) {
+    .mop-adjustment-grid {
+        grid-template-columns: 1fr 1fr;
+    }
 }
 
 .mop-adjustment-grid select:disabled {
-    opacity: 0.4;
+    opacity: 0.35;
+    cursor: not-allowed;
 }
 
+/* Custom Live Subrow in Preview */
 .mop-pv-custom-add {
-    color: #6de5ae;
+    color: #48bb78 !important;
+    font-weight: 600;
 }
 
 .mop-pv-custom-deduct {
-    color: #ff9d9d;
+    color: #fc8181 !important;
+    font-weight: 600;
 }

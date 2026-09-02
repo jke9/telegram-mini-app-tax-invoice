@@ -567,15 +567,17 @@ class EnterpriseMOP:
         return y
 
     def get_adjustment_rows(self):
-        rows = [
+        candidates = [
             ("Income Tax (TDS)", self.calc["it_tds"], f"{self.pct.get('it_tds_pct', 1.0):.2f}%", "deduct"),
             ("Retention Money S.D.", self.calc["retention"], f"{self.pct.get('retention_pct', 2.0):.2f}%", "deduct"),
             ("Labour Welfare Cess", self.calc["labour_cess"], f"{self.pct.get('labour_cess_pct', 1.0):.2f}%", "deduct"),
             ("Quality & Testing Fee", self.calc["testing_fee"], f"{self.pct.get('testing_fee_pct', 0.5):.2f}%", "deduct"),
         ]
+        rows = [c for c in candidates if abs(c[1]) >= 0.01]
         for row in self.calc.get("custom_adjustments", []):
             rate = f"{row['value']:.2f}%" if row.get("calculation") == "percent" else "FIXED"
-            rows.append((row["label"], row["amount"], rate, row["operation"]))
+            if row.get("amount", 0) > 0:
+                rows.append((row["label"], row["amount"], rate, row["operation"]))
         return rows
 
     def render_adjustments_and_total(self, y, rows):

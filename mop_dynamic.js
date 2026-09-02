@@ -1,4 +1,6 @@
-/* Premium MOP custom-adjustment controls and live calculation extension. */
+/* ═══════════════════════════════════════════════════════════════════════
+   MOP Dynamic Custom Adjustment Engine & Live Real-Time Calculation
+   ═══════════════════════════════════════════════════════════════════════ */
 (function () {
     const BASE_OPTIONS = [
         ['gross_amount', 'Gross RA Bill'],
@@ -8,31 +10,43 @@
         ['our_basic', 'Our Basic Amount']
     ];
 
+    const QUICK_TEMPLATES = [
+        'SD GUDA PUNDRASAN',
+        'SD AMC ASARWA',
+        'Security Deposite',
+        'Royalty Deduction',
+        'Testing Charges',
+        'Penalty / Liquidated Damages'
+    ];
+
     function adjustmentMarkup(item = {}) {
         const id = `mop-adj-${Date.now()}-${Math.random().toString(16).slice(2)}`;
         const operation = item.operation === 'add' ? 'add' : 'deduct';
         const calculation = item.calculation === 'percent' ? 'percent' : 'fixed';
         const base = item.base || 'gross_amount';
+        const labelVal = item.label || '';
+        const numVal = item.value !== undefined ? item.value : '';
+
         return `
             <div class="mop-adjustment-row" id="${id}">
                 <div class="mop-adjustment-topline">
                     <input class="mop-adj-label" type="text" maxlength="90"
-                        value="${escapeHtml(item.label || '')}" placeholder="Adjustment name, e.g. SD AMC ASARAVA">
+                        value="${escapeHtml(labelVal)}" placeholder="e.g. SD GUDA PUNDRASAN, Security Deposit">
                     <button type="button" class="mop-adj-remove" aria-label="Remove adjustment"
                         onclick="removeMopAdjustment('${id}')">&times;</button>
                 </div>
                 <div class="mop-adjustment-grid">
-                    <select class="mop-adj-operation">
+                    <select class="mop-adj-operation" title="Deduction or Addition">
                         <option value="deduct" ${operation === 'deduct' ? 'selected' : ''}>Deduction (-)</option>
                         <option value="add" ${operation === 'add' ? 'selected' : ''}>Addition (+)</option>
                     </select>
-                    <select class="mop-adj-calculation">
-                        <option value="fixed" ${calculation === 'fixed' ? 'selected' : ''}>Fixed INR</option>
-                        <option value="percent" ${calculation === 'percent' ? 'selected' : ''}>Percentage</option>
+                    <select class="mop-adj-calculation" title="Fixed INR or Percentage">
+                        <option value="fixed" ${calculation === 'fixed' ? 'selected' : ''}>Fixed INR (₹)</option>
+                        <option value="percent" ${calculation === 'percent' ? 'selected' : ''}>Percent (%)</option>
                     </select>
                     <input class="mop-adj-value" type="number" min="0" step="0.01"
-                        value="${Number(item.value || 0)}" placeholder="0.00">
-                    <select class="mop-adj-base" ${calculation === 'fixed' ? 'disabled' : ''}>
+                        value="${numVal}" placeholder="0.00">
+                    <select class="mop-adj-base" ${calculation === 'fixed' ? 'disabled' : ''} title="Base for % calculation">
                         ${BASE_OPTIONS.map(([key, label]) => `<option value="${key}" ${base === key ? 'selected' : ''}>${label}</option>`).join('')}
                     </select>
                 </div>
@@ -40,19 +54,19 @@
     }
 
     function escapeHtml(value) {
-        return String(value).replace(/[&<>'"]/g, char => ({
+        return String(value || '').replace(/[&<>'"]/g, char => ({
             '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
         })[char]);
     }
 
     function readRows() {
         return [...document.querySelectorAll('.mop-adjustment-row')].map(row => ({
-            label: row.querySelector('.mop-adj-label')?.value.trim() || 'Custom adjustment',
+            label: row.querySelector('.mop-adj-label')?.value.trim() || 'Custom Deduction',
             operation: row.querySelector('.mop-adj-operation')?.value || 'deduct',
             calculation: row.querySelector('.mop-adj-calculation')?.value || 'fixed',
             value: Math.max(0, parseFloat(row.querySelector('.mop-adj-value')?.value) || 0),
             base: row.querySelector('.mop-adj-base')?.value || 'gross_amount'
-        })).filter(item => item.label || item.value);
+        })).filter(item => item.label && item.value > 0);
     }
 
     window.addMopAdjustment = function (item = {}) {
@@ -64,19 +78,31 @@
             control.addEventListener('input', window.syncMopAdjustments);
             control.addEventListener('change', event => {
                 if (event.target.classList.contains('mop-adj-calculation')) {
-                    row.querySelector('.mop-adj-base').disabled = event.target.value === 'fixed';
+                    const baseSelect = row.querySelector('.mop-adj-base');
+                    if (baseSelect) baseSelect.disabled = event.target.value === 'fixed';
                 }
                 window.syncMopAdjustments();
             });
         });
         window.syncMopAdjustments();
-        row.querySelector('.mop-adj-label')?.focus();
+        const labelInput = row.querySelector('.mop-adj-label');
+        if (!item.label && labelInput) labelInput.focus();
         window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light');
+    };
+
+    window.addMopQuickTemplate = function (templateName) {
+        window.addMopAdjustment({
+            label: templateName,
+            operation: 'deduct',
+            calculation: 'fixed',
+            value: 0
+        });
     };
 
     window.removeMopAdjustment = function (id) {
         document.getElementById(id)?.remove();
         window.syncMopAdjustments();
+        window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium');
     };
 
     window.syncMopAdjustments = function () {
@@ -86,7 +112,7 @@
 
     function computedAdjustment(item, bases) {
         const baseValue = Number(bases[item.base]) || 0;
-        return item.calculation === 'percent' ? baseValue * item.value / 100 : item.value;
+        return item.calculation === 'percent' ? (baseValue * item.value / 100) : item.value;
     }
 
     window.updateMopPreview = function () {
@@ -121,6 +147,7 @@
             our_bill_gross: ourGross,
             our_basic: ourBasic
         };
+
         const adjustments = state.mop_adjustments || [];
         let customAdditions = 0;
         let customDeductions = 0;
@@ -186,25 +213,30 @@
 
     function init() {
         state.mop_adjustments = state.mop_adjustments || [];
-        const configBody = document.getElementById('mop-config-body');
-        if (configBody && !document.getElementById('mop-adjustments-panel')) {
-            configBody.insertAdjacentHTML('beforeend', `
-                <div id="mop-adjustments-panel" class="mop-adjustments-panel">
-                    <div class="mop-adjustments-heading">
-                        <div>
-                            <strong>Custom adjustments</strong>
-                            <span>Add unpredictable deductions or additions</span>
-                        </div>
-                        <button type="button" class="btn-mop-add-row" onclick="addMopAdjustment()">+ Add field</button>
-                    </div>
-                    <div id="mop-adjustments-list"></div>
-                </div>`);
+        
+        // Add quick chip templates inside mop-adjustments-card header if not already present
+        const adjCard = document.getElementById('mop-adjustments-card');
+        if (adjCard && !adjCard.querySelector('.mop-quick-chips')) {
+            const header = adjCard.querySelector('.mop-adjustments-header');
+            if (header) {
+                const chipsHtml = `
+                    <div class="mop-quick-chips">
+                        <span style="font-size:0.68rem; color:rgba(255,255,255,0.4); align-self:center;">Quick:</span>
+                        ${QUICK_TEMPLATES.map(name => `<button type="button" class="mop-chip-btn" onclick="addMopQuickTemplate('${name}')">+ ${name}</button>`).join('')}
+                    </div>`;
+                header.insertAdjacentHTML('afterend', chipsHtml);
+            }
         }
+
         const roundOffRow = document.getElementById('mop-pv-roundoff-row');
         if (roundOffRow && !document.getElementById('mop-pv-custom-adjustments')) {
             roundOffRow.insertAdjacentHTML('beforebegin', '<div id="mop-pv-custom-adjustments" style="display:none"></div>');
         }
     }
 
-    init();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 })();

@@ -245,6 +245,7 @@ function updateDocTypeUI() {
     const step4Heading = document.getElementById('step-4-heading');
     const step4Sub = document.getElementById('step-4-sub');
     const mopConfigCard = document.getElementById('mop-config-card');
+    const mopAdjustmentsCard = document.getElementById('mop-adjustments-card');
     const mopPreview = document.getElementById('mop-preview');
     const taxPreview = document.getElementById('tax-preview');
 
@@ -255,6 +256,7 @@ function updateDocTypeUI() {
         if (step4Heading) step4Heading.textContent = 'RA Bill Work Amount';
         if (step4Sub) step4Sub.textContent = 'Enter gross work done and adjust deductions';
         if (mopConfigCard) mopConfigCard.style.display = 'block';
+        if (mopAdjustmentsCard) mopAdjustmentsCard.style.display = 'block';
         if (mopPreview) mopPreview.style.display = 'block';
         if (taxPreview) taxPreview.style.display = 'none';
         fetchMopDefaults();
@@ -265,6 +267,7 @@ function updateDocTypeUI() {
         if (step4Heading) step4Heading.textContent = 'Bill Amount';
         if (step4Sub) step4Sub.textContent = 'Enter amount and select type';
         if (mopConfigCard) mopConfigCard.style.display = 'none';
+        if (mopAdjustmentsCard) mopAdjustmentsCard.style.display = 'none';
         if (mopPreview) mopPreview.style.display = 'none';
         if (taxPreview) taxPreview.style.display = 'block';
     }

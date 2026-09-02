@@ -327,6 +327,21 @@
                     </div>
                 </div>
 
+                <!-- ➕ MOP Dynamic Custom Adjustments Card (SD / Project Deductions & Additions) -->
+                <div id="mop-adjustments-card" class="mop-adjustments-card" style="display:none;">
+                    <div class="mop-adjustments-header">
+                        <div class="mop-adj-title">
+                            <span class="mop-adj-icon">🏷️</span>
+                            <div>
+                                <h3>Custom Adjustments & Deductions</h3>
+                                <p>Add dynamic fields e.g. <em>SD GUDA PUNDRASAN</em>, Penalty, Royalty, Testing</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-mop-add-row" onclick="addMopAdjustment()">➕ Add Field</button>
+                    </div>
+                    <div id="mop-adjustments-list" class="mop-adjustments-list"></div>
+                </div>
+
                 <!-- Standard Tax Preview (Tax & Proforma) -->
                 <div class="tax-preview-inline" id="tax-preview" style="display:none;">
                     <div class="tax-inline-row"><span>Taxable</span><span id="pv-taxable">—</span></div>
