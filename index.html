@@ -334,11 +334,21 @@
                             <span class="mop-adj-icon">🏷️</span>
                             <div>
                                 <h3>Custom Adjustments & Deductions</h3>
-                                <p>Add dynamic fields e.g. <em>SD GUDA PUNDRASAN</em>, Penalty, Royalty, Testing</p>
+                                <p>Add dynamic fields e.g. <em>SD for Project</em>, Security Deposit, Testing, Royalty, Penalty</p>
                             </div>
                         </div>
-                        <button type="button" class="btn-mop-add-row" onclick="addMopAdjustment()">➕ Add Field</button>
+                        <button type="button" id="btn-add-mop-adj" class="btn-mop-add-row" onclick="addMopAdjustment()">➕ Add Field</button>
                     </div>
+                    
+                    <div class="mop-quick-chips">
+                        <span class="mop-chip-lbl">Quick Add:</span>
+                        <button type="button" class="mop-chip-btn" onclick="addMopQuickTemplate('SD for Project')">+ SD for Project</button>
+                        <button type="button" class="mop-chip-btn" onclick="addMopQuickTemplate('Security Deposit')">+ Security Deposit</button>
+                        <button type="button" class="mop-chip-btn" onclick="addMopQuickTemplate('Testing Charges')">+ Testing Charges</button>
+                        <button type="button" class="mop-chip-btn" onclick="addMopQuickTemplate('Royalty Deduction')">+ Royalty</button>
+                        <button type="button" class="mop-chip-btn" onclick="addMopQuickTemplate('Penalty')">+ Penalty</button>
+                    </div>
+
                     <div id="mop-adjustments-list" class="mop-adjustments-list"></div>
                 </div>
 

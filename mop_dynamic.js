@@ -11,12 +11,11 @@
     ];
 
     const QUICK_TEMPLATES = [
-        'SD GUDA PUNDRASAN',
-        'SD AMC ASARWA',
-        'Security Deposite',
-        'Royalty Deduction',
+        'SD for Project',
+        'Security Deposit',
         'Testing Charges',
-        'Penalty / Liquidated Damages'
+        'Royalty Deduction',
+        'Penalty'
     ];
 
     function adjustmentMarkup(item = {}) {
@@ -25,13 +24,13 @@
         const calculation = item.calculation === 'percent' ? 'percent' : 'fixed';
         const base = item.base || 'gross_amount';
         const labelVal = item.label || '';
-        const numVal = item.value !== undefined ? item.value : '';
+        const numVal = (item.value !== undefined && item.value !== null && item.value !== 0) ? item.value : '';
 
         return `
             <div class="mop-adjustment-row" id="${id}">
                 <div class="mop-adjustment-topline">
                     <input class="mop-adj-label" type="text" maxlength="90"
-                        value="${escapeHtml(labelVal)}" placeholder="e.g. SD GUDA PUNDRASAN, Security Deposit">
+                        value="${escapeHtml(labelVal)}" placeholder="Field name e.g. SD for Project, Security Deposit">
                     <button type="button" class="mop-adj-remove" aria-label="Remove adjustment"
                         onclick="removeMopAdjustment('${id}')">&times;</button>
                 </div>
@@ -45,7 +44,7 @@
                         <option value="percent" ${calculation === 'percent' ? 'selected' : ''}>Percent (%)</option>
                     </select>
                     <input class="mop-adj-value" type="number" min="0" step="0.01"
-                        value="${numVal}" placeholder="0.00">
+                        value="${numVal}" placeholder="Amount ₹">
                     <select class="mop-adj-base" ${calculation === 'fixed' ? 'disabled' : ''} title="Base for % calculation">
                         ${BASE_OPTIONS.map(([key, label]) => `<option value="${key}" ${base === key ? 'selected' : ''}>${label}</option>`).join('')}
                     </select>
@@ -86,7 +85,12 @@
         });
         window.syncMopAdjustments();
         const labelInput = row.querySelector('.mop-adj-label');
-        if (!item.label && labelInput) labelInput.focus();
+        const valInput = row.querySelector('.mop-adj-value');
+        if (!item.label && labelInput) {
+            labelInput.focus();
+        } else if (item.label && valInput) {
+            valInput.focus();
+        }
         window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light');
     };
 
@@ -213,21 +217,6 @@
 
     function init() {
         state.mop_adjustments = state.mop_adjustments || [];
-        
-        // Add quick chip templates inside mop-adjustments-card header if not already present
-        const adjCard = document.getElementById('mop-adjustments-card');
-        if (adjCard && !adjCard.querySelector('.mop-quick-chips')) {
-            const header = adjCard.querySelector('.mop-adjustments-header');
-            if (header) {
-                const chipsHtml = `
-                    <div class="mop-quick-chips">
-                        <span style="font-size:0.68rem; color:rgba(255,255,255,0.4); align-self:center;">Quick:</span>
-                        ${QUICK_TEMPLATES.map(name => `<button type="button" class="mop-chip-btn" onclick="addMopQuickTemplate('${name}')">+ ${name}</button>`).join('')}
-                    </div>`;
-                header.insertAdjacentHTML('afterend', chipsHtml);
-            }
-        }
-
         const roundOffRow = document.getElementById('mop-pv-roundoff-row');
         if (roundOffRow && !document.getElementById('mop-pv-custom-adjustments')) {
             roundOffRow.insertAdjacentHTML('beforebegin', '<div id="mop-pv-custom-adjustments" style="display:none"></div>');

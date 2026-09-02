@@ -438,6 +438,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         mopRoInput.addEventListener('input', onMopRoundOffInput);
     }
 
+    // MOP Add Custom Adjustment Button Explicit Listener
+    const btnAddAdj = document.getElementById('btn-add-mop-adj');
+    if (btnAddAdj) {
+        btnAddAdj.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (typeof window.addMopAdjustment === 'function') {
+                window.addMopAdjustment();
+            }
+        });
+    }
+
     // Update step UI
     if (currentDocType === 'mop') {
         goToStep(2);

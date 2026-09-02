@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Tax Invoice Generator â€” API Backend Server
 Runs on Port 8031. Serves contractor/customer/project data and generates PDF invoices.
@@ -302,9 +302,17 @@ def generate_invoice():
     if user_id and bot_token and bot_token != "YOUR_BOT_TOKEN_FROM_BOTFATHER":
         try:
             telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
-            icon = "ðŸ“‹" if is_proforma else "ðŸ§¾"
+            icon = "📋" if is_proforma else "🧾"
             with open(output_path, 'rb') as f:
-                caption = f"{icon} *{doc_title_label} Generated*\nâ€¢ Invoice No: `{inv_no}`\nâ€¢ Project: `{project}`\nâ€¢ Contractor: `{contractor}`"
+                caption = (
+                    f"{icon} *{doc_title_label} Generated*\n\n"
+                    f"🏢 *Contractor:* {contractor}\n"
+                    f"🏛️ *Customer:* {customer}\n"
+                    f"📍 *Project:* {project}\n"
+                    f"📄 *Invoice No:* `{inv_no}` | *Date:* `{inv_date}`\n"
+                    f"💰 *Grand Total:* *₹ {calcs.get('str_grand_total', fmt_indian(calcs.get('grand_total', amount)))}*\n\n"
+                    f"✅ *Status:* Official Vector PDF Generated"
+                )
                 resp = requests.post(
                     telegram_api_url,
                     data={'chat_id': user_id, 'caption': caption, 'parse_mode': 'Markdown'},
@@ -558,7 +566,16 @@ def api_mop_generate():
         try:
             telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
             with open(output_path, 'rb') as f:
-                caption = f"ðŸ“‘ *MOP (Memorandum of Payment) Generated*\nâ€¢ Bill No: `{inv_no}`\nâ€¢ Project: `{project_key}`\nâ€¢ Net Payable: `INR {calcs['str_net_payable']}`"
+                caption = (
+                    f"📑 *MOP (Memorandum of Payment) Generated*\n\n"
+                    f"🏢 *Contractor:* {contractor_name}\n"
+                    f"🏛️ *Agency:* {agency_name}\n"
+                    f"📍 *Project:* {work_name}\n"
+                    f"📄 *RA Bill Ref:* `{inv_no}` | *Date:* `{inv_date}`\n"
+                    f"💰 *Gross Amount:* ₹ {calcs.get('str_gross_amount', fmt_indian(amount))}\n"
+                    f"💵 *Net Payable:* *₹ {calcs.get('str_net_payable', '')}*\n\n"
+                    f"✅ *Status:* Verified Settlement Statement"
+                )
                 resp = requests.post(
                     telegram_api_url,
                     data={'chat_id': user_id, 'caption': caption, 'parse_mode': 'Markdown'},
@@ -680,7 +697,15 @@ def api_einv_generate():
         try:
             telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
             with open(output_path, 'rb') as f:
-                caption = f"âš¡ *E-Invoice (NIC Standard) Generated*\nâ€¢ Invoice No: `{inv_no}`\nâ€¢ IRN: `{calcs['irn'][:16]}...`\nâ€¢ Total: `INR {calcs['total_inv_amt']}`"
+                caption = (
+                    f"⚡ *E-Invoice (NIC Standard) Generated*\n\n"
+                    f"🏢 *Seller:* {seller_name}\n"
+                    f"🏛️ *Buyer:* {buyer_name}\n"
+                    f"📄 *Invoice No:* `{inv_no}` | *Date:* `{inv_date}`\n"
+                    f"🔑 *IRN:* `{calcs.get('irn', '')[:20]}...`\n"
+                    f"💰 *Total Invoice Value:* *₹ {calcs.get('str_total_inv_amt', '')}*\n\n"
+                    f"✅ *Status:* Official E-Invoice with Signed QR"
+                )
                 resp = requests.post(
                     telegram_api_url,
                     data={'chat_id': user_id, 'caption': caption, 'parse_mode': 'Markdown'},
