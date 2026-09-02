@@ -458,9 +458,9 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', async () => {
-    // Check Security Passcode Lock Screen
-    checkPasscodeOnStart();
+document.addEventListener('DOMContentLoaded', () => {
+    // Check Security Passcode Lock Screen (also done in inline script, this is belt-and-suspenders)
+    if (typeof checkPasscodeOnStart === 'function') checkPasscodeOnStart();
 
     if (tg) {
         tg.ready();
@@ -485,18 +485,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     initDatePicker();
     initTimePicker();
 
-    // Load all dropdown data
-    await loadDropdowns();
+    // ── IMMEDIATE: Populate dropdowns from pre-loaded defaults (no waiting) ──
+    populateDropdownsFromCache();
+
+    // ── BACKGROUND: Refresh from API server without blocking UI ──
+    loadDropdownsFromAPI();
 
     // Attach stamp toggle listener
-    document.getElementById('stamp-toggle').addEventListener('change', function() {
-        const on = this.checked;
-        document.getElementById('stamp-toggle-label').textContent = on ? 'Include Stamp & Sign' : 'Without Stamp & Sign';
-        document.getElementById('stamp-toggle-sub').textContent = on
-            ? 'Official stamp will appear on invoice'
-            : 'Clean invoice without stamp';
-        state.include_stamp = on;
-    });
+    const stampToggle = document.getElementById('stamp-toggle');
+    if (stampToggle) {
+        stampToggle.addEventListener('change', function() {
+            const on = this.checked;
+            document.getElementById('stamp-toggle-label').textContent = on ? 'Include Stamp & Sign' : 'Without Stamp & Sign';
+            document.getElementById('stamp-toggle-sub').textContent = on
+                ? 'Official stamp will appear on invoice'
+                : 'Clean invoice without stamp';
+            state.include_stamp = on;
+        });
+    }
 
     // Amount inputs: live preview on change
     const bAmtMop = document.getElementById('bill-amount');
@@ -555,66 +561,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // ─── Load Dropdowns ───────────────────────────────────────────────────────────
-async function loadDropdowns() {
-    try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3500);
 
-        const [cRes, custRes, projRes] = await Promise.all([
-            fetch(`${API}/api/contractors`, { signal: controller.signal }),
-            fetch(`${API}/api/customers`, { signal: controller.signal }),
-            fetch(`${API}/api/projects`, { signal: controller.signal })
-        ]);
-        clearTimeout(timeoutId);
-
-        if (cRes.ok) {
-            const data = await cRes.json();
-            if (Array.isArray(data) && data.length) contractorList = data;
-        }
-        if (custRes.ok) {
-            const data = await custRes.json();
-            if (Array.isArray(data) && data.length) customerList = data;
-        }
-        if (projRes.ok) {
-            const data = await projRes.json();
-            if (Array.isArray(data) && data.length) projectList = data;
-        }
-    } catch (e) {
-        log('API server fetch completed with local fallback cache: ' + e.message, 'warn');
-    }
-
-    // Ensure fallback arrays are always fully populated
-    if (!contractorList || contractorList.length === 0) {
-        contractorList = ['Shivam Builders', 'Jay Khodiyar Enterprise', 'Jay Varudi', 'JNP INFRASTRUCTURE', 'YOGI CONSTRUCTION CO.', 'Sarthi Construction'];
-    }
-    if (!customerList || customerList.length === 0) {
-        customerList = ['Ahmedabad Municipal Corporation', 'GUDC', 'GWSSB', 'Anjar Nagarpalika', 'GUDA'];
-    }
-    if (!projectList || projectList.length === 0) {
-        projectList = [
-            { key: 'AMC Chiloda', label: 'AMC Chiloda' },
-            { key: 'AMC Muthiya', label: 'AMC Muthiya' },
-            { key: 'AMC  Kali Lake', label: 'AMC Kali Lake' },
-            { key: 'AMC ASARWA 4', label: 'AMC ASARWA 4' },
-            { key: 'AMC ASARWA 3', label: 'AMC ASARWA 3' },
-            { key: 'GUDC Zalod', label: 'GUDC Zalod' },
-            { key: 'GWSSSB Zalod', label: 'GWSSSB Zalod' },
-            { key: 'ANJAR', label: 'ANJAR' },
-            { key: 'AMC Vatva', label: 'AMC Vatva' },
-            { key: 'AMC Sardarnagar', label: 'AMC Sardarnagar' },
-            { key: 'AMC Science City', label: 'AMC Science City' },
-            { key: 'GUDC Kheda', label: 'GUDC Kheda' },
-            { key: 'GUDC Mahemdabad', label: 'GUDC Mahemdabad' },
-            { key: 'AMC ARC', label: 'AMC ARC' },
-            { key: 'AMC Partheshwer', label: 'AMC Partheshwer' },
-            { key: 'AMC Piplaj', label: 'AMC Piplaj' }
-        ];
-    }
-
+// ── Step 1: Instantly populate UI from cached defaults (zero waiting) ──────────
+function populateDropdownsFromCache() {
     // Populate contractor select
     const cSel = document.getElementById('sel-contractor');
     if (cSel) {
         cSel.innerHTML = contractorList.map(n => `<option value="${n}">${n}</option>`).join('');
+        cSel.removeEventListener('change', onContractorChange);
         cSel.addEventListener('change', onContractorChange);
     }
 
@@ -622,6 +576,7 @@ async function loadDropdowns() {
     populateCustomerDropdown();
     const custSel = document.getElementById('sel-customer');
     if (custSel) {
+        custSel.removeEventListener('change', onCustomerChange);
         custSel.addEventListener('change', onCustomerChange);
     }
 
@@ -629,10 +584,11 @@ async function loadDropdowns() {
     updateFilteredProjects();
     const projSel = document.getElementById('sel-project');
     if (projSel) {
+        projSel.removeEventListener('change', onProjectChange);
         projSel.addEventListener('change', onProjectChange);
     }
 
-    // Initial cascade trigger
+    // Initial cascade
     if (currentDocType === 'mop') {
         const cSelEl = document.getElementById('sel-contractor');
         if (cSelEl) cSelEl.value = 'Jay Khodiyar Enterprise';
@@ -641,6 +597,50 @@ async function loadDropdowns() {
     } else {
         onContractorChange();
     }
+}
+
+// ── Step 2: Background API refresh (doesn't block UI) ─────────────────────────
+async function loadDropdownsFromAPI() {
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+        const [cRes, custRes, projRes] = await Promise.all([
+            fetch(`${API}/api/contractors`, { signal: controller.signal }),
+            fetch(`${API}/api/customers`, { signal: controller.signal }),
+            fetch(`${API}/api/projects`, { signal: controller.signal })
+        ]);
+        clearTimeout(timeoutId);
+
+        let updated = false;
+
+        if (cRes.ok) {
+            const data = await cRes.json();
+            if (Array.isArray(data) && data.length) { contractorList = data; updated = true; }
+        }
+        if (custRes.ok) {
+            const data = await custRes.json();
+            if (Array.isArray(data) && data.length) { customerList = data; updated = true; }
+        }
+        if (projRes.ok) {
+            const data = await projRes.json();
+            if (Array.isArray(data) && data.length) { projectList = data; updated = true; }
+        }
+
+        // Only re-render dropdowns if API returned fresher data
+        if (updated) {
+            populateDropdownsFromCache();
+        }
+    } catch (e) {
+        // API unavailable — silently use cached defaults already shown
+        log('Background API refresh skipped: ' + e.message, 'warn');
+    }
+}
+
+// ── Legacy alias so any old callers still work ──────────────────────────────
+async function loadDropdowns() {
+    populateDropdownsFromCache();
+    await loadDropdownsFromAPI();
 }
 
 function populateCustomerDropdown() {
