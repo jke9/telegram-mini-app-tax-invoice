@@ -313,9 +313,9 @@ body {
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-lg);
     padding: 20px;
-    backdrop-filter: blur(12px);
     display: none;
     animation: slideUp 0.35s ease;
+    overflow: visible;
 }
 
 .step-card.active {
@@ -388,6 +388,8 @@ body {
     min-height: 48px;
     line-height: 1.4;
     display: block;
+    position: relative;
+    z-index: 1;
     background-color: #121d33 !important;
     border: 1.5px solid rgba(130, 177, 255, 0.35) !important;
     border-radius: var(--radius-sm);
@@ -402,6 +404,7 @@ body {
     -moz-appearance: none;
     appearance: none;
     cursor: pointer;
+    pointer-events: auto;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
     box-sizing: border-box;
 }
@@ -439,6 +442,7 @@ body {
 .select-wrapper {
     position: relative;
     width: 100%;
+    z-index: 1;
 }
 
 .select-arrow {
@@ -450,6 +454,7 @@ body {
     pointer-events: none;
     font-size: 1.1rem;
     font-weight: 700;
+    z-index: 0;
 }
 
 /* Amount Input */
