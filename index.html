@@ -13,8 +13,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="app.css?v=8.0">
-    <link rel="stylesheet" href="mop_dynamic.css?v=8.0">
+    <link rel="stylesheet" href="app.css?v=9.0">
+    <link rel="stylesheet" href="mop_dynamic.css?v=9.0">
 </head>
 
 <body>
@@ -243,113 +243,13 @@
                 </div>
                 <p class="amount-type-hint" id="amount-type-hint">GST (18%) will be added on top of this amount</p>
 
-                <!-- Amount Input -->
-                <div class="field-group">
-                    <label class="field-label" for="bill-amount" id="bill-amount-label">Amount (INR)</label>
+                <!-- Standard Amount Input (Tax & Proforma Only) -->
+                <div class="field-group" id="standard-amount-group">
+                    <label class="field-label" for="bill-amount-standard" id="bill-amount-label">Amount (INR)</label>
                     <div class="amount-input-wrap">
                         <span class="amount-prefix">₹</span>
-                        <input type="number" id="bill-amount" class="field-input amount-input" placeholder="0.00" step="0.01" min="0">
+                        <input type="number" id="bill-amount-standard" class="field-input amount-input" placeholder="0.00" step="0.01" min="0">
                     </div>
-                </div>
-
-                <!-- ⚙️ MOP Percentage Customizer Panel (Visible when MOP selected) -->
-                <div id="mop-config-card" class="mop-config-card" style="display:none;">
-                    <div class="mop-config-header" onclick="toggleMopConfigCollapse()">
-                        <div class="mop-cfg-title">
-                            <span>⚙️ Deductions & Percentages</span>
-                            <span class="mop-cfg-badge">Configurable</span>
-                        </div>
-                        <span id="mop-cfg-arrow" class="mop-cfg-arrow">▾</span>
-                    </div>
-                    
-                    <div id="mop-config-body" class="mop-config-body">
-                        <div class="mop-grid">
-                            <div class="mop-input-group">
-                                <label>Admin Expense %</label>
-                                <div class="mop-pct-wrap">
-                                    <input type="number" id="mop-pct-admin" class="mop-pct-input" value="3.25" step="0.05" min="0" oninput="onMopConfigChange()">
-                                    <span>%</span>
-                                </div>
-                            </div>
-                            <div class="mop-input-group">
-                                <label>Income Tax (TDS) %</label>
-                                <div class="mop-pct-wrap">
-                                    <input type="number" id="mop-pct-it-tds" class="mop-pct-input" value="1.00" step="0.05" min="0" oninput="onMopConfigChange()">
-                                    <span>%</span>
-                                </div>
-                            </div>
-                            <div class="mop-input-group">
-                                <label>Retention Money %</label>
-                                <div class="mop-pct-wrap">
-                                    <input type="number" id="mop-pct-retention" class="mop-pct-input" value="2.00" step="0.1" min="0" oninput="onMopConfigChange()">
-                                    <span>%</span>
-                                </div>
-                            </div>
-                            <div class="mop-input-group">
-                                <label>Labour Cess %</label>
-                                <div class="mop-pct-wrap">
-                                    <input type="number" id="mop-pct-cess" class="mop-pct-input" value="1.00" step="0.1" min="0" oninput="onMopConfigChange()">
-                                    <span>%</span>
-                                </div>
-                            </div>
-                            <div class="mop-input-group">
-                                <label>Testing Fee %</label>
-                                <div class="mop-pct-wrap">
-                                    <input type="number" id="mop-pct-testing" class="mop-pct-input" value="0.50" step="0.05" min="0" oninput="onMopConfigChange()">
-                                    <span>%</span>
-                                </div>
-                            </div>
-                            <div class="mop-input-group">
-                                <label>Agency TDS %</label>
-                                <div class="mop-pct-wrap">
-                                    <input type="number" id="mop-pct-agency-tds" class="mop-pct-input" value="2.00" step="0.1" min="0" oninput="onMopConfigChange()">
-                                    <span>%</span>
-                                </div>
-                            </div>
-                            <div class="mop-input-group">
-                                <label>Agency SGST TDS %</label>
-                                <div class="mop-pct-wrap">
-                                    <input type="number" id="mop-pct-agency-sgst" class="mop-pct-input" value="1.00" step="0.1" min="0" oninput="onMopConfigChange()">
-                                    <span>%</span>
-                                </div>
-                            </div>
-                            <div class="mop-input-group">
-                                <label>Agency CGST TDS %</label>
-                                <div class="mop-pct-wrap">
-                                    <input type="number" id="mop-pct-agency-cgst" class="mop-pct-input" value="1.00" step="0.1" min="0" oninput="onMopConfigChange()">
-                                    <span>%</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mop-btn-reset-wrap">
-                            <button type="button" class="btn-mop-reset" onclick="resetMopPercentages()">↺ Reset to Contractor Defaults</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ➕ MOP Dynamic Custom Adjustments Card (SD / Project Deductions & Additions) -->
-                <div id="mop-adjustments-card" class="mop-adjustments-card" style="display:none;">
-                    <div class="mop-adjustments-header">
-                        <div class="mop-adj-title">
-                            <span class="mop-adj-icon">🏷️</span>
-                            <div>
-                                <h3>Custom Adjustments & Deductions</h3>
-                                <p>Add dynamic fields e.g. <em>SD for Project</em>, Security Deposit, Testing, Royalty, Penalty</p>
-                            </div>
-                        </div>
-                        <button type="button" id="btn-add-mop-adj" class="btn-mop-add-row" onclick="addMopAdjustment()">➕ Add Field</button>
-                    </div>
-                    
-                    <div class="mop-quick-chips">
-                        <span class="mop-chip-lbl">Quick Add:</span>
-                        <button type="button" class="mop-chip-btn" onclick="addMopQuickTemplate('SD for Project')">+ SD for Project</button>
-                        <button type="button" class="mop-chip-btn" onclick="addMopQuickTemplate('Security Deposit')">+ Security Deposit</button>
-                        <button type="button" class="mop-chip-btn" onclick="addMopQuickTemplate('Testing Charges')">+ Testing Charges</button>
-                        <button type="button" class="mop-chip-btn" onclick="addMopQuickTemplate('Royalty Deduction')">+ Royalty</button>
-                        <button type="button" class="mop-chip-btn" onclick="addMopQuickTemplate('Penalty')">+ Penalty</button>
-                    </div>
-
-                    <div id="mop-adjustments-list" class="mop-adjustments-list"></div>
                 </div>
 
                 <!-- Standard Tax Preview (Tax & Proforma) -->
@@ -372,101 +272,208 @@
                     <div class="tax-inline-grand"><span>Grand Total</span><span id="pv-grand">—</span></div>
                 </div>
 
-                <!-- 📑 Dedicated MOP Statement Live Preview (Master Vector PDF Breakdown) -->
-                <div class="mop-preview-inline" id="mop-preview" style="display:none;">
-                    <div class="mop-pv-header">📑 Memorandum of Payment Statement</div>
-                    
-                    <!-- Section A -->
-                    <div class="mop-pv-row mop-pv-highlight">
-                        <span>(A) Total Work Done</span>
-                        <span id="mop-pv-gross">—</span>
-                    </div>
-                    <div class="mop-pv-subrow">
-                        <span>• Basic Work + GST 18%</span>
-                        <span id="mop-pv-work-breakdown">—</span>
-                    </div>
-
-                    <!-- Section B -->
-                    <div class="mop-pv-row">
-                        <span>(B) Less Agency Deductions</span>
-                        <span id="mop-pv-agency-ded">—</span>
-                    </div>
-                    <div class="mop-pv-subrow" id="mop-pv-wrap-agency-tds">
-                        <span id="mop-pv-agency-tds-lbl">• TDS 2%</span>
-                        <span id="mop-pv-agency-tds">—</span>
-                    </div>
-                    <div class="mop-pv-subrow" id="mop-pv-wrap-agency-gst">
-                        <span id="mop-pv-agency-gst-lbl">• SGST 1% + CGST 1%</span>
-                        <span id="mop-pv-agency-gst">—</span>
-                    </div>
-
-                    <!-- Net Work Done (A - B) -->
-                    <div class="mop-pv-row mop-pv-subtotal">
-                        <span>(A - B) Net Work Done</span>
-                        <span id="mop-pv-net-ab">—</span>
-                    </div>
-
-                    <!-- Administrative Expense -->
-                    <div class="mop-pv-row">
-                        <span id="mop-pv-admin-lbl">Admin & Head Expense</span>
-                        <span id="mop-pv-admin">—</span>
-                    </div>
-
-                    <!-- Section C -->
-                    <div class="mop-pv-row mop-pv-highlight">
-                        <span>OUR BILL AMOUNT</span>
-                        <span id="mop-pv-our-bill">—</span>
-                    </div>
-                    <div class="mop-pv-subrow">
-                        <span>• Basic + SGST 9% + CGST 9%</span>
-                        <span id="mop-pv-our-breakdown">—</span>
-                    </div>
-
-                    <!-- Section D (Core & Dynamic Adjustments) -->
-                    <div class="mop-pv-row">
-                        <span>Less Deductions (TDS, Retention, Cess, Testing)</span>
-                        <span id="mop-pv-our-ded">—</span>
-                    </div>
-                    <div class="mop-pv-subrow" id="mop-pv-core-it">
-                        <span id="mop-pv-it-tds-lbl">• Income Tax TDS</span>
-                        <span id="mop-pv-it-tds">—</span>
-                    </div>
-                    <div class="mop-pv-subrow" id="mop-pv-core-retention">
-                        <span id="mop-pv-retention-lbl">• Retention Money</span>
-                        <span id="mop-pv-retention">—</span>
-                    </div>
-                    <div class="mop-pv-subrow" id="mop-pv-core-cess">
-                        <span id="mop-pv-cess-lbl">• Labour Cess</span>
-                        <span id="mop-pv-cess">—</span>
-                    </div>
-                    <div class="mop-pv-subrow" id="mop-pv-core-testing">
-                        <span id="mop-pv-testing-lbl">• Quality & Testing Fee</span>
-                        <span id="mop-pv-testing">—</span>
-                    </div>
-
-                    <!-- ➕ Dynamic Custom Addons Section inside Preview -->
-                    <div id="mop-pv-custom-adjustments" style="display:none;"></div>
-
-                    <!-- Round Off -->
-                    <div class="mop-pv-row mop-ro-interactive-row" id="mop-pv-roundoff-row">
-                        <div class="ro-lbl-wrap">
-                            <span>Round Off</span>
-                            <span id="mop-ro-mode-badge" class="ro-badge ro-badge-auto">AUTO</span>
+                <!-- 📑 UNIFIED MASTER MOP INTERACTIVE STATEMENT -->
+                <div class="mop-master-statement" id="mop-preview" style="display:none;">
+                    <div class="mop-statement-header">
+                        <div class="mop-st-title">
+                            <span class="mop-st-icon">📑</span>
+                            <div>
+                                <h3>MEMORANDUM OF PAYMENT STATEMENT</h3>
+                                <p>Interactive Financial Ledger & Live Settlement Engine</p>
+                            </div>
                         </div>
-                        <div class="ro-ctrl-wrap">
-                            <button type="button" id="btn-mop-ro-reset" class="btn-ro-reset" title="Reset to Auto Round Off" onclick="resetMopRoundOffToAuto()" style="display:none;">↺ Auto</button>
-                            <div class="ro-input-box">
-                                <input type="text" id="mop-pv-roundoff-input" class="inline-ro-input" inputmode="decimal" placeholder="+0.00">
+                        <button type="button" class="btn-mop-reset" onclick="resetMopPercentages()" title="Reset all deductions to contractor defaults">↺ Reset Defaults</button>
+                    </div>
+
+                    <!-- [A] WORK VALUE AS PER R.A. BILL -->
+                    <div class="mop-st-section">
+                        <div class="mop-st-section-title">[A] WORK VALUE AS PER R.A. BILL</div>
+                        
+                        <div class="mop-st-amount-box">
+                            <label for="bill-amount">Total Work Done Amount as per RA Bill (₹)</label>
+                            <div class="mop-st-amount-input-wrap">
+                                <span class="mop-st-curr">₹</span>
+                                <input type="number" id="bill-amount" class="mop-st-main-input" value="100000" placeholder="0.00" step="0.01" min="0" oninput="updateMopPreview()">
+                            </div>
+                        </div>
+
+                        <div class="mop-st-row mop-st-sub">
+                            <span>• Basic Work (Taxable) + GST 18%</span>
+                            <span id="mop-pv-work-breakdown" class="mop-val-txt">Basic INR 84,745.76 + GST INR 15,254.24</span>
+                        </div>
+                    </div>
+
+                    <!-- [B] STATUTORY & AGENCY DEDUCTIONS -->
+                    <div class="mop-st-section">
+                        <div class="mop-st-section-title-flex">
+                            <span>[B] STATUTORY & AGENCY DEDUCTIONS</span>
+                            <span id="mop-pv-agency-ded" class="mop-val-red">- INR 3,389.83</span>
+                        </div>
+
+                        <div class="mop-st-calc-row">
+                            <div class="mop-st-calc-lbl">
+                                <span>• Income Tax / TDS</span>
+                                <div class="mop-inline-pct-wrap">
+                                    <input type="number" id="mop-pct-agency-tds" class="mop-inline-pct" value="2.00" step="0.1" min="0" oninput="onMopConfigChange()">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                            <span id="mop-pv-agency-tds" class="mop-val-sub">- INR 1,694.92</span>
+                        </div>
+
+                        <div class="mop-st-calc-row">
+                            <div class="mop-st-calc-lbl">
+                                <span>• SGST TDS</span>
+                                <div class="mop-inline-pct-wrap">
+                                    <input type="number" id="mop-pct-agency-sgst" class="mop-inline-pct" value="1.00" step="0.1" min="0" oninput="onMopConfigChange()">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                            <span id="mop-pv-agency-sgst" class="mop-val-sub">- INR 847.46</span>
+                        </div>
+
+                        <div class="mop-st-calc-row">
+                            <div class="mop-st-calc-lbl">
+                                <span>• CGST TDS</span>
+                                <div class="mop-inline-pct-wrap">
+                                    <input type="number" id="mop-pct-agency-cgst" class="mop-inline-pct" value="1.00" step="0.1" min="0" oninput="onMopConfigChange()">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                            <span id="mop-pv-agency-cgst" class="mop-val-sub">- INR 847.46</span>
+                        </div>
+                    </div>
+
+                    <!-- [A - B] NET WORK VALUE & OVERHEADS -->
+                    <div class="mop-st-section mop-st-highlight-box">
+                        <div class="mop-st-section-title-flex">
+                            <span class="mop-green-lbl">[A - B] NET WORK VALUE & OVERHEADS</span>
+                            <span id="mop-pv-net-ab" class="mop-val-green">INR 96,610.17</span>
+                        </div>
+
+                        <div class="mop-st-calc-row">
+                            <div class="mop-st-calc-lbl">
+                                <span>• Admin & Head Office Expense</span>
+                                <div class="mop-inline-pct-wrap">
+                                    <input type="number" id="mop-pct-admin" class="mop-inline-pct" value="3.25" step="0.05" min="0" oninput="onMopConfigChange()">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                            <span id="mop-pv-admin" class="mop-val-red">- INR 3,250.00</span>
+                        </div>
+                    </div>
+
+                    <!-- [C] CONTRACTOR BILL AMOUNT SUMMARY -->
+                    <div class="mop-st-section">
+                        <div class="mop-st-section-title-flex">
+                            <span class="mop-gold-lbl">[C] CONTRACTOR GROSS BILL AMOUNT</span>
+                            <span id="mop-pv-our-bill" class="mop-val-gold">INR 93,360.17</span>
+                        </div>
+                        <div class="mop-st-row mop-st-sub">
+                            <span>• Basic + SGST 9% + CGST 9%</span>
+                            <span id="mop-pv-our-breakdown" class="mop-val-txt">Basic INR 79,118.79 + GST INR 14,241.38</span>
+                        </div>
+                    </div>
+
+                    <!-- [D] FINAL RECOVERIES & ADJUSTMENTS (Core + Dynamic Addons) -->
+                    <div class="mop-st-section">
+                        <div class="mop-st-section-title-flex">
+                            <span>[D] FINAL RECOVERIES & ADJUSTMENTS</span>
+                            <span id="mop-pv-our-ded" class="mop-val-red">- INR 4,138.65</span>
+                        </div>
+
+                        <div class="mop-st-calc-row" id="mop-pv-core-it">
+                            <div class="mop-st-calc-lbl">
+                                <span>• Contractor Income Tax (TDS)</span>
+                                <div class="mop-inline-pct-wrap">
+                                    <input type="number" id="mop-pct-it-tds" class="mop-inline-pct" value="1.00" step="0.05" min="0" oninput="onMopConfigChange()">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                            <span id="mop-pv-it-tds" class="mop-val-sub">- INR 791.19</span>
+                        </div>
+
+                        <div class="mop-st-calc-row" id="mop-pv-core-retention">
+                            <div class="mop-st-calc-lbl">
+                                <span>• Retention Money S.D.</span>
+                                <div class="mop-inline-pct-wrap">
+                                    <input type="number" id="mop-pct-retention" class="mop-inline-pct" value="2.00" step="0.1" min="0" oninput="onMopConfigChange()">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                            <span id="mop-pv-retention" class="mop-val-sub">- INR 2,000.00</span>
+                        </div>
+
+                        <div class="mop-st-calc-row" id="mop-pv-core-cess">
+                            <div class="mop-st-calc-lbl">
+                                <span>• Labour Welfare Cess</span>
+                                <div class="mop-inline-pct-wrap">
+                                    <input type="number" id="mop-pct-cess" class="mop-inline-pct" value="1.00" step="0.1" min="0" oninput="onMopConfigChange()">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                            <span id="mop-pv-cess" class="mop-val-sub">- INR 847.46</span>
+                        </div>
+
+                        <div class="mop-st-calc-row" id="mop-pv-core-testing">
+                            <div class="mop-st-calc-lbl">
+                                <span>• Quality & Testing Fee</span>
+                                <div class="mop-inline-pct-wrap">
+                                    <input type="number" id="mop-pct-testing" class="mop-inline-pct" value="0.50" step="0.05" min="0" oninput="onMopConfigChange()">
+                                    <span>%</span>
+                                </div>
+                            </div>
+                            <span id="mop-pv-testing" class="mop-val-sub">- INR 500.00</span>
+                        </div>
+
+                        <!-- ➕ DYNAMIC CUSTOM PROJECT ADDONS / DEDUCTIONS EMBEDDED DIRECTLY IN SECTION D -->
+                        <div class="mop-embedded-adjustments" id="mop-adjustments-card">
+                            <div class="mop-emb-header">
+                                <div class="mop-adj-title">
+                                    <span class="mop-adj-icon">🏷️</span>
+                                    <div>
+                                        <h3>Custom Deductions & Addons</h3>
+                                        <p>Add project-specific deductions (e.g. <em>SD for Project</em>, Security Deposit, Penalty)</p>
+                                    </div>
+                                </div>
+                                <button type="button" id="btn-add-mop-adj" class="btn-mop-add-row" onclick="addMopAdjustment()">➕ Add Field</button>
+                            </div>
+
+                            <div class="mop-quick-chips">
+                                <span class="mop-chip-lbl">Quick Add:</span>
+                                <button type="button" class="mop-chip-btn" onclick="addMopQuickTemplate('SD for Project')">+ SD for Project</button>
+                                <button type="button" class="mop-chip-btn" onclick="addMopQuickTemplate('Security Deposit')">+ Security Deposit</button>
+                                <button type="button" class="mop-chip-btn" onclick="addMopQuickTemplate('Testing Charges')">+ Testing Charges</button>
+                                <button type="button" class="mop-chip-btn" onclick="addMopQuickTemplate('Royalty Deduction')">+ Royalty</button>
+                                <button type="button" class="mop-chip-btn" onclick="addMopQuickTemplate('Penalty')">+ Penalty</button>
+                            </div>
+
+                            <div id="mop-adjustments-list" class="mop-adjustments-list"></div>
+                        </div>
+
+                        <!-- Round Off Row -->
+                        <div class="mop-pv-row mop-ro-interactive-row" id="mop-pv-roundoff-row">
+                            <div class="ro-lbl-wrap">
+                                <span>Round Off</span>
+                                <span id="mop-ro-mode-badge" class="ro-badge ro-badge-auto">AUTO</span>
+                            </div>
+                            <div class="ro-ctrl-wrap">
+                                <button type="button" id="btn-mop-ro-reset" class="btn-ro-reset" title="Reset to Auto Round Off" onclick="resetMopRoundOffToAuto()" style="display:none;">↺ Auto</button>
+                                <div class="ro-input-box">
+                                    <input type="text" id="mop-pv-roundoff-input" class="inline-ro-input" inputmode="decimal" placeholder="+0.00">
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Net Amount Payable -->
-                    <div class="mop-pv-grand">
-                        <span>Net Amount Payable</span>
-                        <span id="mop-pv-net-payable">—</span>
+                    <!-- 🏆 TOTAL NET AMOUNT PAYABLE -->
+                    <div class="mop-st-grand-panel">
+                        <div class="mop-st-grand-flex">
+                            <span>TOTAL NET AMOUNT PAYABLE</span>
+                            <span id="mop-pv-net-payable" class="mop-grand-num">INR 89,222.00</span>
+                        </div>
+                        <div class="mop-pv-words" id="mop-pv-words">"Eighty Nine Thousand Two Hundred Twenty Two Rupees Only"</div>
                     </div>
-                    <div class="mop-pv-words" id="mop-pv-words">One Lakh Rupees Only</div>
                 </div>
 
                 <div class="step-nav">
@@ -832,8 +839,8 @@
         </div>
     </div>
 
-    <script src="app.js?v=8.0"></script>
-    <script src="mop_dynamic.js?v=8.0"></script>
+    <script src="app.js?v=9.0"></script>
+    <script src="mop_dynamic.js?v=9.0"></script>
 </body>
 
 </html>

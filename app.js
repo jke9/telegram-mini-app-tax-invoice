@@ -242,25 +242,20 @@ function updateDocTypeUI() {
     const amountTypeToggleWrap = document.getElementById('amount-type-toggle-wrap');
     const amountTypeHint = document.getElementById('amount-type-hint');
     const billAmountLabel = document.getElementById('bill-amount-label');
-    const step4Heading = document.getElementById('step-4-heading');
-    const step4Sub = document.getElementById('step-4-sub');
-    const mopConfigCard = document.getElementById('mop-config-card');
-    const mopAdjustmentsCard = document.getElementById('mop-adjustments-card');
+    const standardAmountGroup = document.getElementById('standard-amount-group');
     const mopPreview = document.getElementById('mop-preview');
     const taxPreview = document.getElementById('tax-preview');
 
     if (currentDocType === 'mop') {
         if (amountTypeToggleWrap) amountTypeToggleWrap.style.display = 'none';
         if (amountTypeHint) amountTypeHint.style.display = 'none';
-        if (billAmountLabel) billAmountLabel.textContent = 'Total Work Done Amount as per RA Bill (₹)';
-        if (step4Heading) step4Heading.textContent = 'RA Bill Work Amount';
-        if (step4Sub) step4Sub.textContent = 'Enter gross work done and adjust deductions';
+        if (standardAmountGroup) standardAmountGroup.style.display = 'none';
+        if (step4Heading) step4Heading.textContent = 'RA Bill Work & Settlement';
+        if (step4Sub) step4Sub.textContent = 'Interactive financial ledger and live deductions';
         const bInput = document.getElementById('bill-amount');
         if (bInput && (!bInput.value || parseFloat(bInput.value) <= 0)) {
             bInput.value = '100000';
         }
-        if (mopConfigCard) mopConfigCard.style.display = 'block';
-        if (mopAdjustmentsCard) mopAdjustmentsCard.style.display = 'block';
         if (mopPreview) mopPreview.style.display = 'block';
         if (taxPreview) taxPreview.style.display = 'none';
         fetchMopDefaults();
@@ -268,11 +263,10 @@ function updateDocTypeUI() {
     } else {
         if (amountTypeToggleWrap) amountTypeToggleWrap.style.display = 'flex';
         if (amountTypeHint) amountTypeHint.style.display = 'block';
+        if (standardAmountGroup) standardAmountGroup.style.display = 'block';
         if (billAmountLabel) billAmountLabel.textContent = 'Amount (INR)';
         if (step4Heading) step4Heading.textContent = 'Bill Amount';
         if (step4Sub) step4Sub.textContent = 'Enter amount and select type';
-        if (mopConfigCard) mopConfigCard.style.display = 'none';
-        if (mopAdjustmentsCard) mopAdjustmentsCard.style.display = 'none';
         if (mopPreview) mopPreview.style.display = 'none';
         if (taxPreview) taxPreview.style.display = 'block';
     }
@@ -422,16 +416,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         state.include_stamp = on;
     });
 
-    // Amount input: live preview on change
-    document.getElementById('bill-amount').addEventListener('input', () => {
-        // When amount changes, reset manual flag so auto-roundoff recalculates
-        if (state.is_manual_round_off) {
-            state.is_manual_round_off = false;
-            state.custom_round_off = null;
-        }
-        clearTimeout(previewDebounce);
-        previewDebounce = setTimeout(fetchPreview, 400);
-    });
+    // Amount inputs: live preview on change
+    const bAmtMop = document.getElementById('bill-amount');
+    if (bAmtMop) {
+        bAmtMop.addEventListener('input', () => {
+            if (state.is_manual_round_off) {
+                state.is_manual_round_off = false;
+                state.custom_round_off = null;
+            }
+            updateMopPreview();
+        });
+    }
+
+    const bAmtStd = document.getElementById('bill-amount-standard');
+    if (bAmtStd) {
+        bAmtStd.addEventListener('input', () => {
+            if (state.is_manual_round_off) {
+                state.is_manual_round_off = false;
+                state.custom_round_off = null;
+            }
+            clearTimeout(previewDebounce);
+            previewDebounce = setTimeout(fetchPreview, 400);
+        });
+    }
 
     // Round-off editable input: live update
     const roInput = document.getElementById('pv-roundoff-input');
@@ -1129,7 +1136,7 @@ async function fetchPreview() {
         return;
     }
 
-    const amtVal = parseFloat(document.getElementById('bill-amount').value);
+    const amtVal = parseFloat(document.getElementById('bill-amount-standard')?.value);
     if (!amtVal || amtVal <= 0) {
         document.getElementById('tax-preview').style.display = 'none';
         return;
@@ -1484,7 +1491,8 @@ function validateStep(step) {
         }
     }
     if (step === 4) {
-        const amtVal = parseFloat(document.getElementById('bill-amount').value);
+        const amtInput = currentDocType === 'mop' ? document.getElementById('bill-amount') : document.getElementById('bill-amount-standard');
+        const amtVal = parseFloat(amtInput?.value);
         if (!amtVal || amtVal <= 0) { showError('Please enter a valid Bill Amount.'); return false; }
         state.amount = amtVal;
         state.amount_mode = amountMode;
