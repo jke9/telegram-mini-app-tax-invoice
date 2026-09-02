@@ -476,7 +476,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadDropdowns() {
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2500);
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
 
         const [cRes, custRes, projRes] = await Promise.all([
             fetch(`${API}/api/contractors`, { signal: controller.signal }),
@@ -485,19 +485,36 @@ async function loadDropdowns() {
         ]);
         clearTimeout(timeoutId);
 
-        if (!cRes.ok || !custRes.ok || !projRes.ok) throw new Error('API response not ok');
-
-        contractorList = await cRes.json();
-        customerList = await custRes.json();
-        projectList = await projRes.json();
+        if (cRes.ok) {
+            const data = await cRes.json();
+            if (Array.isArray(data) && data.length) contractorList = data;
+        }
+        if (custRes.ok) {
+            const data = await custRes.json();
+            if (Array.isArray(data) && data.length) customerList = data;
+        }
+        if (projRes.ok) {
+            const data = await projRes.json();
+            if (Array.isArray(data) && data.length) projectList = data;
+        }
     } catch (e) {
-        // Fallback static data if API not running or timing out
+        log('API server fetch completed with local fallback cache: ' + e.message, 'warn');
+    }
+
+    // Ensure fallback arrays are always fully populated
+    if (!contractorList || contractorList.length === 0) {
         contractorList = ['Shivam Builders', 'Jay Khodiyar Enterprise', 'Jay Varudi', 'JNP INFRASTRUCTURE', 'YOGI CONSTRUCTION CO.', 'Sarthi Construction'];
+    }
+    if (!customerList || customerList.length === 0) {
         customerList = ['Ahmedabad Municipal Corporation', 'GUDC', 'GWSSB', 'Anjar Nagarpalika', 'GUDA'];
+    }
+    if (!projectList || projectList.length === 0) {
         projectList = [
+            { key: 'AMC Chiloda', label: 'AMC Chiloda' },
+            { key: 'AMC Muthiya', label: 'AMC Muthiya' },
+            { key: 'AMC  Kali Lake', label: 'AMC Kali Lake' },
             { key: 'AMC ASARWA 4', label: 'AMC ASARWA 4' },
             { key: 'AMC ASARWA 3', label: 'AMC ASARWA 3' },
-            { key: 'AMC  Kali Lake', label: 'AMC Kali Lake' },
             { key: 'GUDC Zalod', label: 'GUDC Zalod' },
             { key: 'GWSSSB Zalod', label: 'GWSSSB Zalod' },
             { key: 'ANJAR', label: 'ANJAR' },
@@ -506,31 +523,42 @@ async function loadDropdowns() {
             { key: 'AMC Science City', label: 'AMC Science City' },
             { key: 'GUDC Kheda', label: 'GUDC Kheda' },
             { key: 'GUDC Mahemdabad', label: 'GUDC Mahemdabad' },
-            { key: 'AMC Muthiya', label: 'AMC Muthiya' },
-            { key: 'AMC Chiloda', label: 'AMC Chiloda' },
             { key: 'AMC ARC', label: 'AMC ARC' },
             { key: 'AMC Partheshwer', label: 'AMC Partheshwer' },
-            { key: 'AMC Piplaj', label: 'AMC Piplaj' },
+            { key: 'AMC Piplaj', label: 'AMC Piplaj' }
         ];
-        log('API server not detected — using cached data', 'warn');
     }
 
     // Populate contractor select
     const cSel = document.getElementById('sel-contractor');
-    cSel.innerHTML = contractorList.map(n => `<option value="${n}">${n}</option>`).join('');
-    cSel.addEventListener('change', onContractorChange);
+    if (cSel) {
+        cSel.innerHTML = contractorList.map(n => `<option value="${n}">${n}</option>`).join('');
+        cSel.addEventListener('change', onContractorChange);
+    }
 
-    // Populate customer select (Client for Tax/Proforma/E-Invoice, Agency Contractor for MOP)
-    const custSel = document.getElementById('sel-customer');
+    // Populate customer / agency select
     populateCustomerDropdown();
-    custSel.addEventListener('change', onCustomerChange);
+    const custSel = document.getElementById('sel-customer');
+    if (custSel) {
+        custSel.addEventListener('change', onCustomerChange);
+    }
 
     // Populate project select
+    updateFilteredProjects();
     const projSel = document.getElementById('sel-project');
-    projSel.addEventListener('change', onProjectChange);
+    if (projSel) {
+        projSel.addEventListener('change', onProjectChange);
+    }
 
     // Initial cascade trigger
-    onContractorChange();
+    if (currentDocType === 'mop') {
+        const cSelEl = document.getElementById('sel-contractor');
+        if (cSelEl) cSelEl.value = 'Jay Khodiyar Enterprise';
+        state.contractor = 'Jay Khodiyar Enterprise';
+        updateContractorPreview();
+    } else {
+        onContractorChange();
+    }
 }
 
 function populateCustomerDropdown() {
@@ -539,9 +567,22 @@ function populateCustomerDropdown() {
     const currVal = custSel.value;
     const isMop = currentDocType === 'mop';
 
-    // In MOP mode, populate with Contractor List (the Main Agency / Contractor)
-    // In other modes (Tax / Proforma / E-Invoice), populate with Customer List (Client)
-    const list = isMop ? contractorList : customerList;
+    let list = [];
+    if (isMop) {
+        // Main Agencies: Contractors + Government Bodies
+        const rawList = [
+            'JNP INFRASTRUCTURE',
+            'Shivam Builders',
+            'YOGI CONSTRUCTION CO.',
+            'Jay Varudi',
+            'Sarthi Construction',
+            ...contractorList.filter(c => c !== 'Jay Khodiyar Enterprise'),
+            ...customerList
+        ];
+        list = [...new Set(rawList.filter(Boolean))];
+    } else {
+        list = [...new Set(customerList.filter(Boolean))];
+    }
 
     custSel.innerHTML = list.map(n => `<option value="${n}">${n}</option>`).join('');
 
@@ -617,16 +658,20 @@ function updateFilteredProjects() {
     if (currentDocType === 'mop') {
         // In MOP mode: customer dropdown holds the Agency / Main Contractor
         const agencyRule = CONTRACTOR_MAP[customerName] || {};
-        if (agencyRule.allowedProjects && agencyRule.allowedProjects.length > 0) {
-            filtered = projectList.filter(p => {
-                const cleanKey = (p.key || '').replace(/\s+/g, ' ').trim().toUpperCase();
-                return agencyRule.allowedProjects.some(ap => ap.replace(/\s+/g, ' ').trim().toUpperCase() === cleanKey);
-            });
-        }
-        // Fallback if no specific mapped project for agency
-        if (filtered.length === 0) {
-            filtered = [...projectList];
-        }
+        const agencyAllowed = agencyRule.allowedProjects || [];
+
+        const preferred = [];
+        const others = [];
+
+        projectList.forEach(p => {
+            const cleanKey = (p.key || '').replace(/\s+/g, ' ').trim().toUpperCase();
+            const isMatch = agencyAllowed.some(ap => ap.replace(/\s+/g, ' ').trim().toUpperCase() === cleanKey);
+            if (isMatch) preferred.push(p);
+            else others.push(p);
+        });
+
+        // Put preferred agency projects at top, followed by all remaining projects
+        filtered = preferred.length > 0 ? [...preferred, ...others] : [...projectList];
     } else {
         // In Standard modes (Tax / Proforma / E-Invoice): customerName is Client (e.g. AMC, GUDC)
         const cRule = CONTRACTOR_MAP[contractorName] || {};
